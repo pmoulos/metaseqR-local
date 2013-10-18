@@ -1,0 +1,459 @@
+#' Statistical testing with DESeq
+#'
+#' This function is a wrapper over DESeq statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq) or DGEList (edgeR).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param norm.args a list of DESeq normalization parameters. See the result of \code{get.defaults("normalization", "deseq")} for
+#' an example and how you can modify it.
+#' @return A named list of p-values, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
+#' p <- stat.deseq(norm.data.matrix,sample.list,contrast)
+#'}
+stat.deseq <- function(object,sample.list,contrast.list=NULL,norm.args=NULL) {
+	if (is.null(norm.args) && class(object)=="DGEList")
+		norm.args <- get.defaults("normalization","edger")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	classes <- as.class.vector(sample.list)
+	the.design <- data.frame(condition=classes,row.names=colnames(object))
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			cds <- object
+		},
+		DGEList = { # Has been normalized with edgeR
+			if (norm.args$main.method=="classic") {
+				cds <- newCountDataSet(round(object$pseudo.counts),the.design$condition)
+			}
+			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+				scl <- object$samples$lib.size * object$samples$norm.factors
+				cds <- newCountDataSet(round(t(t(object$counts)/scl)*mean(scl)),the.design$condition)
+			}
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+		},
+		matrix = { # Has been normalized with EDASeq or NOISeq
+			cds <- newCountDataSet(object,the.design$condition)
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+		}
+	)
+	for (con.name in names(contrast.list)) {
+		disp("  Contrast: ", con.name)
+		con <- contrast.list[[con.name]]
+		cons <- unique(unlist(con))
+		if (length(con)==2) {
+			res <- nbinomTest(cds,cons[1],cons[2])
+			p[[con.name]] <- res$pval
+		}
+		else {
+			fit0 <- fitNbinomGLMs(cds,count~1)
+			fit1 <- fitNbinomGLMs(cds,count~condition)
+			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
+		}
+		names(p[[con.name]]) <- rownames(object)
+	}
+	return(p)
+}
+
+#' Statistical testing with edgeR
+#'
+#' This function is a wrapper over edgeR statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq) or DGEList (edgeR).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "edger")}
+#' for an example and how you can modify it.
+#' @return A named list of p-values, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
+#' p <- stat.edger(norm.data.matrix,sample.list,contrast)
+#'}
+stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
+	if (is.null(stat.args))
+		stat.args <- get.defaults("statistics","edger")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	classes <- as.class.vector(sample.list)
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			dge <- DGEList(counts=counts(object,normalized=TRUE),group=classes)
+			if (stat.args$main.method=="classic") {
+				dge <- estimateCommonDisp(dge)
+				dge <- estimateTagwiseDisp(dge)
+			}
+			else if (stat.args$main.method=="glm") {
+				design <- model.matrix(~0+classes,data=dge$samples)
+				dge <- estimateGLMCommonDisp(dge,design=design)
+				dge <- estimateGLMTrendedDisp(dge,design=design)
+				dge <- estimateGLMTagwiseDisp(dge,design=design)
+			}
+		},
+		DGEList = { # Has been normalized with edgeR
+			dge <- object
+		},
+		matrix = { # Has been normalized with EDASeq or NOISeq
+			dge <- DGEList(object,group=classes)
+			if (stat.args$main.method=="classic") {
+				dge <- estimateCommonDisp(dge)
+				dge <- estimateTagwiseDisp(dge)
+			}
+			else if (stat.args$main.method=="glm") {
+				design <- model.matrix(~0+classes,data=dge$samples)
+				dge <- estimateGLMCommonDisp(dge,design=design)
+				dge <- estimateGLMTrendedDisp(dge,design=design)
+				dge <- estimateGLMTagwiseDisp(dge,design=design)
+			}
+		}
+	)
+	for (con.name in names(contrast.list))
+	{
+		disp("  Contrast: ", con.name)
+		con <- contrast.list[[con.name]]
+		if (length(con)==2) {
+			if (stat.args$main.method=="classic") {
+				res <- exactTest(dge,pair=unique(unlist(con)))
+			}
+			else if (stat.args$main.method=="glm") {
+				s <- unlist(con)
+				us <- unique(s)
+				design <- model.matrix(~0+s,data=dge$samples)
+				colnames(design) <- us
+				fit <- glmFit(dge,design=design,offset=stat.args$offset,weights=stat.args$weights,
+					lib.size=stat.args$lib.size,prior.count=stat.args$prior.count,start=stat.args$start,method=stat.args$method)				
+				co <- makeContrasts(paste(us,collapse="-"),levels=design)
+				lrt <- glmLRT(fit,contrast=co,test=stat.args$test)
+				res <- topTags(lrt,n=nrow(dge))
+			}
+		}
+		else { # GLM only
+			s <- unlist(con)
+			us <- unique(s)
+			design <- model.matrix(~0+s,data=dge$samples)
+			colnames(design) <- us
+			fit <- glmFit(dge,design=design,offset=stat.args$offset,weights=stat.args$weights,
+				lib.size=stat.args$lib.size,prior.count=stat.args$prior.count,start=stat.args$start,method=stat.args$method)				
+			lrt <- glmLRT(fit,coef=2:ncol(fit$design),test=stat.args$test)
+			res <- topTags(lrt,n=nrow(dge))
+		}
+		p[[con.name]] <- res$table[,"PValue"]
+		names(p[[con.name]]) <- rownames(res$table)
+	}
+	return(p)
+}
+
+#' Statistical testing with limma
+#'
+#' This function is a wrapper over limma statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq) or DGEList (edgeR).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "limma")}
+#' for an example and how you can modify it.
+#' @return A named list of p-values, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
+#' p <- stat.limma(norm.data.matrix,sample.list,contrast)
+#'}
+stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
+	if (is.null(stat.args))
+		stat.args <- get.defaults("statistics","limma")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	classes <- as.class.vector(sample.list)
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			dge <- DGEList(counts=counts(object,normalized=TRUE),group=classes)
+		},
+		DGEList = { # Has been normalized with edgeR
+			dge <- object
+		},
+		matrix = { # Has been normalized with EDASeq or NOISeq
+			dge <- DGEList(object,group=classes)
+		}
+	)
+	for (con.name in names(contrast.list))
+	{
+		disp("  Contrast: ", con.name)
+		con <- contrast.list[[con.name]]
+		s <- unlist(con)
+		us <- unique(s)
+		design <- model.matrix(~0+s,data=dge$samples)
+		colnames(design) <- us
+		vom <- voom(dge,design)
+		fit <- lmFit(vom,design)
+		co <- makeContrasts(contrasts=paste(us[2],us[1],sep="-"),levels=design)
+		fit <- eBayes(contrasts.fit(fit,co))
+		if (length(con)==2)
+			res <- topTable(fit,coef=1,n=nrow(vom))
+		else
+			res <- topTable(fit,coef=1:ncol(fit$design),n=nrow(vom))
+		p[[con.name]] <- res[,"P.Value"]
+		names(p[[con.name]]) <- rownames(res)
+	}
+	return(p)
+}
+
+#' Statistical testing with NOISeq
+#'
+#' This function is a wrapper over NOISeq statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq) or DGEList (edgeR).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "noiseq")}
+#' for an example and how you can modify it.
+#' @param norm.args a list of NOISeq normalization parameters. See the result of \code{get.defaults("normalization", "noiseq")} for
+#' an example and how you can modify it.
+#' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation} which contains the GC content
+#' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
+#' @param log.offset a number to be added to each element of data matrix in order to avoid Infinity on log type data transformations.
+#' @return A named list of NOISeq q-values, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' lengths <- round(1000*runif(nrow(data.matrix)))
+#' starts <- round(1000*runif(nrow(data.matrix)))
+#' ends <- starts + lengths
+#' gc=runif(nrow(data.matrix)),
+#' gene.data <- data.frame(
+#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2))
+#'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
+#' )
+#' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)
+#' p <- stat.noiseq(norm.data.matrix,sample.list,contrast,gene.data=gene.data)
+#'}
+stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,gene.data=NULL,log.offset=1) {
+	if (is.null(norm.args) && class(object)=="DGEList")
+		norm.args <- get.defaults("normalization","edger")
+	if (is.null(stat.args))
+		stat.args <- get.defaults("statistics","limma")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	if (is.null(gene.data)) {
+		gc.content <- NULL
+		chromosome <- NULL
+		biotype <- NULL
+		gene.length <- NULL
+	}
+	else {
+		gc.content <- gene.data$gc_content
+		biotype <- as.character(gene.data$biotype)
+		names(gc.content) <- names(biotype) <- rownames(gene.data)
+		if (is.null(attr(gene.data,"gene.length")))
+			gene.length <- NULL
+		else {
+			gene.length <- attr(gene.data,"gene.length")
+			names(gene.length) <- rownames(gene.data)
+		}
+	}
+	classes <- as.class.vector(sample.list)
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			ns.obj <- NOISeq::readData(
+				data=counts(object,normalized=TRUE),
+				length=gene.length,
+				gc=gc.content,
+				chromosome=gene.data[,1:3],
+				factors=data.frame(class=classes),
+				biotype=biotype
+			)
+		},
+		DGEList = { # Has been normalized with edgeR
+			if (norm.args$main.method=="classic")
+				dm <- round(object$pseudo.counts)
+			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+				scl <- object$samples$lib.size * object$samples$norm.factors
+				dm <- round(t(t(object$counts)/scl)*mean(scl))
+			}
+			ns.obj <- NOISeq::readData(
+				data=dm,
+				length=gene.length,
+				gc=gc.content,
+				chromosome=gene.data[,1:3],
+				factors=data.frame(class=classes),
+				biotype=biotype
+			)
+		},
+		ExpressionSet = { # Has been normalized with NOISeq
+			ns.obj <- object
+		},
+		matrix = { # Has been normalized with EDASeq
+			ns.obj <- NOISeq::readData(
+				data=object,
+				length=gene.length,
+				gc=gc.content,
+				chromosome=gene.data[,1:3],
+				factors=data.frame(class=classes),
+				biotype=biotype
+			)
+		}
+	)
+	for (con.name in names(contrast.list)) {
+		disp("  Contrast: ", con.name)
+		con <- contrast.list[[con.name]]
+		if (length(con)==2) {
+			stat.args$conditions=unique(unlist(con))
+			if (any(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE))))
+				stat.args$replicates <- "no" # At least one condition does not have replicates
+			if (stat.args$replicates %in% c("technical","no"))
+				res <- noiseq(ns.obj,k=log.offset,norm="n",replicates=stat.args$replicates,factor=stat.args$factor,
+					conditions=stat.args$conditions,pnr=stat.args$pnr,nss=stat.args$nss,v=stat.args$v,lc=stat.args$lc)
+			else
+				res <- noiseqbio(ns.obj,k=log.offset,norm="n",nclust=stat.args$nclust,factor=stat.args$factor,lc=stat.args$lc,
+					conditions=stat.args$conditions,r=stat.args$r,adj=stat.args$adj,a0per=stat.args$a0per,cpm=stat.args$cpm,
+					filter=stat.args$filter,depth=stat.args$depth,cv.cutoff=stat.args$cv.cutoff)
+			p[[con.name]] <- 1 - res@results[[1]]$prob # Beware! This is not the classical p-value!
+		}
+		else {
+			warning(
+				paste("NOISeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name),
+				call.=FALSE
+			)
+			M <- assayData(ns.obj)$exprs
+			cds <- newCountDataSet(M,data.frame(condition=unlist(con),row.names=names(unlist(con))))
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+			fit0 <- fitNbinomGLMs(cds,count~1)
+			fit1 <- fitNbinomGLMs(cds,count~condition)
+			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
+		}
+		names(p[[con.name]]) <- rownames(ns.obj)
+	}
+	return(p)
+}
+
+#' Statistical testing with baySeq
+#'
+#' This function is a wrapper over baySeq statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq) or DGEList (edgeR).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "bayseq")}
+#' for an example and how you can modify it.
+#' @param norm.args a list of normalization parameters required only if normalization has been performed with edgeR. See the result
+#' of \code{get.defaults("normalization","edger")} for an example and how you can modify it.
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' members are the library sizes (the sequencing depth) for each sample. If not provided, they will be estimated from baySeq.
+#' @return A named list of the value 1-likelihood that a gene is differentially expressed, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data)
+#' p <- stat.bayseq(norm.data.matrix,sample.list,contrast)
+#'}
+stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,libsize.list=NULL) {
+	if (is.null(norm.args) && class(object)=="DGEList")
+		norm.args <- get.defaults("normalization","edger")
+	if (is.null(stat.args))
+		stat.args <- get.defaults("statistics","bayseq")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	classes <- as.class.vector(sample.list)
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			bayes.data <- counts(object,normalized=TRUE)
+		},
+		DGEList = { # Has been normalized with edgeR
+			bayes.data <- round(object$pseudo.counts)
+		},
+		matrix = { # Has been normalized with EDASeq or NOISeq
+			bayes.data <- object
+		}
+	)
+	CD <- new("countData",data=bayes.data,replicates=classes)
+	if (is.null(libsize.list))
+		libsizes(CD) <- getLibsizes(CD)
+	else
+		libsizes(CD) <- unlist(libsize.list)
+	for (con.name in names(contrast.list)) {
+		disp("  Contrast: ", con.name,"\n")
+		con <- contrast.list[[con.name]]
+		cd <- CD[,names(unlist(con))]
+		if (length(con)==2)
+			groups(cd) <- list(NDE=rep(1,length(unlist(con))),DE=c(rep(1,length(con[[1]])),rep(2,length(con[[2]]))))
+		else
+			groups(cd) <- list(NDE=rep(1,length(unlist(con))),DE=unlist(con,use.names=FALSE)) # Maybe this will not work
+		replicates(cd) <- as.factor(classes[names(unlist(con))])
+		cd <- getPriors.NB(cd,samplesize=stat.args$samplesize,samplingSubset=stat.args$samplingSubset,equalDispersions=stat.args$equalDispersions,
+			estimation=stat.args$estimation,zeroML=stat.args$zeroML,consensus=stat.args$consensus,cl=stat.args$cl)
+		cd <- getLikelihoods.NB(cd,pET=stat.args$pET,marginalise=stat.args$marginalise,subset=stat.args$subset,priorSubset=stat.args$priorSubset,
+			bootStraps=stat.args$bootStraps,conv=stat.args$conv,nullData=stat.args$nullData,returnAll=stat.args$returnAll,returnPD=stat.args$returnPD,
+			discardSampling=stat.args$discardSampling,cl=stat.args$cl)
+		tmp <- topCounts(cd,group="DE",number=nrow(cd))
+		p[[con.name]] <- as.numeric(tmp[,"FDR"])
+		names(p[[con.name]]) <- rownames(tmp)
+	}
+	return(p)
+}

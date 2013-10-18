@@ -1,0 +1,656 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN" "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd">
+
+<html>
+<head>
+<title>MetaSeq Report</title>
+<meta http-equiv="Content-Type" content="text/html;">
+<link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+<link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css">
+<link type="text/css" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/redmond/jquery-ui.min.css">
+<link type="text/css" rel="stylesheet" href="styles.css">
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="http://code.highcharts.com/highcharts.js"></script>
+</head>
+<body>
+<table class="headContainer">
+	<tr> 
+		<td style="padding:0px; border-width:0px; width:20%;">
+			<img src="logo.png" alt="logo here" height="100%">
+		</td>
+		<td style="padding:5px; border-width:0px; text-align:center; width:80%">
+			<span class="pageTitle"><span style="font-size:1.4em; font-weight:bold">metaseqr Analysis Report</span></br></br><%=basename(PROJECT.PATH$main)%></span>
+		</td>
+	</tr>
+	<tr> 
+		<td colspan=2 style="height:5px; background-color:#0E38C4; padding:0px; border-width:0px;"></td>
+	</tr>
+</table>
+<table class="menuContainer">
+	<tr>
+		<td>
+			<table class="menuContainer" style="width:100%">
+				<tr>
+					<td class="menuCell"><a href="#summary">Summary</a></td>
+					<td class="menuCell"><a href="#figures">Figures</a></td>
+					<td class="menuCell"><a href="#results">Results</a></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<table class="mainContainer">
+	<tr>
+		<td class="mainContainer" style="height:80%;">
+			<table class="mainContainer">
+				<tr>
+					<td class="leftContainer">
+						<!--We want the TOC here-->
+						<div id="contents"><div>
+							<span class="title" style="font-size:1.1em;">Contents</span>
+							<div id="toc" style="float: left; width:200px; word-wrap: break-word;">
+								<%
+								cat("<h5>Summary</h5>")
+								cat("<div><ul class=\"tocul\">")
+								#cat("<ul class=\"tocul\"><li class=\"tocli\"><a href=\"#summary\">Summary</a><ul>")
+								cat("<li class=\"tocli\"><a href=\"#summary_input\">Input options</a></li>")
+								cat("<li class=\"tocli\"><a href=\"#summary_analysis_filtered\">Filtered genes</a></li>")
+								cat("<li class=\"tocli\"><a href=\"#summary_analysis_nde\">DE genes</a></li>")
+								#cat("</ul></li></ul>")
+								cat("</ul></div>")
+								if (exists("fig.raw") || exists("fig.unorm") || exists("fig.norm") || exists("fig.other")) {
+									cat("<h5>Figures</h5>")
+									cat("<div><ul class=\"tocul\">")
+									#cat("<ul class=\"tocul\">")
+									cat("<li class=\"tocli\"><a href=\"#figures\">Figures</a><ul>")
+									if (!is.null(fig.raw$mds))
+										cat("<li class=\"tocli\"><a href=\"#figures_mds\">MDS</a></li>")
+									if (!is.null(fig.raw$biodetection))
+										cat("<li class=\"tocli\"><a href=\"#figures_biodetection\">Biotype detection</a></li>")
+									if (!is.null(fig.raw$countsbio))
+										cat("<li class=\"tocli\"><a href=\"#figures_countsbio\">Biotype counts</a></li>")
+									if (!is.null(fig.raw$saturation))
+										cat("<li class=\"tocli\"><a href=\"#figures_saturation\">Biotype saturation</a></li>")
+									if (!is.null(fig.raw$rnacomp))
+										cat("<li class=\"tocli\"><a href=\"#figures_rnacomp\">RNA composition</a></li>")
+									if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot))
+										cat("<li class=\"tocli\"><a href=\"#figures_boxplot\">Boxplots</a></li>")
+									if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias))
+										cat("<li class=\"tocli\"><a href=\"#figures_gcbias\">GC-bias</a></li>")
+									if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias))
+										cat("<li class=\"tocli\"><a href=\"#figures_lengthbias\">Length bias</a></li>")
+									if (!is.null(fig.unorm$meandiff) || !is.null(fig.norm$meandiff))
+										cat("<li class=\"tocli\"><a href=\"#figures_meandiff\">Mean-difference</a></li>")
+									if (!is.null(fig.unorm$meanvar) || !is.null(fig.norm$meanvar))
+										cat("<li class=\"tocli\"><a href=\"#figures_meanvar\">Mean-variance</a></li>")
+									if (!is.null(fig.other$filtered))
+										cat("<li class=\"tocli\"><a href=\"#figures_filtered\">Filtered genes</a></li>")
+									if (!is.null(fig.stat$volcano)) {
+										cat("<li class=\"tocli\"><a href=\"#figures_filtered\">Volcano plots</a><ul>")
+										nn <- names(fig.stat$volcano)
+										counter <- 1
+										for (n in nn) {
+											cat("<li class=\"tocli\"><a href=\"#volcano_",counter,"\">",n,"</a></li>",sep="")
+											counter <- counter + 1
+										}
+										cat("</ul></li>")
+									}
+									if (!is.null(fig.stat$deheatmap)) {
+										cat("<li class=\"tocli\"><a href=\"#figures_heatmap\">DEG heatmaps</a><ul>")
+										nn <- names(fig.stat$deheatmap)
+										counter <- 1
+										for (n in nn) {
+											cat("<li class=\"tocli\"><a href=\"#deheatmap_",counter,"\">",n,"</a></li>",sep="")
+											counter <- counter + 1
+										}
+										cat("</ul></li>")
+									}
+									if (!is.null(fig.stat$biodist)) {
+										cat("<li class=\"tocli\"><a href=\"#figures_biodist\">DEG biotypes</a><ul>")
+										nn <- names(fig.stat$biodist)
+										counter <- 1
+										for (n in nn) {
+											cat("<li class=\"tocli\"><a href=\"#biodist_",counter,"\">",n,"</a></li>",sep="")
+											counter <- counter + 1
+										}
+										cat("</ul></li>")
+									}
+								}
+								#cat("</ul></li></ul>")
+								cat("</ul></div>")
+								cat("<h5>Results</h5>")
+								cat("<div><ul class=\"tocul\">")
+								#cat("<ul class=\"tocul\"><li class=\"tocli\"><a href=\"#results\">Results</a><ul>")
+								nn <- names(html)
+								counter <- 1
+								for (n in nn) {
+									cat("<li class=\"tocli\"><a href=\"#table_",counter,"\">",n,"</a></li>",sep="")
+									counter <- counter + 1
+								}
+								#cat("</ul></li></ul>")
+								cat("</ul></div>")
+								%>
+							</div></div>
+						</div>
+					</td>
+					<td class="mainContainer">
+						<div id="report"> <!-- Start main accordion container -->
+							<h3 id="summary" class="title">Summary </h3>
+							<div id="summary_container"> <!-- Start summary container -->
+								<h4 id="summary_input" class="subtitle">Input options </h4>
+								<div id="summary_input_container">
+									<strong>Read counts file:</strong> <%=counts.name%></br>
+									<strong>Conditions:</strong> <%=paste(names(sample.list),collapse=", ")%></br>
+									<strong>Samples:</strong> <%=paste(unlist(sample.list),collapse=", ")%></br>
+									<strong>Requested contrasts:</strong> <%=paste(contrast,collapse=", ")%></br>
+									<strong>Library sizes:</strong>
+									<%=
+									if (!is.null(libsize.list)) {
+										cat("<ul>")
+										for (n in names(libsize.list)) cat("<li>",paste(n,libsize.list[[n]],sep=": "),"</li>")
+										cat("</ul>")
+									} else cat("not available","</br>")
+									%>
+									<strong>Annotation:</strong> <%=annotation%></br>
+									<strong>Organism:</strong> <%=org%></br>
+									<strong>Count type:</strong> <%=count.type%></br>
+									<strong>Exon filters:</strong>
+									<%=
+									if (!is.null(exon.filters)) {
+										cat(paste(names(exon.filters),collapse=", "),"</br>")
+										for (ef in names(exon.filters)) {
+											cat("<ul>")
+											cat("<li><em><span style=\"font-size:1em\">",ef,"</span></em><ul>")
+											for (efp in names(exon.filters[[ef]])) {
+												if (length(exon.filters[[ef]][[efp]])==1 && is.function(exon.filters[[ef]][[efp]]))
+													cat("<li>custom function</li>")
+												else if (length(exon.filters[[ef]][[efp]])==1)
+													cat("<li>",paste(efp,exon.filters[[ef]][[efp]],sep=": "),"</li>")
+												else if (length(exon.filters[[ef]][[efp]])>1)
+													cat("<li>",paste(efp,paste(exon.filters[[ef]][[efp]],collapse=", "),sep=": "),"</li>")
+											}
+											cat("</ul></li>")
+											cat("</ul>")
+										}
+									} else cat("not available","</br>")
+									%>
+									<strong>Gene filters:</strong>
+									<%=
+									if (!is.null(gene.filters)) {
+										cat(paste(names(gene.filters),collapse=", "),"</br>")
+										for (gf in names(gene.filters)) {
+											cat("<ul>")
+											cat("<li><em><span style=\"font-size:1em\">",gf,"</span></em><ul>")
+											for (gfp in names(gene.filters[[gf]])) {
+												if (length(gene.filters[[gf]][[gfp]])==1 && is.function(gene.filters[[gf]][[gfp]]))
+													cat("<li>custom function</li>")
+												else if (length(gene.filters[[gf]][[gfp]])==1)
+													cat("<li>",paste(gfp,gene.filters[[gf]][[gfp]],sep=": "),"</li>")
+												else if (length(gene.filters[[gf]][[gfp]])>1)
+													cat("<li>",paste(gfp,paste(gene.filters[[gf]][[gfp]],collapse=", "),sep=": "),"</li>")
+											}
+											cat("</ul></li>")
+											cat("</ul>")
+										}
+									} else cat("not available","</br>")
+									%>
+									<strong>Normalization algorithm:</strong> <%=report.messages$norm[[normalization]]%></br>
+									<strong>Normalization arguments:</strong>
+									<%=
+									if (!is.null(norm.args)) {
+										cat(paste(names(norm.args),collapse=", "),"</br>")
+										cat("<ul>")
+										for (na in names(norm.args)) {
+											if (length(norm.args[[na]])==1 && is.function(norm.args[[na]]))
+												cat("<li>custom function</li>")
+											else if (length(norm.args[[na]])==1)
+												cat("<li>",paste(na,norm.args[[na]],sep=": "),"</li>")
+											else if (length(norm.args[[na]])>1)
+												cat("<li>",paste(na,paste(norm.args[[na]],collapse=", "),sep=": "),"</li>")
+										}
+										cat("</ul>")
+									} else cat("not available")
+									%>
+									<strong>Statistical algorithm(s): </strong> <%=paste(unlist(report.messages$stat[statistics],use.names=FALSE),collapse=", ")%></br>
+									<%=
+									if (!is.null(stat.args)) {
+										for (s in names(stat.args)) {
+											cat("<strong>Statistical arguments for</strong> ",report.messages$stat[[s]],": ",paste(names(stat.args[[s]]),collapse=", "))
+											if (length(stat.args[[s]])>0) {
+												cat("<ul>")
+												for (sa in names(stat.args[[s]])) {
+													if (length(stat.args[[s]][[sa]])==1 && is.function(stat.args[[s]][[sa]]))
+														cat("<li>",sa,": custom function</li>")
+													else if (length(stat.args[[s]][[sa]])==1)
+														cat("<li>",paste(sa,stat.args[[s]][[sa]],sep=": "),"</li>")
+													else if (length(stat.args[[s]][[sa]])>1)
+														cat("<li>",paste(sa,paste(stat.args[[s]][[sa]],collapse=", "),sep=": "),"</li>")
+													}
+													cat("</ul>")
+												}
+											else cat("not available or not required</br>")
+										}
+									} else cat("<strong>Statistical arguments not available</strong>")
+									%>
+									<strong>Meta-analysis method:</strong> <%=report.messages$meta[[meta.p]]%></br>
+									<strong>Multiple testing correction: </strong> <%=report.messages$adjust[[tolower(adjust.method)]]%></br>
+									<strong>p-value threshold: </strong> <%=if (!is.na(pcut)) cat(pcut) else cat("not available")%></br>
+									<strong>Logarithmic tranformation offset: </strong> <%=log.offset%></br>
+									<strong>Analysis preset: </strong> <%=if (!is.null(preset)) cat(preset) else ("not available")%></br>
+									<strong>Quality control plots: </strong><%=paste(unlist(report.messages$plots[qc.plots],use.names=FALSE),collapse=", ")%></br>
+									<strong>Figure format: </strong> <%=paste(fig.format,collapse=", ")%></br>
+									<strong>Output directory: </strong> <%=if (!is.na(export.where)) cat(export.where) else cat("default")%></br>
+									<strong>Output data: </strong> <%=paste(unlist(report.messages$export[export.what],use.names=FALSE),collapse=", ")%></br>
+									<strong>Output scale(s): </strong> <%=paste(unlist(report.messages$export[export.scale],use.names=FALSE),collapse=", ")%></br>
+									<strong>Output values: </strong> <%=paste(unlist(report.messages$export[export.values],use.names=FALSE),collapse=", ")%></br>
+									<strong>Output statistics: </strong><%=paste(unlist(report.messages$export[export.stats],use.names=FALSE),collapse=", ")%></br>
+								</div>
+								<h4 id="summary_analysis_filtered" class="subtitle">Filtered genes </h4>
+								<div id="summary_filtered_container">
+									<strong>Number of filtered genes: </strong><%=length(the.zeros) + length(the.dead)%><em> which is the <strong>union</strong> of</em>
+									<ul>
+										<li>Filtered because of zero reads: <%=length(the.zeros)%></li>
+										<li>
+											Filtered because of exon filters: <%=sum(as.numeric(sapply(exon.filter.result,length)))%>
+											<ul>
+												<%=
+												for (n in names(exon.filter.result)) {
+													cat("<li>",n,": ",length(exon.filter.result[[n]]),"</li>")
+												}
+												%>
+											</ul>
+										</li>
+										<li>
+											Filtered because of gene filters: <%=sum(as.numeric(sapply(gene.filter.result,length)))%>
+											<ul>
+												<%=
+												for (n in names(gene.filter.result)) {
+													cat("<li>",n,": ",length(gene.filter.result[[n]]),"</li>")
+												}
+												%>
+											</ul>
+										</li>
+									</ul>
+								</div>
+								<h4 id="summary_analysis_nde" class="subtitle">Differentially expressed genes</h4>
+								<div id="summary_nde_container">
+									<strong>Number of differentially expressed genes per contrast: </strong>
+									<ul>
+										<%=
+										for (cnt in contrast) {
+											cat("<li>",cnt,": ")
+											if (!is.na(pcut) && length(which(p.list[[cnt]]<pcut))==0)
+												cat("no differentially expressed genes","</li>")
+											else if (is.na(pcut))
+												cat("no statistical threshold defined","</li>")
+											else
+												cat(length(which(p.list[[cnt]]<pcut)))
+										}
+										%>
+									</ul>
+								</div>
+							</div> <!-- End summary container -->
+							<h3 id="figures" class="title">Figures </h3>
+							<div id="figures_container">  <!-- Start figures container -->								
+								<%
+								if (!is.null(fig.raw$mds)) {
+									cat("<h4 class=\"subtitle\">Multidimensional scaling</h4>")
+									cat("<div id=\"figures_mds\">")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\">")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.raw$biodetection)) {
+									cat("<h4 class=\"subtitle\">Biotype detection</h4>")
+									cat("<div id=\"figures_biodetection\"> ")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$biodetection))
+										cat("<img src=\"",s,"\" alt=\"biotype detection\"></br></br>")
+									cat("</div>")
+								}
+								%>								
+								<%
+								if (!is.null(fig.raw$countsbio)) {
+									cat("<h4 class=\"subtitle\">Biotype detection counts</h4>")
+									cat("<div id=\"figures_countsbio\">")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$countsbio))
+										cat("<img src=\"",s,"\" alt=\"biotype detection\"></br></br>")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.raw$saturation)) {
+									cat("<h4 class=\"subtitle\">Read and biotype saturation</h4>")
+									cat("<div id=\"figures_saturation\">")
+									cat("<span class=\"subtitle\">Read saturation per biotype for all samples</span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\"></br></br>")
+									cat("<span class=\"subtitle\">Read saturation per sample for all biotypes </span></br>")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$saturation$sample))
+										cat("<img src=\"",s,"\" alt=\"sample biotype saturation\"></br></br>")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.raw$rnacomp)) {
+									cat("<h4 class=\"subtitle\">RNA composition </h4>")
+									cat("<div id=\"figures_rnacomp\">")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$rnacomp),"\" alt=\"RNA composition\">")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot)) {
+									cat("<h4 class=\"subtitle\">Boxplots</h4>")
+									cat("<div id=\"figures_boxplot\">")
+									cat("<table class=\"innerTable\"><tr>")
+								}
+								if (!is.null(fig.unorm$boxplot)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Boxplot of un-normalized data </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$boxplot),"\" alt=\"Un-normalized boxplot\"></td>")
+								}
+								if (!is.null(fig.unorm$boxplot)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Boxplot of normalized data </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$boxplot),"\" alt=\"Normalized boxplot\"></td>")
+								}
+								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot))
+									cat("</tr></table></div>")
+								%>
+								<%
+								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias)) {
+									cat("<h4 class=\"subtitle\">GC content bias</h4>")
+									cat("<div id=\"figures_gcbias\">")
+									cat("<table class=\"innerTable\"><tr>")
+								}
+								if (!is.null(fig.unorm$gcbias)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">GC content bias un-normalized </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$gcbias),"\" alt=\"Un-normalized gcbias\"></td>")
+								}
+								if (!is.null(fig.norm$gcbias)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">GC content bias normalized </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$gcbias),"\" alt=\"Normalized gcbias\"></td>")
+								}
+								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias))
+									cat("</tr></table></div>")
+								%>
+								<%
+								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias)) {
+									cat("<h4 class=\"subtitle\">Gene length bias</h4>")
+									cat("<div id=\"figures_lengthbias\">")
+									cat("<table class=\"innerTable\"><tr>")	
+								}
+								if (!is.null(fig.unorm$lengthbias)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Transcript length bias un-normalized </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$lengthbias),"\" alt=\"Un-normalized lengthbias\"></td>")
+								}
+								if (!is.null(fig.norm$lengthbias)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Transcript length bias normalized </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$lengthbias),"\" alt=\"Normalized lengthbias\"></td>")
+								}
+								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias))
+									cat("</tr></table></div>")
+								%>
+								<%
+								if (!is.null(fig.unorm$meandiff) || !is.null(fig.norm$meandiff)) {
+									cat("<h4 class=\"subtitle\">Mean-difference</h4>")
+									cat("<div id=\"figures_meandiff\">")
+									if (is.null(fig.unorm$meandiff))
+										nn <- names(fig.norm$meandiff)
+									else
+										nn <- names(fig.unorm$meandiff)
+									for (n in nn) {
+										cat("<table class=\"innerTable\"><tr><td class=\"innerCell\"><span class=\"subtitle\">Mean-difference plots for the replicates of ",n,"</span></td></tr>")
+										if (!is.null(fig.unorm$meandiff[[n]]) && !is.null(fig.norm$meandiff[[n]])) {
+											for (i in 1:length(fig.norm$meandiff[[n]])) {
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unnorm meandiff\"></td>")
+												cat("<td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\"></td></tr>")
+											}
+										}
+										else if (is.null(fig.unorm$meandiff[[n]]) && !is.null(fig.norm$meandiff[[n]])) {
+											for (i in 1:length(fig.norm$meandiff[[n]]))
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\"></td><td class=\"innerCell\"></td></tr>")
+										}
+										else if (!is.null(fig.unorm$meandiff[[n]]) && is.null(fig.norm$meandiff[[n]])) {
+											for (i in 1:length(fig.unorm$meandiff[[n]]))
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unorm meandiff\"></td><td class=\"innerCell\"></td></tr>")
+										}
+										cat("</table>")
+									}
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.unorm$meanvar) || !is.null(fig.norm$meanvar)) {
+									cat("<h4 class=\"subtitle\">Mean-variance</h4>")
+									cat("<div id=\"figures_meanvar\">")
+									if (is.null(fig.unorm$meanvar))
+										nn <- names(fig.norm$meanvar)
+									else
+										nn <- names(fig.unorm$meanvar)
+									for (n in nn) {
+										cat("<table class=\"innerTable\"><tr><td class=\"innerCell\"><span class=\"subtitle\">Mean-variance plots for the replicates of ",n,"</span></td></tr>")
+										if (!is.null(fig.unorm$meanvar[[n]]) && !is.null(fig.norm$meanvar[[n]])) {
+											for (i in 1:length(fig.norm$meanvar[[n]])) {
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unnorm meanvar\"></td>")
+												cat("<td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\"></td></tr>")
+											}
+										}
+										else if (is.null(fig.unorm$meanvar[[n]]) && !is.null(fig.norm$meanvar[[n]])) {
+											for (i in 1:length(fig.norm$meanvar[[n]]))
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\"></td><td class=\"innerCell\"></td></tr>")
+										}
+										else if (!is.null(fig.unorm$meanvar[[n]]) && is.null(fig.norm$meanvar[[n]])) {
+											for (i in 1:length(fig.unorm$meanvar[[n]]))
+												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unorm meanvar\"></td><td class=\"innerCell\"></td></tr>")
+										}
+										cat("</table>")
+									}
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.other$filtered)) {
+									cat("<h4 class=\"subtitle\">Biotype distribution of filtered genes</h4>")
+									cat("<div id=\"figures_filtered\">")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\">")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.stat$volcano)) {
+									cat("<h4 class=\"subtitle\">Volcano plots</h4>")
+									cat("<div id=\"figures_volcano\">")
+									nn <- names(contrast.list)
+									counter <- 1
+									for (n in nn) {
+										cat("<span class=\"subtitle\">Volcano plot for the contrast",n,"</span></br>")
+										cat("<div class=\"volcano\" id=\"volcano_",counter,"\" ></div></br></br>",sep="")
+										fc <- log2(make.fold.change(n,sample.list,norm.genes.expr,1))
+										for (contrast in colnames(fc)) {
+											json <- plot.volcano(fc[,contrast],sum.p.list[[n]],contrast,alt.names=gene.data.expr$gene_name,output="json")
+											cat("<script>$('#volcano_",counter,"').highcharts(",json,");</script>",sep="")
+											counter <- counter+1
+										}
+									}
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.stat$deheatmap)) {
+									cat("<h4 class=\"subtitle\">DEG heatmaps</h4>")
+									cat("<div id=\"figures_deheatmap\">")
+									nn <- names(fig.stat$deheatmap)
+									counter <- 1
+									for (n in nn) {
+										cat("<div id=\"deheatmap_",counter,"\"><span class=\"subtitle\">DEG heatmap for the contrast ",n,"</span></br>",sep="")
+										s <- gsub(PROJECT.PATH$main,".",fig.stat$deheatmap[n])
+										cat("<img src=\"",s,"\" alt=\"deg heatmap\"></br></br>")
+										counter <- counter + 1
+										cat("</div></br>")
+									}
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.stat$biodist)) {
+									cat("<h4 class=\"subtitle\">DEG biotype distributions</h4>")
+									cat("<div id=\"figures_biodist\">")
+									nn <- names(fig.stat$biodist)
+									counter <- 1
+									for (n in nn) {
+										cat("<div id=\"biodist_",counter,"\"><span class=\"subtitle\">Biotype distribution in DEG for the contrast ",n,"</span></br>",sep="")
+										s <- gsub(PROJECT.PATH$main,".",fig.stat$biodist[n])
+										cat("<img src=\"",s,"\" alt=\"deg biodist\"></br></br>")
+										cat("</div></br>")
+										counter <- counter + 1
+									}
+									cat("</div>")
+								}
+								%>
+								<div id="get_figures">
+									</br><strong>Get all the figures in 
+									<%=paste(paste("<a href=\"plots/metaseqr_figures_",fig.format,".zip\" download>",fig.format,"</a>",sep=""),collapse=", ")%>
+									format.</strong>
+								</div>
+							</div> <!-- End figures container -->
+							<h3 id="results" class="title">Results</h3>
+							<div id="results_container" style="width:1024px"> <!-- Start results container -->
+								<%
+								if (!is.null(html)) {
+									nn <- names(html)
+									for (n in nn) {
+										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>")
+										cat("<div>")
+										cat(html[[n]],"</br>")
+										cat("<strong><a href=\"lists/metaseqr_out_",n,".txt.gz\" download>Download</a> the result list for ",n,".</strong></br></br>",sep="")
+										cat("</div>")
+									}
+									counter <- 1
+									cat("<script type=\"text/javascript\">")
+									for (n in nn) {
+										cat("$('#table_",counter,"').dataTable({\"sScrollY\": 400,\"sScrollX\": 1024,\"bJQueryUI\": true,\"sPaginationType\": \"full_numbers\",\"bStateSave\": true,\"iDisplayLength\": 50});",sep="")
+										counter <- counter + 1
+									}
+									cat("</script>")
+								}
+								%>
+							</div> <!-- End results container -->
+						</div> <!-- End main accordion container -->
+
+						<!--Finally, render the accordions-->
+						<script type="text/javascript">
+							$.fn.togglepanels_h3 = function() {
+								return this.each(function() {
+									$(this).addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset")
+										.find("h3")
+										.addClass("ui-accordion-header ui-helper-reset ui-state-default ui-accordion-icons ui-corner-all ui-state-focus")
+										.attr("role","tab")
+										.attr("aria-controls","summary_container")
+										.attr("aria-selected","false")
+										.attr("tabindex","0")
+										.hover(function() { $(this).toggleClass("ui-state-hover"); })
+										.prepend('<span class="ui-accordion-header-icon ui-icon ui-icon-triangle-1-e"></span>')
+										.click(function() {
+											$(this)
+												.toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
+												.find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
+												.next().slideToggle();
+											return false;
+										})
+										.next()
+										.addClass("ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
+										.hide();
+								});
+							};
+							$.fn.togglepanels_h4 = function() {
+								return this.each(function() {
+									$(this).addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset")
+										.find("h4")
+										.addClass("ui-accordion-header ui-helper-reset ui-state-default ui-accordion-icons ui-corner-all ui-state-focus")
+										.attr("role","tab")
+										.attr("aria-controls","summary_container")
+										.attr("aria-selected","false")
+										.attr("tabindex","0")
+										.hover(function() { $(this).toggleClass("ui-state-hover"); })
+										.prepend('<span class="ui-accordion-header-icon ui-icon ui-icon-triangle-1-e"></span>')
+										.click(function() {
+											$(this)
+												.toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
+												.find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
+												.next().slideToggle();
+											return false;
+										})
+										.next()
+										.addClass("ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
+										.hide();
+								});
+							};
+							$.fn.togglepanels_h5 = function() {
+								return this.each(function() {
+									$(this).addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset")
+										.find("h5")
+										.addClass("ui-accordion-header ui-helper-reset ui-state-default ui-accordion-icons ui-corner-all ui-state-focus")
+										.attr("role","tab")
+										.attr("aria-controls","summary_container")
+										.attr("aria-selected","false")
+										.attr("tabindex","0")
+										.hover(function() { $(this).toggleClass("ui-state-hover"); })
+										.prepend('<span class="ui-accordion-header-icon ui-icon ui-icon-triangle-1-e"></span>')
+										.click(function() {
+											$(this)
+												.toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
+												.find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
+												.next().slideToggle();
+											return false;
+										})
+										.next()
+										.addClass("ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
+										.hide();
+								});
+							};
+
+							$("#report").togglepanels_h3();
+							$("#summary_container").togglepanels_h4();
+							$("#figures_container").togglepanels_h4();
+							$("#results_container").togglepanels_h4();
+							$("#toc").togglepanels_h5();
+
+							// Small hack to recalcluate the column widths of the datatable objects because they are being changed
+							// after the application of accordion
+							$("#results_container").each(function() {
+								$(this).find(".ui-accordion-header")
+								.each(function() {
+									$(this).click(function() {
+										if ($(this).next().hasClass("ui-accordion-content")) {
+											var table = $.fn.dataTable.fnTables();
+											$(table).each(function() {
+												$(this).dataTable().fnAdjustColumnSizing()
+											});
+										}
+									})
+								})
+							});
+							
+							var el = $("#contents");
+							var pos = el.position().top;
+							$(window).scroll(function() {
+								el.toggleClass("fixed", $(this).scrollTop() >= pos);
+							});
+						</script>
+					</td>
+					<td class="rightContainer"></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr> 
+		<td class="footer">
+			Copyright &copy; 2013 <a href="http://www.fleming.gr/en/investigators/Talianidis/index.html" class="whitetext" target="_blank">Talianidis Lab</a>/<a href="http://www.fleming.gr/" class="whitetext" target="_blank">BSRC Alexander Fleming</a>,  Designed by <a href="http://www.grissom.gr/pmoulos/" class="whitetext" target="_blank">Panagiotis Moulos</a>
+		</td>
+	</tr>
+	<tr>
+		<td style="height:5px; background-color:#0E38C4; padding:0px; border-width:0px;"></td>
+	</tr>
+</table>
+</body>
+</html>

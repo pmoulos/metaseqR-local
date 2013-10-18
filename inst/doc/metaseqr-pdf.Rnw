@@ -1,0 +1,256 @@
+\documentclass[a4paper]{article}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{listings}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{pdfstartview={XYZ null null 1}}
+\lstset{breaklines=true} % break long lines
+\begin{document}
+
+%\VignetteIndexEntry{RNA-Seq data analysis and meta-analysis with metaseqr}
+%\VignetteEngine{knitr::knitr}
+
+\title{RNA-Seq data analysis and meta-analysis with metaseqr}
+\author{Panagiotis Moulos}
+\maketitle
+
+During the past few years, a lot of R/Bioconductor packages have been developped for the analysis of RNA-Seq data, introducing several
+approaches. For example, packages using the negative binomial distribution to model the null hypotheses (\emph{DESeq}, \emph{edgeR}) or 
+packages using Bayesian statistics (\emph{baySeq}, \emph{NBPSeq}). In addition, packages specialized to RNA-Seq data normalization have 
+also been developed (\emph{EDASeq}). The package \emph{metaseqr} tries to provide an interface to several algorithms, similar to the recent 
+\emph{TCC} package. However, it is much simpler to use than \emph{TCC}, incoporates more algorithms for normalization and statistical 
+analysis and builds a full report with several interactive and non-interactive diagnostic plots so that the users can easily explore 
+the results and have whatever they need for this part of their research in one place. Most importantly, metaseqr provides an interface 
+for RNA-Seq data meta-analysis by providing the ability to use different algorithms for the statistical testing part and combining the 
+p-values using popular published methods (e.g. Fisher's method, Whitlock's method) and two package-specific methods (intersection, union 
+of statistically significant results). In the future, more algorithms will be incorporated in the package, with more diagnostic plots and more
+examples. This initial vignette contains just this introductory text and reference to some examples in the package documentation, which 
+we believe that at this point contains sufficient explanation to run the metaseqr pipeline.
+
+\section{Getting started}
+
+Detailed instructions on how to run the metaseqr pipeline can be found under the main documentation of the metaseqr package:
+
+<<init-metaseqr, eval=FALSE, echo=TRUE>>=
+library(metaseqr)
+help(metaseqr) # or
+help(metaseqr.main)
+@
+
+Briefly, to run metaseqr you need:
+
+\begin{itemize}
+ \item A text tab delimited file in a spreadsheet like format containing at least unique gene identifiers (corresponding to one of metaseqr's
+supported formats, for the time being Ensembl
+ \item A list of statistical contrasts for which you wish to check differential expression
+ \item An internet connection so that the interactive parts of the report can be properly rendered, as the report template points to external
+Content Delivery Networks (CDNs) distributing the appropriate JavaScript
+\end{itemize}
+
+Everything else (e.g. genomic regions annotation etc.) can be handled by the metaseqr pipeline. Some example data are included in the
+package. See the related help pages:
+
+<<help-1, eval=FALSE, echo=TRUE>>=
+help(hg18.exon.data)
+help(mm9.gene.data)
+@
+
+\section{Running the metaseqr pipeline}
+
+Running a metaseqr pipeline instance is quite straightforward. Again, see the examples in the main help page. An example and the command
+window output follow:
+
+<<data-1, eval=TRUE, echo=TRUE>>=
+data("mm9.gene.data",package="metaseqr")
+@
+
+<<head-1, eval=TRUE, echo=TRUE>>=
+head(mm9.gene.counts)
+@
+
+<<random-1, eval=TRUE, echo=TRUE>>=
+sample.list.mm9
+@
+
+<<random-2, eval=TRUE, echo=TRUE>>=
+libsize.list.mm9
+@
+
+Following is a full example with the informative messages that are printed in the command window:
+
+<<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE>>=
+library(metaseqr)
+data("mm9.gene.data",package="metaseqr")
+result <- metaseqr(
+	counts=mm9.gene.counts,
+	sample.list=sample.list.mm9,
+	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60","e15.5_vs_P0.5_vs_P60"),
+	libsize.list=libsize.list.mm9,
+	annotation="fixed",
+	org="mm9",
+	count.type="gene",
+	normalization="edger",
+	statistics="edger",
+	pcut=0.05,
+	fig.format=c("png","pdf"),
+	export.what=c("annotation","p.value","meta.p.value","adj.meta.p.value","fold.change"),
+	export.scale=c("natural","log2"),
+	export.values="normalized",
+	export.stats=c("mean","sd","cv"),
+	export.where="~/metaseqr_test",
+	restrict.cores=0.8,
+	gene.filters=list(
+		length=list(
+			length=500
+		),
+		avg.reads=list(
+			average.per.bp=100,
+			quantile=0.25
+		),
+		expression=list(
+			median=TRUE,
+			mean=FALSE,
+			quantile=NA,
+			known=NA,
+			custom=NA
+		),
+		biotype=get.defaults("biotype.filter","mm9")
+	),
+	out.list=TRUE
+)
+@
+
+To get a glimpse on the results, run:
+
+<<head-2, eval=TRUE, echo=TRUE>>=
+head(result[["data"]][["e15.5_vs_P0.5"]])
+@
+
+Check the HTML report generated in the output directory defined by the export.where argument above.
+
+Now, the same example but with more than one statistical selection algorithms and a different normalization:
+
+<<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE>>=
+library(metaseqr)
+data("mm9.gene.data",package="metaseqr")
+result <- metaseqr(
+	counts=mm9.gene.counts,
+	sample.list=sample.list.mm9,
+	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60","e15.5_vs_P0.5_vs_P60"),
+	libsize.list=libsize.list.mm9,
+	annotation="fixed",
+	org="mm9",
+	count.type="gene",
+	normalization="edaseq",
+	statistics=c("deseq","edger"),
+	meta.p="fisher",
+	pcut=0.05,
+	fig.format=c("png","pdf"),
+	export.what=c("annotation","p.value","meta.p.value","adj.meta.p.value","fold.change"),
+	export.scale=c("natural","log2"),
+	export.values="normalized",
+	export.stats=c("mean","sd","cv"),
+	export.where="~/metaseqr_test_2",
+	restrict.cores=0.8,
+	gene.filters=list(
+		length=list(
+			length=500
+		),
+		avg.reads=list(
+			average.per.bp=100,
+			quantile=0.25
+		),
+		expression=list(
+			median=TRUE,
+			mean=FALSE,
+			quantile=NA,
+			known=NA,
+			custom=NA
+		),
+		biotype=get.defaults("biotype.filter","mm9")
+	),
+	out.list=TRUE
+)
+@
+
+An additional example with human exon data (if you have a multiple core system, be very careful on how you are using the restrict.cores
+option and generally how many cores you are using with scripts purely written in R. The analysis with exon read data can very easily
+cause memory problems, so unless you have more than 64Gb of RAM available, consider setting restrict.cores to something like 0.2):
+
+<<example-3, eval=FALSE, echo=TRUE, tidy=FALSE>>=
+# A full example pipeline with exon counts
+data("hg18.exon.data",package="metaseqr")
+metaseqr(
+	counts=hg18.exon.counts,
+	sample.list=list(CON=c("CON_BR1","CON_BR2"),DOX=c("DOX_BR1","DOX_BR2")),
+	contrast=c("CON_vs_DOX"),
+	libsize.list=list(CON_BR1=17041268,CON_BR2=23579904,DOX_BR1=16018639,DOX_BR2=26294259),
+	id.col=4,
+	annotation="download",
+	org="hg18",
+	count.type="exon",
+	normalization="edaseq",
+	statistics="deseq",
+	pcut=0.05,
+	qc.plots=c(
+		"mds","biodetection","countsbio","saturation","rnacomp",
+		"boxplot","gcbias","lengthbias","meandiff","meanvar",
+		"deheatmap","volcano","biodist","filtered"
+	),
+	fig.format=c("png","pdf"),
+	export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
+	export.scale=c("natural","log2","log10","vst"),
+	export.values=c("raw","normalized"),
+	export.stats=c("mean","median","sd","mad","cv","rcv"),
+	restrict.cores=0.8,
+	gene.filters=list(
+		length=list(
+			length=500
+		),
+		avg.reads=list(
+			average.per.bp=100,
+			quantile=0.25
+		),
+		expression=list(
+			median=TRUE,
+			mean=FALSE
+		),
+		biotype=get.defaults("biotype.filter","hg18")
+	)
+)
+@
+
+\section{metaseqr components}
+
+The metaseqr package includes several functions which are responsible for running each part of the pipeline (data reading and summarization,
+filtering, normalization, statistical analysis and meta-analysis and reporting). Although metaseqr is designed to run as a pipeline, where
+all the parameters for each individual part can be passed in the main function, several of the individual functions can be run separately
+so that the more experienced user can build custom pipelines. All the HTML help pages contain analytical documentation on how to run these
+functions, their inputs and outputs and contain basic examples. For example, runnning
+
+<<help-2, eval=FALSE, echo=TRUE>>=
+help(stat.edgeR)
+@
+
+will open the help page of the wrapper function over the edgeR statistical testing algorithm which contains an example of data generation,
+processing, up to statistical selection.
+
+Most of the diagnostic plots, work with simple matrices as inputs, so they can be easily used outside the main pipeline, as long as all
+the necessary arguments are given. It should be noted that a report can be generated only when running the whole metaseqr pipeline and in
+the current version there is no support for generating custom reports.
+
+\section{R session information}
+
+<<session-info, eval=TRUE, echo=FALSE>>=
+sessionInfo()
+@
+
+\end{document}
