@@ -45,7 +45,18 @@
 #' match, the pipeline will either crash or at best, ignore several of your samples. Alternative, \code{sample.list} can be a small
 #' tab-delimited file structured as follows: he first line of the external tab delimited file should contain column names (names are
 #' not important). The first column MUST contain UNIQUE sample names and the second column MUST contain the biological condition where
-#' each of the samples in the first column should belong to. In this case, the function \code{\link{make.sample.list}} is used.
+#' each of the samples in the first column should belong to. In this case, the function \code{\link{make.sample.list}} is used. If the
+#' \code{counts} argument is missing, the \code{sample.list} argument MUST be a targets text tab-delimited file which contains the 
+#' sample names, the BAM/BED file names and the biological conditions/groups for each sample/file. The file should be text tab-delimited
+#' and structured as follows: the first line of the external tab delimited file should contain column names (names are not important).
+#' The first column MUST contain UNIQUE sample names. The second column MUST contain the raw BAM/BED files WITH their full path.
+#' Alternatively, the \code{path} argument should be provided (see below). The third column MUST contain the biological condition where
+#' each of the samples in the first column should belong to.
+#' @param path an optional path where all the BED/BAM files are placed, to be prepended to the BAM/BED file names in the targets file.
+#' If not given and if the files in the second column of the targets file do not contain a path to a directory, the current directory
+#' is assumed to be the BAM/BED file container.
+#' @param file.type the type of raw input files. It can be \code{"auto"} for auto-guessing, \code{"bed"} for BED files or \code{"bam"}
+#' for BAM files.
 #' @param contrast a character vector of contrasts to be tested in the statistical testing step(s) of the metaseqr pipeline. Each 
 #' element of the should STRICTLY have the format "ConditionA_vs_ConditionB_vs_...". A valid example based on the \code{sample.list}
 #' above is \code{contrast <- c("ConditionA_vs_ConditionB", "ConditionA_vs_ConditionC", "ConditionA_vs_ConditionB_vs_ConditionC")}. The 
@@ -112,11 +123,11 @@
 #' stands for Mutlti-Dimensional Scaling and it creates a PCA-like plot but using the MDS dimensionality reduction instead. It has
 #' been succesfully used for NGS data (e.g. see the package htSeqTools) and it shows how well samples from the same condition cluster
 #' together. For "biodetection", "countsbio", "saturation", "rnacomp", "biodist" see the vignette of NOISeq package. The "saturation"
-#' case has been rewritten in order to display more samples in a more simple way. See the help page of \code{\link{plot.noiseq.saturation}}.
+#' case has been rewritten in order to display more samples in a more simple way. See the help page of \code{\link{diagplot.noiseq.saturation}}.
 #' For "gcbias", "lengthbias", "meandiff", "meanvar" see the vignette of EDASeq package. "lenghtbias" is similar to "gcbias" but
 #' using the gene length instead of the GC content as covariate. The "boxplot" option draws boxplots of log2 transformed gene counts.
 #' The "filtered" option draws a 4-panel figure with the filtered genes per chromosome and per biotype, as absolute numbers and as
-#' fractions of the genome. See also the help page of \code{\link{plot.filtered}}. The "deheatmap" option performs hierarchical
+#' fractions of the genome. See also the help page of \code{\link{diagplot.filtered}}. The "deheatmap" option performs hierarchical
 #' clustering and draws a heatmap of differentially expressed genes. In the context of diagnostic plots, it's useful to see if samples
 #' from the same groups cluster together after statistical testing. The "volcano" option draws a volcano plot for each contrast and
 #' if a report is requested, an interactive volcano plot is presented in the HTML report. Set to \code{NULL} if you don't want any
@@ -315,6 +326,8 @@
 metaseqr <- function(
 	counts,
 	sample.list,
+	file.type=c("auto","bam","bed"),
+	path=NULL,
 	contrast=NULL,
 	libsize.list=NULL,
 	id.col=4,
@@ -378,12 +391,26 @@ metaseqr <- function(
 
 {
 	# Check essential arguments
-	if (missing(counts))
-		stop("You must provide a file with genomic region (gene, exon, etc.) counts!")
+	from.raw <- FALSE
+	if (missing(counts) && (missing(sample.list) || is.list(sample.list)))
+		stop(paste("You must provide a file with genomic region (gene, exon, etc.) counts or an input targets file to create input from!",
+			"If the counts file is missing, sample.list cannot be missing or a list! It must be a targets file with at least three columns!",
+			"See the read.targets function."))
 	if (missing(sample.list) || (!is.list(sample.list) && !file.exists(sample.list)))
 		stop("You must provide a list with condition names and sample names (same as in the counts file) or an input file to create the sample list from!")
-	if (!is.list(sample.list) && file.exists(sample.list))
+	if (!is.list(sample.list) && file.exists(sample.list) && !missing(counts))
 		sample.list <- make.sample.list(sample.list)
+	if (!is.list(sample.list) && file.exists(sample.list) && missing(counts))
+	{
+		the.list <- read.targets(sample.list,path=path)
+		sample.list <- the.list$samples
+		file.list <- the.list$files
+		if (file.type=="auto")
+			file.type <- the.list$type
+		if (is.null(file.type))
+			stop("The type of the input files could not be recognized! Please specify (BAM or BED)...")
+		from.raw <- TRUE
+	}
 
 	# Initialize environmental variables
 	if (!exists("HOME"))
@@ -417,7 +444,8 @@ metaseqr <- function(
 	{
 		counts.name <- "imported custom data frame"
 	}
-	
+
+	check.text.args("file.type",org,c("auto","bam","bed"),multiarg=FALSE)
 	check.text.args("annotation",annotation,c("embedded","download","fixed"),multiarg=FALSE)
 	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
@@ -1307,13 +1335,13 @@ metaseqr <- function(
 		for (fig in fig.format)
 		{
 			disp("Plotting in ",fig," format...")
-			fig.raw[[fig]] <- plot.metaseqr(gene.counts,sample.list,annotation=gene.data,plot.type=intersect(qc.plots,plots$raw),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # raw plots
-			fig.unorm[[fig]] <- plot.metaseqr(gene.counts,sample.list,annotation=gene.data,plot.type=intersect(qc.plots,plots$norm),is.norm=FALSE,output=fig,path=PROJECT.PATH$normalization) # un-normalized plots
-			fig.norm[[fig]] <- plot.metaseqr(norm.genes,sample.list,annotation=gene.data,plot.type=intersect(qc.plots,plots$norm),is.norm=TRUE,output=fig,path=PROJECT.PATH$normalization) # normalized plots
-			fig.stat[[fig]] <- plot.metaseqr(norm.genes.expr,sample.list,annotation=gene.data.expr,contrast.list=contrast.list,p.list=sum.p.list,thresholds=list(p=pcut,f=1),
-				plot.type=intersect(qc.plots,plots$stat),is.norm=TRUE,output=fig,path=PROJECT.PATH$statistics) # statistical plots
+			fig.raw[[fig]] <- diagplot.metaseqr(gene.counts,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$raw),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # raw plots
+			fig.unorm[[fig]] <- diagplot.metaseqr(gene.counts,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$norm),is.norm=FALSE,output=fig,path=PROJECT.PATH$normalization) # un-normalized plots
+			fig.norm[[fig]] <- diagplot.metaseqr(norm.genes,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$norm),is.norm=TRUE,output=fig,path=PROJECT.PATH$normalization) # normalized plots
+			fig.stat[[fig]] <- diagplot.metaseqr(norm.genes.expr,sample.list,annotation=gene.data.expr,contrast.list=contrast.list,p.list=sum.p.list,thresholds=list(p=pcut,f=1),
+				diagplot.type=intersect(qc.plots,plots$stat),is.norm=TRUE,output=fig,path=PROJECT.PATH$statistics) # statistical plots
 			if (!is.null(gene.data.filtered))
-				fig.other[[fig]] <- plot.metaseqr(gene.data.filtered,sample.list,annotation=total.gene.data,plot.type=intersect(qc.plots,plots$other),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # other plots
+				fig.other[[fig]] <- diagplot.metaseqr(gene.data.filtered,sample.list,annotation=total.gene.data,diagplot.type=intersect(qc.plots,plots$other),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # other plots
 			else fig.other[[fig]] <- NULL
 		}
 	}

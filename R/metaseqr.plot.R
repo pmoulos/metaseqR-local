@@ -2,24 +2,24 @@
 #'
 #' This is the main function for producing sructured quality control and informative graphs base on the results of the various steps
 #' of the metaseqr package. The graphs produced span a variety of issues like good sample reproducibility (Multi-Dimensional Scaling
-#' plot, biotype detection, heatmaps. plot.metaseqr, apart from implementing certain package-specific plots, is a wrapper around several
+#' plot, biotype detection, heatmaps. diagplot.metaseqr, apart from implementing certain package-specific plots, is a wrapper around several
 #' diagnostic plots present in other RNA-Seq analysis packages such as EDASeq and NOISeq.
 #'
 #' @param object a matrix or a data frame containing count data derived before or after the normalization procedure, filtered or not
-#' by the metaseqr's filters and/or p-value. The object can be fed to any of the plot.metaseqr plotting systems but not every plot is
+#' by the metaseqr's filters and/or p-value. The object can be fed to any of the diagplot.metaseqr plotting systems but not every plot is
 #' meaningful. For example, it's meaningless to create a "biodist" plot for a count matrix before normalization or statistical testing.
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param annotation a data.frame containing annotation elements for each row in object. Usually, a subset of the annotation obtained
 #' by \code{\link{get.annotation}} or a subset of possibly embedded annotation with the input counts table. This parameter is optional
-#' and required only when plot.type is any of "biodetection", "countsbio", "saturation","rnacomp", "biodist", "gcbias", "lengthbias" 
+#' and required only when diagplot.type is any of "biodetection", "countsbio", "saturation","rnacomp", "biodist", "gcbias", "lengthbias" 
 #' or "filtered".
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
-#' contrasts as defined in the main help page of \code{\link{metaseqr}}. This parameter is optional and required only when plot.type
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}. This parameter is optional and required only when diagplot.type
 #' is any of "deheatmap", "volcano" or "biodist".
 #' @param p.list a list of p-values for each contrast as obtained from any of the stat.* methods of the metaseqr package. This parameter
-#' is optional and required only when plot.type is any of "deheatmap", "volcano" or "biodist".
-#' @param thresholds a list with the elements "p" and "f" which are the p-value and the fold change cutoff when plot.type="volcano".
-#' @param plot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
+#' is optional and required only when diagplot.type is any of "deheatmap", "volcano" or "biodist".
+#' @param thresholds a list with the elements "p" and "f" which are the p-value and the fold change cutoff when diagplot.type="volcano".
+#' @param diagplot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
 #' additional package, somethng that is checked while running the main metaseqr function. The supported plots are "mds", "biodetection",
 #' "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff", "meanvar", "deheatmap", "volcano", "biodist",
 #' "filtered".
@@ -45,35 +45,35 @@
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.metaseqr(data.matrix,sample.list,plot.type=c("mds","boxplot"))
+#' diagplot.metaseqr(data.matrix,sample.list,diagplot.type=c("mds","boxplot"))
 #'
 #' norm.args <- get.defaults("normalization","deseq")
 #' object <- normalize.deseq(data.matrix,sample.list,norm.args)
-#' plot.metaseqr(object,sample.list,plot.type="boxplot")
+#' diagplot.metaseqr(object,sample.list,diagplot.type="boxplot")
 #'
 #' p <- stat.deseq(object)
-#' plot.metaseqr(object,sample.list,contrast.list=contrast,p.list=p,plot.type="volcano")
+#' diagplot.metaseqr(object,sample.list,contrast.list=contrast,p.list=p,diagplot.type="volcano")
 #'}
-plot.metaseqr <- function(
+diagplot.metaseqr <- function(
 	object,sample.list,annotation=NULL,contrast.list=NULL,p.list=NULL,thresholds=list(p=0.05,f=1),
-	plot.type=c("mds","biodetection","countsbio","saturation","rnacomp","boxplot","gcbias","lengthbias",
+	diagplot.type=c("mds","biodetection","countsbio","saturation","rnacomp","boxplot","gcbias","lengthbias",
 		"meandiff","meanvar","deheatmap","volcano","biodist","filtered"),
 	is.norm=FALSE,output="x11",path=NULL,...
 ) {
 	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
 	if (!is.matrix(object) && !is.data.frame(object))
 		stop("object argument must be a matrix or data frame!")
-	if (is.null(annotation) && any(plot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist","gcbias","lengthbias","filtered")))
-		stop("annotation argument is needed when plot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"biodist\", \"gcbias\", \"lengthbias\" or \"filtered\"!")
-	if (any(plot.type %in% c("deheatmap","volcano","biodist"))) {
+	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist","gcbias","lengthbias","filtered")))
+		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"biodist\", \"gcbias\", \"lengthbias\" or \"filtered\"!")
+	if (any(diagplot.type %in% c("deheatmap","volcano","biodist"))) {
 		if (is.null(contrast.list))
-			stop("contrast.list argument is needed when plot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
+			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
 		if (is.null(p.list))
-			stop("The p argument which is a list of p-values for each contrast is needed when plot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
+			stop("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
 	}
 	if (is.null(path)) path <- getwd()
-	if (is.data.frame(object) && !("filtered" %in% plot.type)) object <- as.matrix(object)
-	if (any(plot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist")))
+	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) object <- as.matrix(object)
+	if (any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist")))
 		covars <- list(
 			data=object,
 			length=annotation$end - annotation$start,
@@ -89,47 +89,47 @@ plot.metaseqr <- function(
 	other.plots <- c("filtered")
 	files <- list()
 
-	for (p in plot.type) {
+	for (p in diagplot.type) {
 		disp("  Plotting ",p,"...")
 		if (p %in% raw.plots && !is.norm) {
 			switch(p,
 				mds = {
-					files$mds <- plot.mds(object,sample.list,output=output,path=path)
+					files$mds <- diagplot.mds(object,sample.list,output=output,path=path)
 				},
 				biodetection = {
-					files$biodetection <- plot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$biodetection <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
 				},
 				countsbio = {
-					files$countsbio <- plot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$countsbio <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
 				},
 				saturation = {
-					fil <- plot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
 					files$saturation$biotype <- fil[["biotype"]]
 					files$saturation$sample <- fil[["sample"]]
 				},
 				rnacomp = {
-					files$rnacomp <- plot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$rnacomp <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
 				}
 			)
 		}
 		if (p %in% norm.plots) {
 			switch(p,
 				boxplot = {
-					files$boxplot <- plot.boxplot(object,name=sample.list,is.norm=is.norm,output=output,path=path,...)
+					files$boxplot <- diagplot.boxplot(object,name=sample.list,is.norm=is.norm,output=output,path=path,...)
 				},
 				gcbias = {
-					files$gcbias <- plot.edaseq(object,sample.list,covar=annotation$gc_content,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					files$gcbias <- diagplot.edaseq(object,sample.list,covar=annotation$gc_content,is.norm=is.norm,which.plot=p,output=output,path=path,...)
 				},
 				lengthbias = {
-					files$lengthbias <- plot.edaseq(object,sample.list,covar=annotation$end-annotation$start,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					files$lengthbias <- diagplot.edaseq(object,sample.list,covar=annotation$end-annotation$start,is.norm=is.norm,which.plot=p,output=output,path=path,...)
 				},
 				meandiff = {
-					fil <- plot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
 					for (n in names(fil))
 						files$meandiff[[n]] <- unlist(fil[[n]])
 				},
 				meanvar = {
-					fil <- plot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
 					for (n in names(fil))
 						files$meanvar[[n]] <- unlist(fil[[n]])
 				}
@@ -142,16 +142,16 @@ plot.metaseqr <- function(
 				mat <- as.matrix(object[,match(samples,colnames(object))])
 				switch(p,
 					deheatmap = {
-						files$deheatmap[[cnt]] <- plot.de.heatmap(mat,cnt,output=output,path=path)
+						files$deheatmap[[cnt]] <- diagplot.de.heatmap(mat,cnt,output=output,path=path)
 					},
 					volcano = {
 						fc <- log2(make.fold.change(cnt,sample.list,object,1))
 						for (contrast in colnames(fc)) {
-							files$volcano[[contrast]] <- plot.volcano(fc[,contrast],p.list[[cnt]],contrast,fcut=thresholds$f,pcut=thresholds$p,output=output,path=path)
+							files$volcano[[contrast]] <- diagplot.volcano(fc[,contrast],p.list[[cnt]],contrast,fcut=thresholds$f,pcut=thresholds$p,output=output,path=path)
 						}
 					},
 					biodist = {
-						files$biodist[[cnt]] <- plot.noiseq(object,sample.list,covars,which.plot=p,output=output,biodist.opts=list(p=p.list[[cnt]],pcut=thresholds$p,name=cnt),path=path,...)
+						files$biodist[[cnt]] <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,biodist.opts=list(p=p.list[[cnt]],pcut=thresholds$p,name=cnt),path=path,...)
 					}
 				)
 			}
@@ -159,7 +159,7 @@ plot.metaseqr <- function(
 		if (p %in% other.plots) {
 			switch(p,
 				filtered = {
-					files$filtered <- plot.filtered(object,annotation,output=output,path=path)
+					files$filtered <- diagplot.filtered(object,annotation,output=output,path=path)
 				}
 			)
 		}
@@ -174,7 +174,7 @@ plot.metaseqr <- function(
 #' internal use but can be easily used as stand-alone. It can colors boxes based on group depending on the name argument.
 #'
 #' @param mat the count data matrix.
-#' @param name the names of the samples plotted on the boxplot. If NULL, the function check the column names of mat. If they are also
+#' @param name the names of the samples plotted on the boxdiagplot. If NULL, the function check the column names of mat. If they are also
 #' NULL, sample names are autogenerated. If name="none", no sample names are plotted. If name is a list, it should be the sample.list
 #' argument provided to the manin metaseqr function. In that case, the boxes are colored per group.
 #' @param log.it whether to log transform the values of mat or not. It can be TRUE, FALSE or "auto" for auto-detection. Auto-detection
@@ -195,13 +195,13 @@ plot.metaseqr <- function(
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.boxplot(data.matrix,sample.list)
+#' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.args <- get.defaults("normalization","deseq")
 #' object <- normalize.deseq(data.matrix,sample.list,norm.args)
-#' plot.boxplot(object,sample.list)
+#' diagplot.boxplot(object,sample.list)
 #'}
-plot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm=FALSE,output="x11",path=NULL,...) {
+diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm=FALSE,output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	if (is.norm)
 		status<- "normalized"
@@ -277,9 +277,9 @@ plot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm=FAL
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.mds(data.matrix,sample.list)
+#' diagplot.mds(data.matrix,sample.list)
 #'}
-plot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",path=NULL,...) {
+diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	classes <- as.factor(as.class.vector(sample.list))
 	design <- as.numeric(classes)
@@ -317,7 +317,7 @@ plot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",pa
 #'
 #' A wrapper around the plotting functions availale in the EDASeq normalization Bioconductor package. For analytical explanation of
 #' each plot please see the vignette of the EDASeq package. It is best to use this function through the main plotting function
-#' \code{\link{plot.metaseqr}}.
+#' \code{\link{diagplot.metaseqr}}.
 #'
 #' @param x the count data matrix.
 #' @param sample.list the list containing condition names and the samples under each condition.
@@ -342,9 +342,9 @@ plot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",pa
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
 #' gc <- runif(nrow(data.matrix))
-#' plot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar","meandiff","gcbias"))
+#' diagplot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar","meandiff","gcbias"))
 #'}
-plot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("meanvar","meandiff","gcbias","lengthbias"),output="x11",path=NULL,...) {
+diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("meanvar","meandiff","gcbias","lengthbias"),output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	check.text.args("which.plot",which.plot,c("meanvar","meandiff","gcbias","lengthbias"),multiarg=TRUE)
 	if (is.null(covar) && which.plot %in% c("gcbias","lengthbias"))
@@ -421,7 +421,7 @@ plot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("mea
 #'
 #' A wrapper around the plotting functions availale in the NOISeq RNA-Seq analysisBioconductor package. For analytical explanation
 #' of each plot please see the vignette of the NOISeq package. It is best to use this function through the main plotting function
-#' \code{\link{plot.metaseqr}}.
+#' \code{\link{diagplot.metaseqr}}.
 #'
 #' @param x the count data matrix.
 #' @param sample.list the list containing condition names and the samples under each condition.
@@ -431,7 +431,7 @@ plot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("mea
 #' each experimental condition) and biotype (each gene's biotype as depicted in Ensembl-like annotations).
 #' @param which.plot the NOISeq package plot to generate. It can be one or more of "biodetection", "countsbio", "saturation", "rnacomp"
 #' or "biodist". Please refer to the documentation of the EDASeq package for details on the use of these plots. The which.plot="saturation"
-#' case is modified to be more informative by producing two kinds of plots. See \code{\link{plot.noiseq.saturation}}.
+#' case is modified to be more informative by producing two kinds of plots. See \code{\link{diagplot.noiseq.saturation}}.
 #' @param biodist.opts a list with the following members: p (a vector of p-values, e.g. the p-values of a contrast), pcut (a unique
 #' number depicting a p-value cutoff, required for the "biodist" case), name (a name for the "biodist" plot, e.g. the name of the
 #' contrast.
@@ -467,9 +467,9 @@ plot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("mea
 #'   biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",nrow(data.matrix)/2))
 #' )
 #' p <- runif(nrow(data.matrix))
-#' plot.noiseq(data.matrix,sample.list,covars=covars,biodist.opts=list(p=p,pcut=0.1,name="A_vs_B"))
+#' diagplot.noiseq(data.matrix,sample.list,covars=covars,biodist.opts=list(p=p,pcut=0.1,name="A_vs_B"))
 #'}
-plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "countsbio", "saturation", "rnacomp", "biodist"),output="x11",
+diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "countsbio", "saturation", "rnacomp", "biodist"),output="x11",
 	biodist.opts=list(p=NULL,pcut=NULL,name=NULL),path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	# covars is a list of gc-content, factors, length, biotype, chromosomes, factors, basically copy of the noiseq object
@@ -501,7 +501,7 @@ plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "count
 	)
 	switch(which.plot,
 		biodetection = {
-			plot.data <- NOISeq::dat(local.obj,type=which.plot)
+			diagplot.data <- NOISeq::dat(local.obj,type=which.plot)
 			samples <- unlist(sample.list)
 			fil <- character(length(samples))
 			names(fil) <- samples
@@ -511,12 +511,12 @@ plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "count
 					graphics.open(output,fil[samples[i]],width=9,height=7)
 				else
 					graphics.open(output,fil[samples[i]],width=1024,height=768)
-				explo.plot(plot.data,samples=i)
+				explo.plot(diagplot.data,samples=i)
 				graphics.close(output)
 			}
 		},
 		countsbio = {
-			plot.data <- NOISeq::dat(local.obj,type=which.plot,factor=NULL)
+			diagplot.data <- NOISeq::dat(local.obj,type=which.plot,factor=NULL)
 			samples <- unlist(sample.list)
 			fil <- character(length(samples))
 			names(fil) <- samples
@@ -526,20 +526,20 @@ plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "count
 					graphics.open(output,fil[samples[i]],width=9,height=7)
 				else
 					graphics.open(output,fil[samples[i]],width=1024,height=768)
-				explo.plot(plot.data,samples=i,plottype="boxplot")
+				explo.plot(diagplot.data,samples=i,plottype="boxplot")
 				graphics.close(output)
 			}
 		},
 		saturation = { # Up to 12 samples... Hmmm... I have to improvise
-			plot.data <- NOISeq::dat(local.obj,k=0,ndepth=9,type=which.plot) # For 10 saturation points
-			d2s <- dat2save(plot.data)
-			fil <- plot.noiseq.saturation(d2s,output,covars$biotype,path=path)
+			diagplot.data <- NOISeq::dat(local.obj,k=0,ndepth=9,type=which.plot) # For 10 saturation points
+			d2s <- dat2save(diagplot.data)
+			fil <- diagplot.noiseq.saturation(d2s,output,covars$biotype,path=path)
 		},
 		rnacomp = {
-			plot.data <- NOISeq::dat(local.obj,type="cd")
+			diagplot.data <- NOISeq::dat(local.obj,type="cd")
 			fil <- file.path(path,paste(which.plot,".",output,sep=""))
 			graphics.open(output,fil)
-			explo.plot(plot.data,main="RNA composition")
+			explo.plot(diagplot.data,main="RNA composition")
 			grid()
 			graphics.close(output)
 		},
@@ -603,11 +603,11 @@ plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "count
 
 #' Simpler implementation of saturation plots inspired from NOISeq package
 #'
-#' Helper function for \code{\link{plot.noiseq}} to plot feature detection saturation as presented in the NOISeq package vignette.
+#' Helper function for \code{\link{diagplot.noiseq}} to plot feature detection saturation as presented in the NOISeq package vignette.
 #' It has two main outputs: a set of figures, one for each input sample depicting the saturation for each biotype and one single
 #' multiplot which depicts the saturation of all samples for each biotype. It expands the saturation plots of NOISeq by allowing
-#' more samples to be examined in a simpler way. Don't use this function directly. Use either \code{\link{plot.metaseqr}} or 
-#' \code{\link{plot.noiseq}}.
+#' more samples to be examined in a simpler way. Don't use this function directly. Use either \code{\link{diagplot.metaseqr}} or 
+#' \code{\link{diagplot.noiseq}}.
 #'
 #' @param x the count data matrix.
 #' @param o one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
@@ -623,9 +623,9 @@ plot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "count
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",nrow(data.matrix)/2))
-#' plot.noiseq.saturation(data.matrix,"x11",biotype)
+#' diagplot.noiseq.saturation(data.matrix,"x11",biotype)
 #'}
-plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
+diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 	if (is.null(path)) path <- getwd()
 	total.biotypes <- table(tb)
 	the.biotypes <- names(tb)
@@ -655,8 +655,8 @@ plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		ylim.ab <- range(yab[,2:ncol(yab)])
 		ylim.nab <- range(ynab[,2:ncol(ynab)])
 		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lty=2,lwd=1.5,mfrow=c(1,2))
-		plot.new()
-		plot.window(xlim,ylim.nab)
+		diagplot.new()
+		diagplot.window(xlim,ylim.nab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.nab,10))
 		title(main="Non abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
@@ -677,8 +677,8 @@ plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 			box.lty=0,x.intersp=0.5,cex=0.6,text.font=2,
 			col=colspace[1:(ncol(ynab)-1)],pch=pchspace[1:(ncol(ynab)-1)]
 		)
-		plot.new()
-		plot.window(xlim,ylim.ab)
+		diagplot.new()
+		diagplot.window(xlim,ylim.ab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.ab,10))
 		title(main="Abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
@@ -716,8 +716,8 @@ plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		y <- do.call("cbind",y)
 		xlim <- range(do.call("c",depth))
 		ylim <- range(y)
-		plot.new()
-		plot.window(xlim,ylim)
+		diagplot.new()
+		diagplot.window(xlim,ylim)
 		axis(1,at=pretty(xlim,5),labels=as.character(pretty(xlim,5)/1e+6),line=0.5)
 		axis(2,at=pretty(ylim,5),line=0.5)
 		title(main=b,xlab="Depth in millions of reads",ylab="Detected features")
@@ -745,7 +745,7 @@ plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #'
 #' @param f the fold changes which are to be plotted on the x-axis.
 #' @param p the p-values whose -log10 transformation is going to be plotted on the y-axis.
-#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano plot.
+#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano diagplot.
 #' @param fcut a fold change cutoff so as to draw two vertical lines indicating the cutoff threshold for biological significance.
 #' @param pcut a p-value cutoff so as to draw a horizontal line indicating the cutoff threshold for statistical significance.
 #' @param alt.names an optional vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique names of f or p (one of
@@ -770,10 +770,10 @@ plot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #' ma <- apply(M[,sample.list$A],1,mean)
 #' mb <- apply(M[,sample.list$B],1,mean)
 #' f <- log2(mb/ma)
-#' plot.volcano(f,p,con=contrast)
-#' j <- plot.volcano(f,p,con=contrast,output="json")
+#' diagplot.volcano(f,p,con=contrast)
+#' j <- diagplot.volcano(f,p,con=contrast,output="json")
 #'}
-plot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x11",path=NULL,...) { # output can be json here...
+diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x11",path=NULL,...) { # output can be json here...
 	if (is.null(path)) path <- getwd()
 	if (is.null(con))
 		con <- conn <- ""
@@ -818,8 +818,8 @@ plot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x1
 	}
 	if (output!="json") {
 		par(cex.main=1.1,cex.lab=1.1,cex.axis=1.1,font.lab=2,font.axis=2,pty="m",lwd=1.5)
-		plot.new()
-		plot.window(xlim,ylim)
+		diagplot.new()
+		diagplot.window(xlim,ylim)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)))
 		axis(2,at=pretty(ylim,10))
 		title(paste(main="Volcano plot",con),xlab="Fold change",ylab="-log10(p-value)")
@@ -972,7 +972,7 @@ plot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x1
 #' e.g. whether samples belonging to the same group cluster together.
 #'
 #' @param x the data matrix to create a heatmap for.
-#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano plot.
+#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano diagplot.
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
 #' "bmp", "pdf", "ps".
 #' @param path the path to create output files.
@@ -989,9 +989,9 @@ plot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x1
 #' contrast <- "A_vs_B"
 #' M <- norm.edger(data.matrix,sample.list)
 #' p <- stat.edger(M,sample.list,contrast)
-#' plot.de.heatmap(data.matrix[p[[1]]<0.05])
+#' diagplot.de.heatmap(data.matrix[p[[1]]<0.05])
 #'}
-plot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
+diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	if (is.null(con))
 		con <- conn <- ""
@@ -1032,9 +1032,9 @@ plot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 #' \dontrun{
 #' y <- get.annotation("mm9","gene")
 #' x <- y[-sample(1:nrow(y),10000),]
-#' plot.filtered(x,y)
+#' diagplot.filtered(x,y)
 #'}
-plot.filtered <- function(x,y,output="x11",path=NULL,...) {
+diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	fil <- file.path(path,paste("filtered_genes.",output,sep=""))
 	if (output %in% c("pdf","ps","x11"))
@@ -1060,8 +1060,8 @@ plot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Chromosomes
 	barx.chr <- barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),yaxt="n",xaxt="n",plot=FALSE)
-	plot.new()
-	plot.window(xlim=c(0,ceiling(max(barx.chr))),ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
+	diagplot.new()
+	diagplot.window(xlim=c(0,ceiling(max(barx.chr))),ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(chr)+ceiling(max(chr)/10))),cex.axis=0.9,padj=1,font=2)
 	text(x=barx.chr,y=chr,label=barlab.chr,cex=0.7,font=2,col="green3",adj=c(0.5,-1.3))
 	title(main="Filtered genes per chromosome",cex.main=1.1)
@@ -1071,8 +1071,8 @@ plot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Biotypes
 	barx.bt <- barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),yaxt="n",xaxt="n",plot=FALSE)
-	plot.new()
-	plot.window(xlim=c(0,ceiling(max(barx.bt))),ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
+	diagplot.new()
+	diagplot.window(xlim=c(0,ceiling(max(barx.bt))),ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(bt)+ceiling(max(bt)/10))),cex.axis=0.9,padj=1,font=2)
 	text(x=barx.bt,y=bt,label=barlab.bt,cex=0.7,font=2,col="blue",adj=c(0.5,-1.3),xpd=TRUE)
 	title(main="Filtered genes per biotype",cex.main=1.1)
@@ -1082,9 +1082,9 @@ plot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Chromosome percentage
 	barx.per.chr <- barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),yaxt="n",xaxt="n",plot=FALSE)
-	plot.new()
+	diagplot.new()
 	par(mar=c(9,4,1,1))
-	plot.window(xlim=c(0,max(barx.per.chr)),ylim=c(0,max(per.chr)))
+	diagplot.window(xlim=c(0,max(barx.per.chr)),ylim=c(0,max(per.chr)))
 	#axis(1,at=barx.per.chr,labels=names(per.chr),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
 	axis(1,at=barx.per.chr,labels=FALSE,tcl=-0.3,col="lightgrey")
 	axis(2,at=seq(0,max(per.chr),length.out=5),labels=formatC(seq(0,max(per.chr),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
@@ -1096,9 +1096,9 @@ plot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Biotype percentage
 	barx.per.bt <- barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),yaxt="n",xaxt="n",plot=FALSE)
-	plot.new()
+	diagplot.new()
 	par(mar=c(9,4,1,1))
-	plot.window(xlim=c(0,max(barx.per.bt)),ylim=c(0,max(per.bt)))
+	diagplot.window(xlim=c(0,max(barx.per.bt)),ylim=c(0,max(per.bt)))
 	#axis(1,at=barx.per.bt,labels=names(per.bt),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
 	axis(1,at=barx.per.bt,labels=FALSE,tcl=-0.3,col="lightgrey")
 	axis(2,at=seq(0,max(per.bt),length.out=5),labels=formatC(seq(0,max(per.bt),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)

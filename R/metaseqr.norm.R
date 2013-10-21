@@ -20,7 +20,7 @@
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.boxplot(data.matrix,sample.list)
+#' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' lengths <- round(1000*runif(nrow(data.matrix)))
 #' starts <- round(1000*runif(nrow(data.matrix)))
@@ -31,7 +31,7 @@
 #'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
 #' )
 #' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data=gene.data)
-#' plot.boxplot(norm.data.matrix,sample.list)
+#' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
 normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,output=c("matrix","native")) {
 	if (is.null(norm.args))
@@ -106,10 +106,10 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.boxplot(data.matrix,sample.list)
+#' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
-#' plot.boxplot(norm.data.matrix,sample.list)
+#' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
 normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("matrix","native")) {
 	if (is.null(norm.args))
@@ -149,10 +149,10 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.boxplot(data.matrix,sample.list)
+#' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
-#' plot.boxplot(norm.data.matrix,sample.list)
+#' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
 normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("matrix","native")) {
 	if (is.null(norm.args))
@@ -211,7 +211,7 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
-#' plot.boxplot(data.matrix,sample.list)
+#' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' lengths <- round(1000*runif(nrow(data.matrix)))
 #' starts <- round(1000*runif(nrow(data.matrix)))
@@ -222,7 +222,7 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
 #' )
 #' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)
-#' plot.boxplot(norm.data.matrix,sample.list)
+#' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
 normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,log.offset=1,output=c("matrix","native")) {
 	if (is.null(norm.args))

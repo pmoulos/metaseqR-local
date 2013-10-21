@@ -934,7 +934,7 @@ make.contrast.list <- function(contrast,sample.list) {
 #'
 #' Create the main sample list from an external file.
 #'
-#' @param input a tab-delimited file structured as follows: he first line of the external tab delimited file should contain column 
+#' @param input a tab-delimited file structured as follows: the first line of the external tab delimited file should contain column 
 #' names (names are not important). The first column MUST contain UNIQUE sample names and the second column MUST contain the biological
 #' condition where each of the samples in the first column should belong to.
 #' @return A named list whose names are the conditions of the experiments and its members are the samples belonging to each condition.
@@ -955,7 +955,7 @@ make.sample.list <- function(input) {
 	conditions <- unique(as.character(tab[,2]))
 	if (length(samples) != length(unique(samples)))
 		stop("Sample names must be unique for each sample!")
-	sample.list <- vector("list",conditions)
+	sample.list <- vector("list",length(conditions))
 	names(sample.list) <- conditions
 	for (n in conditions)
 		sample.list[[n]] <- samples[which(as.character(tab[,2]))==n]

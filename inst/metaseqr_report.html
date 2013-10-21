@@ -467,7 +467,7 @@
 										cat("<div class=\"volcano\" id=\"volcano_",counter,"\" ></div></br></br>",sep="")
 										fc <- log2(make.fold.change(n,sample.list,norm.genes.expr,1))
 										for (contrast in colnames(fc)) {
-											json <- plot.volcano(fc[,contrast],sum.p.list[[n]],contrast,alt.names=gene.data.expr$gene_name,output="json")
+											json <- diagplot.volcano(fc[,contrast],sum.p.list[[n]],contrast,alt.names=gene.data.expr$gene_name,output="json")
 											cat("<script>$('#volcano_",counter,"').highcharts(",json,");</script>",sep="")
 											counter <- counter+1
 										}
