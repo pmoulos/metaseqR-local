@@ -138,6 +138,12 @@
 						<div id="report"> <!-- Start main accordion container -->
 							<h3 id="summary" class="title">Summary </h3>
 							<div id="summary_container"> <!-- Start summary container -->
+								<h4 id="summary_summary" class="subtitle">Input options </h4>
+								<div id="summary_summary_container">
+									<strong>Summary: </strong>
+									Here we are going to write a small methods summary with a lots of opening and closing brew tags refering
+									to several aspects of the analysis. As a template, we have the supplementary methods of the Pr-Set7 paper.
+								</div>
 								<h4 id="summary_input" class="subtitle">Input options </h4>
 								<div id="summary_input_container">
 									<strong>Read counts file:</strong> <%=counts.name%></br>
@@ -297,7 +303,8 @@
 								if (!is.null(fig.raw$mds)) {
 									cat("<h4 class=\"subtitle\">Multidimensional scaling</h4>")
 									cat("<div id=\"figures_mds\">")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\">")
+									cat("<div>",,"</br></br></div>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\"></div>")
 									cat("</div>")
 								}
 								%>
@@ -305,8 +312,9 @@
 								if (!is.null(fig.raw$biodetection)) {
 									cat("<h4 class=\"subtitle\">Biotype detection</h4>")
 									cat("<div id=\"figures_biodetection\"> ")
+									cat("<div>",,"</br></br></div>")
 									for (s in gsub(PROJECT.PATH$main,".",fig.raw$biodetection))
-										cat("<img src=\"",s,"\" alt=\"biotype detection\"></br></br>")
+										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
 									cat("</div>")
 								}
 								%>								
@@ -314,8 +322,9 @@
 								if (!is.null(fig.raw$countsbio)) {
 									cat("<h4 class=\"subtitle\">Biotype detection counts</h4>")
 									cat("<div id=\"figures_countsbio\">")
+									cat("<div>",,"</br></br></div>")
 									for (s in gsub(PROJECT.PATH$main,".",fig.raw$countsbio))
-										cat("<img src=\"",s,"\" alt=\"biotype detection\"></br></br>")
+										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
 									cat("</div>")
 								}
 								%>
@@ -323,11 +332,12 @@
 								if (!is.null(fig.raw$saturation)) {
 									cat("<h4 class=\"subtitle\">Read and biotype saturation</h4>")
 									cat("<div id=\"figures_saturation\">")
+									cat("<div>",,"</br></br></div>")
 									cat("<span class=\"subtitle\">Read saturation per biotype for all samples</span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\"></br></br>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\"></br></br></div>")
 									cat("<span class=\"subtitle\">Read saturation per sample for all biotypes </span></br>")
 									for (s in gsub(PROJECT.PATH$main,".",fig.raw$saturation$sample))
-										cat("<img src=\"",s,"\" alt=\"sample biotype saturation\"></br></br>")
+										cat("<div><img src=\"",s,"\" alt=\"sample biotype saturation\"></br></br></div>")
 									cat("</div>")
 								}
 								%>
@@ -335,7 +345,8 @@
 								if (!is.null(fig.raw$rnacomp)) {
 									cat("<h4 class=\"subtitle\">RNA composition </h4>")
 									cat("<div id=\"figures_rnacomp\">")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$rnacomp),"\" alt=\"RNA composition\">")
+									cat("<div>",,"</br></br></div>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$rnacomp),"\" alt=\"RNA composition\"></div>")
 									cat("</div>")
 								}
 								%>
@@ -343,6 +354,7 @@
 								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot)) {
 									cat("<h4 class=\"subtitle\">Boxplots</h4>")
 									cat("<div id=\"figures_boxplot\">")
+									cat("<div>",,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$boxplot)) {
@@ -360,6 +372,7 @@
 								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias)) {
 									cat("<h4 class=\"subtitle\">GC content bias</h4>")
 									cat("<div id=\"figures_gcbias\">")
+									cat("<div>",,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$gcbias)) {
@@ -377,6 +390,7 @@
 								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias)) {
 									cat("<h4 class=\"subtitle\">Gene length bias</h4>")
 									cat("<div id=\"figures_lengthbias\">")
+									cat("<div>",,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")	
 								}
 								if (!is.null(fig.unorm$lengthbias)) {
@@ -394,6 +408,7 @@
 								if (!is.null(fig.unorm$meandiff) || !is.null(fig.norm$meandiff)) {
 									cat("<h4 class=\"subtitle\">Mean-difference</h4>")
 									cat("<div id=\"figures_meandiff\">")
+									cat("<div>",,"</br></br></div>")
 									if (is.null(fig.unorm$meandiff))
 										nn <- names(fig.norm$meandiff)
 									else
@@ -423,6 +438,7 @@
 								if (!is.null(fig.unorm$meanvar) || !is.null(fig.norm$meanvar)) {
 									cat("<h4 class=\"subtitle\">Mean-variance</h4>")
 									cat("<div id=\"figures_meanvar\">")
+									cat("<div>",,"</br></br></div>")
 									if (is.null(fig.unorm$meanvar))
 										nn <- names(fig.norm$meanvar)
 									else
@@ -452,7 +468,8 @@
 								if (!is.null(fig.other$filtered)) {
 									cat("<h4 class=\"subtitle\">Biotype distribution of filtered genes</h4>")
 									cat("<div id=\"figures_filtered\">")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\">")
+									cat("<div>",,"</br></br></div>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\"></div>")
 									cat("</div>")
 								}
 								%>
@@ -460,6 +477,7 @@
 								if (!is.null(fig.stat$volcano)) {
 									cat("<h4 class=\"subtitle\">Volcano plots</h4>")
 									cat("<div id=\"figures_volcano\">")
+									cat("<div>",,"</br></br></div>")
 									nn <- names(contrast.list)
 									counter <- 1
 									for (n in nn) {
@@ -478,6 +496,7 @@
 								<%
 								if (!is.null(fig.stat$deheatmap)) {
 									cat("<h4 class=\"subtitle\">DEG heatmaps</h4>")
+									cat("<div>",,"</br></br></div>")
 									cat("<div id=\"figures_deheatmap\">")
 									nn <- names(fig.stat$deheatmap)
 									counter <- 1
@@ -495,6 +514,7 @@
 								if (!is.null(fig.stat$biodist)) {
 									cat("<h4 class=\"subtitle\">DEG biotype distributions</h4>")
 									cat("<div id=\"figures_biodist\">")
+									cat("<div>",,"</br></br></div>")
 									nn <- names(fig.stat$biodist)
 									counter <- 1
 									for (n in nn) {
@@ -521,6 +541,8 @@
 									for (n in nn) {
 										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>")
 										cat("<div>")
+										cat("<div>The following table presents the results for the contrast ",nn,". The fields of the table correspond to the ",
+										"requested features to be exported. The table can be searched using the search field on the top right</br></br></div>",sep="")
 										cat(html[[n]],"</br>")
 										cat("<strong><a href=\"lists/metaseqr_out_",n,".txt.gz\" download>Download</a> the result list for ",n,".</strong></br></br>",sep="")
 										cat("</div>")

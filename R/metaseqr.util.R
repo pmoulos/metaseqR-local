@@ -1141,6 +1141,38 @@ make.report.messages <- function(lang) {
 					mad="Median Absolute Deviation (MAD)",
 					cv="Coefficient of Variation",
 					rcv="Robust Coefficient of Variation"
+				),
+				explain=list(
+					mds=paste(
+						"The Multi-Dimensional Scaling (MDS) plots comprise a means of visualizing the level of similarity of",
+						"individual cases of a dataset. It is similar to Principal Component Analysis (PCA), but instead of using",
+						"the covariance matrix to find similarities among cases, MDS is using absolute distance metrics such as",
+						"the classical Euclidean distance. Because of the relative linear relations among sequencing samples, it",
+						"provides a more realistic clustering among samples. MDS serves quality control and it can be interpreted",
+						"as follows: when the distance among samples of the same biological condition in the MDS space is small,"
+						"this is an indication of high correlation and reproducibility among them. When this distance is larger",
+						"or heterogeneous (e.g. the 3rd sample of a triplicate set is further from the other 2), this comprises an",
+						"indication of low correlation and reproducibility among samples. It can help exclude poor samples from",
+						"further analysis.",collapse=" "
+					),
+					biodetection="Biotype detection",
+					countsbio="Biotype counts",
+					saturation="Sample and biotype saturation",
+					rnacomp="RNA composition",
+					boxplot=paste(
+						"The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of",
+						"a bar with extending lines. Write the rest of boxplot explanation...",
+						collaps=" "
+					),
+					gcbias="GC-content bias",
+					lengthbias="Transcript length bias",
+					meandiff="Mean-difference plot",
+					meanvar="Mean-variance plot",
+					deheatmap="DEG heatmap",
+					volcano="Volcano plot",
+					biodist="DEG biotype detection",
+					filtered="Filtered biotypes",
+					none="No plot"
 				)
 			)
 		}
