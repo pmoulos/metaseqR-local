@@ -1,8 +1,3 @@
-# TODO: Think of some pre-defined settings for RNA-Seq analysis, e.g. strict: exon filter + only coding biotype + length > 750, loose: less strict exon filter + more biotypes + length > 500 etc.
-# TODO: Write evaluation functions for filters
-# TODO: Write evaluation functions for normalization and statistica list arguments
-# TODO: Study about efficiency of statistical algorithms and use it to make weights for the Whitlock method (e.g. Soneson and Delorenzi, 2013)
-
 #' The main metaseqr pipeline
 #'
 #' This function is the main metaseqr workhorse and implements the main metaseqr workflow which performs data read, filtering, normalization 
@@ -38,7 +33,7 @@
 #' a lot of diagnostic plots will not be available. If the HUGO gene symbols are missing, the final annotation will contain only
 #' gene accessions and thus be less comprehensible. Generally, it's best to set the \code{annotation} parameter to "download" or "fixed"
 #' to ensure the most comprehensible results. Finally, counts can be a data frame satisfying the above conditions. It is a data
-#' frame by default when \code{bam2metaseqr} is used.
+#' frame by default when \code{read2count} is used.
 #' @param sample.list a list containing condition names and the samples under each condition. It should have the format \code{sample.list <-
 #' list(ConditionA=c("Sample_A1", "Sample_A2", "Sample_A3"), ConditionB=c("Sample_B1", "Sample_B2"), ConditionC=c("Sample_C1", "Sample_C2"))}.
 #' The names of the samples in list members MUST match the column names containing the read counts in the counts file. If they do
@@ -55,8 +50,8 @@
 #' @param path an optional path where all the BED/BAM files are placed, to be prepended to the BAM/BED file names in the targets file.
 #' If not given and if the files in the second column of the targets file do not contain a path to a directory, the current directory
 #' is assumed to be the BAM/BED file container.
-#' @param file.type the type of raw input files. It can be \code{"auto"} for auto-guessing, \code{"bed"} for BED files or \code{"bam"}
-#' for BAM files.
+#' @param file.type the type of raw input files. It can be \code{"auto"} for auto-guessing, \code{"bed"} for BED files, \code{"sam"}
+#' for SAM files or \code{"bam"} for BAM files.
 #' @param contrast a character vector of contrasts to be tested in the statistical testing step(s) of the metaseqr pipeline. Each 
 #' element of the should STRICTLY have the format "ConditionA_vs_ConditionB_vs_...". A valid example based on the \code{sample.list}
 #' above is \code{contrast <- c("ConditionA_vs_ConditionB", "ConditionA_vs_ConditionC", "ConditionA_vs_ConditionB_vs_ConditionC")}. The 
@@ -119,11 +114,12 @@
 #' @param preset an analysis strictness preset. Not yet implemented but in the end it should be a vector like c("strict","loose",
 #' "verystrict","everything") etc.
 #' @param qc.plots a set of diagnostic plots to show/create. It can be one or more of "mds", "biodetection", "countsbio", "saturation",
-#' "rnacomp", "filtered", "boxplot", "gcbias", "lengthbias", "meandiff", "meanvar", "deheatmap", "volcano", "biodist". The "mds"
+#' "rnacomp", "readnoise", "filtered", "boxplot", "gcbias", "lengthbias", "meandiff", "meanvar", "deheatmap", "volcano", "biodist". The "mds"
 #' stands for Mutlti-Dimensional Scaling and it creates a PCA-like plot but using the MDS dimensionality reduction instead. It has
 #' been succesfully used for NGS data (e.g. see the package htSeqTools) and it shows how well samples from the same condition cluster
-#' together. For "biodetection", "countsbio", "saturation", "rnacomp", "biodist" see the vignette of NOISeq package. The "saturation"
+#' together. For "biodetection", "countsbio", "saturation", "rnacomp", "readnoise", "biodist" see the vignette of NOISeq package. The "saturation"
 #' case has been rewritten in order to display more samples in a more simple way. See the help page of \code{\link{diagplot.noiseq.saturation}}.
+#' In addition, the "readnoise" plots represent an older version or the RNA composition plot included in older versions of NOISeq.
 #' For "gcbias", "lengthbias", "meandiff", "meanvar" see the vignette of EDASeq package. "lenghtbias" is similar to "gcbias" but
 #' using the gene length instead of the GC content as covariate. The "boxplot" option draws boxplots of log2 transformed gene counts.
 #' The "filtered" option draws a 4-panel figure with the filtered genes per chromosome and per biotype, as absolute numbers and as
@@ -175,7 +171,7 @@
 #' implemented in future versions and users are encouraged to propose exon filter ideas to the author by mail. See \code{metaseqr}
 #' usage for the defaults. Set exon.filters=NULL to not apply any exon filtering.
 #' @section Gene filters: The gene filters are a set of filters applied to gene expression as this is manifested through the read
-#' present on each gene and are preferably applied after normalization. These filters can be applied both when the input file or
+#' presence on each gene and are preferably applied after normalization. These filters can be applied both when the input file or
 #' data frame contains exon read counts and gene read counts. Such filter can be for example "accept all genes above a certain count
 #' threshold" or "accept all genes with expression above the median of the normalized counts distribution" or "accept all with length
 #' above a certain threshold in kb" or "exclude the 'pseudogene' biotype from further analysis". The supported gene filters in the
@@ -224,10 +220,10 @@
 #' @note Please note that currently only gene and exon annotation from Ensembl (http://www.ensembl.org) are supported. Thus, the
 #' unique gene or exon ids in the counts files should correspond to valid Ensembl gene or exon accessions for the organism of interest.
 #' If you are not sure about the source of your counts file or do not know how to produce it, it's better to start from the original
-#' BAM files and run the pipeline through the \code{\link{bam2metaseqr}} wrapper. Keep in mind that in this case the performance will
+#' BAM files and run the pipeline through the \code{\link{read2count}} wrapper. Keep in mind that in this case the performance will
 #' be significantly lower and the overall running time significanlty higher as the R functions which are used to read BAM files to 
 #' proper structures (GenomicRanges) and calculate the counts are quite slow. An alternative way is maybe the easyRNASeq package
-#' (Delhomme et al, 2012). The bam2metaseqr function does not use this package but rather makes use of standard Bioconductor functions
+#' (Delhomme et al, 2012). The read2count function does not use this package but rather makes use of standard Bioconductor functions
 #' to handle NGS data. If you wish to work outside R, you can work with other popular read counters such as the HTSeq read counter
 #' (http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html). Please also note that in the current version, the members of the
 #' gene.filters and exon.filters lists are not checked for validity so be careful to supply with correct names otherwise the pipeline
@@ -257,7 +253,7 @@
 #'  statistics="deseq",
 #'  pcut=0.05,
 #'  qc.plots=c("mds", "biodetection", "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff",
-#'    "meanvar", "deheatmap", "volcano", "biodist", "filtered"),
+#'    "meanvar", "readnoise", "deheatmap", "volcano", "biodist", "filtered"),
 #'  fig.format=c("png","pdf"),
 #'  export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
 #'  export.scale=c("natural","log2","log10","vst"),
@@ -326,7 +322,7 @@
 metaseqr <- function(
 	counts,
 	sample.list,
-	file.type=c("auto","bam","bed"),
+	file.type=c("auto","sam","bam","bed"),
 	path=NULL,
 	contrast=NULL,
 	libsize.list=NULL,
@@ -366,13 +362,13 @@ metaseqr <- function(
 	statistics=c("deseq","edger","noiseq","bayseq","limma"),
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
-	meta.p=c("fisher","perm","sum","whitlock","intersection","union","none"),
+	meta.p=if (length(statistics)>1) c("fisher","perm","whitlock","intersection","union","none") else "none",
 	pcut=NA, # A p-value cutoff for exporting DE genes, default is to export all
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
 	preset=NULL, # In the end it should be a vector like c("strict","loose","verystrict","everything") etc.
 	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","rnacomp","filtered", # Raw count data
-		"boxplot","gcbias","lengthbias","meandiff","meanvar", # Pre and post normalization
+		"mds","biodetection","countsbio","saturation","readnoise","filtered", # Raw count data
+		"boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp", # Pre and post normalization
 		"deheatmap","volcano","biodist" # Post statistical testing
 	),
 	fig.format=c("x11","png","jpg","tiff","bmp","pdf","ps"),
@@ -402,10 +398,11 @@ metaseqr <- function(
 		sample.list <- make.sample.list(sample.list)
 	if (!is.list(sample.list) && file.exists(sample.list) && missing(counts))
 	{
+		counts <- NULL
 		the.list <- read.targets(sample.list,path=path)
 		sample.list <- the.list$samples
 		file.list <- the.list$files
-		if (file.type=="auto")
+		if (tolower(file.type[1])=="auto")
 			file.type <- the.list$type
 		if (is.null(file.type))
 			stop("The type of the input files could not be recognized! Please specify (BAM or BED)...")
@@ -417,9 +414,13 @@ metaseqr <- function(
 		init.envar()
 	
 	# Globalize the project's path and verbosity
-	PROJECT.PATH <<- make.project.path(export.where,counts)
+	if (from.raw)
+		PROJECT.PATH <<- make.project.path(export.where)
+	else
+		PROJECT.PATH <<- make.project.path(export.where,counts)
 	VERBOSE <<- verbose
 
+	file.type <- tolower(file.type[1])
 	annotation <- tolower(annotation[1])
 	org <- tolower(org[1])
 	count.type <- tolower(count.type[1])
@@ -434,8 +435,7 @@ metaseqr <- function(
 	export.values <- tolower(export.values)
 	export.stats <- tolower(export.stats)
 
-	
-	if (!is.data.frame(counts))
+	if (!is.data.frame(counts) && !is.null(counts))
 	{
 		check.file.args("counts",counts)
 		counts.name <- basename(counts)
@@ -445,21 +445,21 @@ metaseqr <- function(
 		counts.name <- "imported custom data frame"
 	}
 
-	check.text.args("file.type",org,c("auto","bam","bed"),multiarg=FALSE)
+	check.text.args("file.type",file.type,c("auto","sam","bam","bed"),multiarg=FALSE)
 	check.text.args("annotation",annotation,c("embedded","download","fixed"),multiarg=FALSE)
 	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma"),multiarg=TRUE)
-	check.text.args("meta.p",meta.p,c("fisher","perm","sum","whitlock","intersection","union","none"),multiarg=FALSE)
+	check.text.args("meta.p",meta.p,c("fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("x11","png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),multiarg=TRUE)
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)
 	check.text.args("export.values",export.values,c("raw","normalized"),multiarg=TRUE)
 	check.text.args("export.stats",export.stats,c("mean","median","sd","mad","cv","rcv"),multiarg=TRUE)
 	if (!is.null(qc.plots))
-		check.text.args("qc.plots",qc.plots,c("mds","biodetection","countsbio","saturation","rnacomp","boxplot","gcbias","lengthbias",
-			"meandiff","meanvar","deheatmap","volcano","biodist","filtered"),multiarg=TRUE)
+		check.text.args("qc.plots",qc.plots,c("mds","biodetection","countsbio","saturation","readnoise","boxplot","gcbias","lengthbias",
+			"meandiff","meanvar","rnacomp","deheatmap","volcano","biodist","filtered"),multiarg=TRUE)
 	if (!is.na(restrict.cores)) check.num.args("restrict.cores",restrict.cores,"numeric",c(0,1),"botheq")
 	if (!is.na(pcut)) check.num.args("pcut",pcut,"numeric",c(0,1),"botheq")
 	if (!is.na(gc.col)) check.num.args("gc.col",gc.col,"numeric",0,"gt")
@@ -652,28 +652,28 @@ metaseqr <- function(
 			disp("Reading stored gene annotation for ",org,"...")
 			gene.data <- read.annotation(org,"gene")
 		}
-		disp("Reading counts file ",counts.name,"...")
-		if (!is.data.frame(counts)) # Otherwise it's coming ready from bam2metaseqr
-			exon.counts <- read.delim(counts)
-		else
-			exon.counts <- counts
-		rownames(exon.counts) <- as.character(exon.counts[,id.col])
+	
 		if (annotation=="download")
 		{
 			disp("Downloading exon annotation for ",org,"...")
 			exon.data <- get.annotation(org,count.type)
-			exon.counts <- cbind(exon.data[rownames(exon.counts),c("start","end","exon_id","gene_id")],exon.counts[,unlist(sample.list,use.names=FALSE)])
 		}
 		else if (annotation=="fixed")
 		{
 			disp("Reading stored exon annotation for ",org,"...")
-			#exon.data <- read.delim(file.path(ANNOTATION$ENSEMBL$EXON,paste(org,".txt.gz",sep="")))
-			#rownames(exon.data) <- as.character(exon.data$exon_id)
 			exon.data <- read.annotation(org,count.type)
-			exon.counts <- cbind(exon.data[rownames(exon.counts),c("start","end","exon_id","gene_id")],exon.counts[,unlist(sample.list,use.names=FALSE)])
 		}
 		else if (annotation=="embedded") # The following should work if annotation elements are arranged in MeV-like data style
 		{
+			# Embedded annotation can NEVER occur when receiving data from read2count, so there is no danger here
+			if (!is.data.frame(counts))
+			{
+				disp("Reading counts file ",counts.name,"...")
+				exon.counts <- read.delim(counts)
+			}
+			else
+				exon.counts <- counts
+			rownames(exon.counts) <- as.character(exon.counts[,id.col])
 			all.cols <- 1:ncol(exon.counts)
 			sam.cols <- match(unlist(sample.list),colnames(exon.counts))
 			sam.cols <- sam.cols[which(!is.na(sam.cols))]
@@ -690,8 +690,34 @@ metaseqr <- function(
 			disp("Reading external exon annotation for ",org," from ",annotation,"...")
 			exon.data <- read.delim(annotation)
 			colnames(exon.data)[id.col] <- "exon_id"
-			exon.counts <- cbind(exon.data[rownames(exon.counts),c("start","end","exon_id","gene_id")],exon.counts[,unlist(sample.list,use.names=FALSE)])
 		}
+
+		if (annotation!="embedded") # Else everything is provided and done
+		{
+			if (!is.null(counts)) # Otherwise it's coming ready from read2count
+			{
+				if (!is.data.frame(counts)) # Else it's already here
+				{
+					disp("Reading counts file ",counts.name,"...")
+					exon.counts <- read.delim(counts)
+				}
+				else # Already a data frame as input
+					exon.counts <- counts
+				rownames(exon.counts) <- as.character(exon.counts[,id.col])
+				exon.counts <- exon.counts[,unlist(sample.list,use.names=FALSE)]
+			}
+			else # Coming from read2count
+			{
+				if (from.raw) # Double check
+				{
+					r2c <- read2count(file.list,file.type,exon.data)
+					exon.counts <- r2c$counts
+					if (is.null(libsize.list))
+						libsize.list <- r2c$libsize
+				}
+			}
+		}
+		exon.counts <- cbind(exon.data[rownames(exon.counts),c("start","end","exon_id","gene_id")],exon.counts[,unlist(sample.list,use.names=FALSE)])
 
 		# Get the exon counts per gene model
 		disp("Checking chromosomes in exon counts and gene annotation...")
@@ -724,30 +750,26 @@ metaseqr <- function(
 	}
 	else if (count.type=="gene")
 	{
-		disp("Reading counts file ",counts.name,"...")
-		if (!is.data.frame(counts)) # Otherwise it's coming ready from bam2metaseqr
-			gene.counts <- read.delim(counts)
-		else
-			gene.counts <- counts
-		rownames(gene.counts) <- as.character(gene.counts[,id.col])
 		if (annotation=="download")
 		{
 			disp("Downloading gene annotation for ",org,"...")
 			gene.data <- get.annotation(org,count.type)
-			gene.data <- gene.data[rownames(gene.counts),]
-			gene.counts <- gene.counts[,unlist(sample.list,use.names=FALSE)]
 		}
 		else if (annotation=="fixed")
 		{
 			disp("Reading stored gene annotation for ",org,"...")
-			#gene.data <- read.delim(file.path(ANNOTATION$ENSEMBL$GENE,paste(org,".txt.gz",sep="")))
-			#rownames(gene.data) <- as.character(gene.data$gene_id)
 			gene.data <- read.annotation(org,count.type)
-			gene.data <- gene.data[rownames(gene.counts),]
-			gene.counts <- gene.counts[,unlist(sample.list,use.names=FALSE)]
 		}
 		else if (annotation=="embedded") # The following should work if annotation elements are arranged in MeV-like data style
 		{
+			if (!is.data.frame(counts))
+			{
+				disp("Reading counts file ",counts.name,"...")
+				gene.counts <- read.delim(counts)
+			}
+			else
+				gene.counts <- counts
+			rownames(gene.counts) <- as.character(gene.counts[,id.col])
 			all.cols <- 1:ncol(gene.counts)
 			sam.cols <- match(unlist(sample.list),colnames(gene.counts))
 			sam.cols <- sam.cols[which(!is.na(sam.cols))]
@@ -780,8 +802,36 @@ metaseqr <- function(
 			if (!is.na(bt.col)) colnames(gene.data)[bt.col] <- "biotype"
 		}
 		total.gene.data <- gene.data # We need this for some total stats
-		gene.length <- gene.data$end - gene.data$start # Based on total gene lengths
 		exon.filter.result <- NULL
+
+		if (annotation!="embedded") # Else everything is provided and done
+		{
+			if (!is.null(counts)) # Otherwise it's coming ready from read2count
+			{
+				if (!is.data.frame(counts)) # Else it's already here
+				{
+					disp("Reading counts file ",counts.name,"...")
+					gene.counts <- read.delim(counts)
+				}
+				else # Already a data frame as input
+					gene.counts <- counts
+				rownames(gene.counts) <- as.character(gene.counts[,id.col])
+				gene.counts <- gene.counts[,unlist(sample.list,use.names=FALSE)]
+			}
+			else # Coming from read2count
+			{
+				if (from.raw) # Double check
+				{
+					r2c <- read2count(file.list,file.type,gene.data)
+					gene.counts <- r2c$counts
+					if (is.null(libsize.list))
+						libsize.list <- r2c$libsize
+				}
+			}
+		}
+
+		gene.data <- gene.data[rownames(gene.counts),]
+		gene.length <- gene.data$end - gene.data$start # Based on total gene lengths
 	}
 
 	# Transform GC-content and biotype
@@ -847,6 +897,14 @@ metaseqr <- function(
 		gene.filter.result <- NULL
 
 	# Unify the filters and filter
+	the.dead.genes <- list(
+		gene.filter.result$expression$median,
+		gene.filter.result$expression$mean,
+		gene.filter.result$expression$quantile,
+		gene.filter.result$expression$known,
+		gene.filter.result$expression$custom
+	)
+	#gene.filter.result$expression <- Reduce("union",the.dead.genes)
 	the.dead <- unique(unlist(c(gene.filter.result,exon.filter.result)))
 	if (length(the.dead>0)) # All method specific object are row-index subsettable
 	{
@@ -1325,8 +1383,8 @@ metaseqr <- function(
 	{
 		disp("Creating quality control graphs...")
 		plots <- list(
-			raw=c("mds","biodetection","countsbio","saturation","rnacomp"),
-			norm=c("boxplot","gcbias","lengthbias","meandiff","meanvar"),
+			raw=c("mds","biodetection","countsbio","saturation","readnoise"),
+			norm=c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp"),
 			stat=c("deheatmap","volcano","biodist"),
 			other=c("filtered")
 		)
@@ -1375,11 +1433,6 @@ metaseqr <- function(
 		if (tolower(report.template)=="default")
 		{
 			if (exists("TEMPLATE"))
-				#report.template=list(
-				#	html=file.path(TEMPLATE$HTML,"metaseqr_report.html"),
-				#	css=file.path(TEMPLATE$CSS,"styles.css"),
-				#	logo=file.path(TEMPLATE$IMAGE,"logo.png")
-				#)
 				report.template=list(
 					html=file.path(TEMPLATE,"metaseqr_report.html"),
 					css=file.path(TEMPLATE,"styles.css"),

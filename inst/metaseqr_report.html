@@ -2,7 +2,7 @@
 
 <html>
 <head>
-<title>MetaSeq Report</title>
+<title>meetaseqr report</title>
 <meta http-equiv="Content-Type" content="text/html;">
 <link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
 <link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css">
@@ -130,6 +130,10 @@
 								}
 								#cat("</ul></li></ul>")
 								cat("</ul></div>")
+								cat("<h5>References</h5>")
+								cat("<div><ul class=\"tocul\">")							
+								cat("<li class=\"tocli\"><a href=\"#references\">References</a></li>")
+								cat("</ul></div>")
 								%>
 							</div></div>
 						</div>
@@ -138,11 +142,144 @@
 						<div id="report"> <!-- Start main accordion container -->
 							<h3 id="summary" class="title">Summary </h3>
 							<div id="summary_container"> <!-- Start summary container -->
-								<h4 id="summary_summary" class="subtitle">Input options </h4>
+								<h4 id="summary_summary" class="subtitle">Analysis summary </h4>
 								<div id="summary_summary_container">
 									<strong>Summary: </strong>
-									Here we are going to write a small methods summary with a lots of opening and closing brew tags refering
-									to several aspects of the analysis. As a template, we have the supplementary methods of the Pr-Set7 paper.
+									<%
+									if (from.raw) {
+										cat("The raw ",file.type," files, one for each RNA-Seq sample, were summarized to ")
+										if (count.type=="exon") cat("an exon ") else if (count.type=="gene") cat("a gene ")
+										cat("read counts table, where each row represented ")
+										if (count.type=="exon") cat("one exon, ") else if (count.type=="gene") cat("one gene, ")
+										cat("each column one RNA-Seq sample and each cell, the corresponding read counts associated with each row and column.")
+									}
+									if (count.type=="exon") {
+										if (!is.null(exon.filters)) {
+											cat("The exon read counts were filtered for artifacts that could affect the subsequent normalization and statistical ")
+											cat("testing procedures as follows:")
+											msg.exon.filters.min.active.exons <- NULL
+											if (!is.null(exon.filters$min.active.exons)) {
+												msg.exon.filters.min.active.exons <- paste(
+													"if an annotated gene had up to ",exon.filters$min.active.exons$exons.per.gene," read presence was required in at ",
+													"least ",exon.filters$min.active.exons$min.exons," of the exons, else if an annotated gene had more than ",
+													exon.filters$min.active.exons$exons.per.gene,", then read presence was required in at least ",exon.filters$min.active.exons,
+													"x&lceil;E&rceil; exons, where &lceil;<sup>.</sup>&rceil; is the <em>ceiling</em> mathematical function. The application ",
+													"of this filter resulted in the exclusion of ",length(exon.filter.results$min.active.exons)," genes from further analysis. ",
+													sep=""
+												)
+											}
+											cat(msg.exon.filters.min.active.exons,sep=", ")
+											cat("The total number of genes excluded due to the application of exon filters was ",sum(as.numeric(sapply(exon.filter.result,length))),". ")
+										}
+										cat("The final read counts for each gene model were calculated as the sums of their exon reads, creating a gene counts ")
+										cat("table where each row corresponded to an Ensembl gene model and each column corresponded to an RNA-Seq sample. ")
+									}
+									cat("The gene counts table was normalized for inherent systematic or experimental biases (e.g. sequencing depth, gene length, ")
+									cat("GC content bias etc.) using the Bioconductor package",report.messages$norm[[normalization]],"after removing genes that had ")
+									cat("zero counts over all the RNA-Seq samples (",length(the.zeros)," genes). The output of the normalization algorithm ",sep="")
+									cat("was a table with normalized counts, which can be used for differential expression analysis with statistical algorithms ")
+									cat("developed specifically for count data. ")
+									if (!is.null(gene.filters)) {
+										cat("Prior to the statistical testing procedure, the gene read counts were filtered for possible artifacts that could affect ")
+										cat("the subsequent statistical testing procedures. Genes presenting any of the following were excluded from further analysis: ")
+										latin.numbered <- c("i)","ii)","iii)","iv)","v)","vi)","vii)","viii)","ix)","x)","xi)","xii)","xiii)","xiv)","xv)")
+										counter <- 0
+										msg.gene.filters.length <- msg.gene.filters.expression.median <- msg.gene.filters.expression.mean <-
+										msg.gene.filters.expression.quantile <- msg.gene.filters.expression.known <- msg.gene.filters.expression.custom <-
+										msg.gene.filters.biotype <- NULL
+										if (!is.null(gene.filters$length)) {
+											counter <- counter + 1
+											msg.gene.filters.length <- paste(
+												latin.numbered[counter]," genes with length less than ",gene.filters$length$length," (",length(gene.filter.result$length),
+												" genes)",sep=""
+											)
+										}
+										if (!is.null(gene.filters$avg.reads)) {
+											counter <- counter + 1
+											msg.gene.filters.avg.reads <- paste(
+												latin.numbered[counter]," genes whose average reads per ",gene.filters$avg.reads$average.per.bp," bp was less than the ",
+												100*gene.filters$avg.reads$quantile,"<sup>th</sup> quantile of the total normalized distribution of average reads per ",
+												gene.filters$avg.reads$average.per.bp,"bp (",length(gene.filter.result$average.per.bp)," genes)",sep=""
+											)
+										}
+										if (!is.null(gene.filters$expression)) {
+											if (!is.null(gene.filters$expression$median) && gene.filters$expression$median) {
+												counter <- counter + 1
+												msg.gene.filters.expression.median <- paste(
+													latin.numbered[counter]," genes with read counts below the median read counts of the total normalized count distribution ",
+													"(",length(gene.filter.result$expression$median)," genes)",sep=""
+												)
+											}
+											if (!is.null(gene.filters$expression$mean) && gene.filters$expression$mean) {
+												counter <- counter + 1
+												msg.gene.filters.expression.mean <- paste(
+													latin.numbered[counter]," genes with read counts below the mean read counts of the total normalized counts distribution ",
+													"(",length(gene.filter.result$expression$mean)," genes)",sep=""
+												)
+											}
+											if (!is.null(gene.filters$expression$quantile) && !is.na(gene.filters$expression$quantile)) {
+												counter <- counter + 1
+												msg.gene.filters.expression.quantile <- paste(
+													latin.numbered[counter]," genes with read counts below the ",100*gene.filters$expression$quantile,"<sup>th</sup> ",
+													"quantile of the normalized counts distribution (",length(gene.filter.result$expression$quantile)," genes)",sep=""
+												)
+											}
+											if (!is.null(gene.filters$expression$known) && !is.na(gene.filters$expression$known)) {
+												counter <- counter + 1
+												msg.gene.filters.expression.known <- paste(
+													latin.numbered[counter]," genes with read counts below the 90<sup>th</sup> quantile of the counts of the following ",
+													"genes, known to not being expressed from the related literature: ",paste(gene.filters$expression$known,collapse=", "),
+													"(",length(gene.filter.result$expression$known)," genes)",sep=""
+												)
+											}
+											if (!is.null(gene.filters$expression$custom) && !is.na(gene.filters$expression$custom)) {
+												counter <- counter + 1
+												msg.gene.filters.expression.custom <- paste(
+													latin.numbered[counter]," genes not passing the user defined filter provided to the metaseqr pipeline ",
+													"(",length(gene.filter.result$expression$custom)," genes)",sep=""
+												)
+											}
+										}
+										if (!is.null(gene.filters$biotype)) {
+											counter <- counter + 1
+											msg.gene.filters.biotype <- paste(
+												latin.numbered[counter]," genes whose biotype matched the following: ",
+												paste(names(gene.filters$biotype)[which(unlist(gene.filters$biotype))],collapse=", "),
+												" (",length(gene.filter.result$biotype)," genes)",sep=""
+											)
+										}
+										cat(msg.gene.filters.length,msg.gene.filters.avg.reads,msg.gene.filters.expression.median,msg.gene.filters.expression.mean,
+											msg.gene.filters.expression.quantile,msg.gene.filters.expression.known,msg.gene.filters.expression.custom,sep=", ")
+										cat(". The total number of genes excluded due to the application of gene filters was ",sum(as.numeric(sapply(gene.filter.result,length))),". ",sep="")
+										cat("The total (unified) number of genes excluded due to the application of all filters was ",length(the.zeros) + length(the.dead),". ",sep="")
+									}
+									cat("The resulting gene counts table was subjected to differential expression analysis for the contrasts ",gsub("_vs_"," versus ",contrast),". ",sep="")
+									if (length(statistics)>1) {
+										cat(" using the Bioconductor packages ",paste(unlist(report.messages$stat[statistics],use.names=FALSE),collapse=", "),".",sep="")
+										if (meta.p!="none") {
+											cat("In order to combine the statistical significance from multiple algorithms and perform meta-analysis, the ")
+											cat(report.messages$meta[[meta.p]],"method was applied. ")
+										}
+									} else {
+										cat(" using the Bioconductor package ",report.messages$stat[[statistics]],". ",sep="")
+									}
+									cat("The final numbers of differentially expressed genes were (per contrast): ")
+									msg.contrast <- character(length(contrast))
+									names(msg.contrast) <- contrast
+									for (cnt in contrast) {
+										if (!is.na(pcut) && length(which(p.list[[cnt]]<pcut))==0) {
+											msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", no differentially expressed genes were found",
+												" with a p-value threshold of ",pcut,sep="")
+										} else if (is.na(pcut)) {
+											msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", no statistical threshold defined",sep="")
+										} else {
+											msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),",",length(which(p.list[[cnt]]<pcut))," differentially expressed genes",
+												" were found with a p-value threshold of ",pcut)
+										}
+									}
+									cat(paste(msg.contrast,collapse=", "))
+									cat(". Literature references for all the algorithms used can be found to the end of this report.")
+									%>
 								</div>
 								<h4 id="summary_input" class="subtitle">Input options </h4>
 								<div id="summary_input_container">
@@ -303,7 +440,7 @@
 								if (!is.null(fig.raw$mds)) {
 									cat("<h4 class=\"subtitle\">Multidimensional scaling</h4>")
 									cat("<div id=\"figures_mds\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$mds,"</br></br></div>")
 									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\"></div>")
 									cat("</div>")
 								}
@@ -312,7 +449,7 @@
 								if (!is.null(fig.raw$biodetection)) {
 									cat("<h4 class=\"subtitle\">Biotype detection</h4>")
 									cat("<div id=\"figures_biodetection\"> ")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$biodetection,"</br></br></div>")
 									for (s in gsub(PROJECT.PATH$main,".",fig.raw$biodetection))
 										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
 									cat("</div>")
@@ -322,7 +459,7 @@
 								if (!is.null(fig.raw$countsbio)) {
 									cat("<h4 class=\"subtitle\">Biotype detection counts</h4>")
 									cat("<div id=\"figures_countsbio\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$countsbio,"</br></br></div>")
 									for (s in gsub(PROJECT.PATH$main,".",fig.raw$countsbio))
 										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
 									cat("</div>")
@@ -332,7 +469,7 @@
 								if (!is.null(fig.raw$saturation)) {
 									cat("<h4 class=\"subtitle\">Read and biotype saturation</h4>")
 									cat("<div id=\"figures_saturation\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$saturation,"</br></br></div>")
 									cat("<span class=\"subtitle\">Read saturation per biotype for all samples</span></br>")
 									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\"></br></br></div>")
 									cat("<span class=\"subtitle\">Read saturation per sample for all biotypes </span></br>")
@@ -342,11 +479,11 @@
 								}
 								%>
 								<%
-								if (!is.null(fig.raw$rnacomp)) {
-									cat("<h4 class=\"subtitle\">RNA composition </h4>")
-									cat("<div id=\"figures_rnacomp\">")
-									cat("<div>",,"</br></br></div>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$rnacomp),"\" alt=\"RNA composition\"></div>")
+								if (!is.null(fig.raw$readnoise)) {
+									cat("<h4 class=\"subtitle\">RNA-Seq reads noise </h4>")
+									cat("<div id=\"figures_readnoise\">")
+									cat("<div>",report.messages$explain$readnoise,"</br></br></div>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$readnoise),"\" alt=\"Read noise\"></div>")
 									cat("</div>")
 								}
 								%>
@@ -354,7 +491,7 @@
 								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot)) {
 									cat("<h4 class=\"subtitle\">Boxplots</h4>")
 									cat("<div id=\"figures_boxplot\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$boxplot,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$boxplot)) {
@@ -369,10 +506,28 @@
 									cat("</tr></table></div>")
 								%>
 								<%
+								if (!is.null(fig.unorm$rnacomp) || !is.null(fig.norm$rnacomp)) {
+									cat("<h4 class=\"subtitle\">RNA composition</h4>")
+									cat("<div id=\"figures_rnacomp\">")
+									cat("<div>",report.messages$explain$rnacomp,"</br></br></div>")
+									cat("<table class=\"innerTable\"><tr>")
+								}
+								if (!is.null(fig.unorm$rnacomp)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">RNA composition of un-normalized data </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$rnacomp),"\" alt=\"Un-normalized rnacomp\"></td>")
+								}
+								if (!is.null(fig.unorm$rnacomp)) {
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">RNA composition of normalized data </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$rnacomp),"\" alt=\"Normalized rnacomp\"></td>")
+								}
+								if (!is.null(fig.unorm$rnacomp) || !is.null(fig.norm$rnacomp))
+									cat("</tr></table></div>")
+								%>
+								<%
 								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias)) {
 									cat("<h4 class=\"subtitle\">GC content bias</h4>")
 									cat("<div id=\"figures_gcbias\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$gcbias,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$gcbias)) {
@@ -388,17 +543,17 @@
 								%>
 								<%
 								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias)) {
-									cat("<h4 class=\"subtitle\">Gene length bias</h4>")
+									cat("<h4 class=\"subtitle\">Gene/transcript length bias</h4>")
 									cat("<div id=\"figures_lengthbias\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$lengthbias,"</br></br></div>")
 									cat("<table class=\"innerTable\"><tr>")	
 								}
 								if (!is.null(fig.unorm$lengthbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Transcript length bias un-normalized </span></br>")
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Gene/transcript length bias un-normalized </span></br>")
 									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$lengthbias),"\" alt=\"Un-normalized lengthbias\"></td>")
 								}
 								if (!is.null(fig.norm$lengthbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Transcript length bias normalized </span></br>")
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Gene/transcript length bias normalized </span></br>")
 									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$lengthbias),"\" alt=\"Normalized lengthbias\"></td>")
 								}
 								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias))
@@ -408,7 +563,7 @@
 								if (!is.null(fig.unorm$meandiff) || !is.null(fig.norm$meandiff)) {
 									cat("<h4 class=\"subtitle\">Mean-difference</h4>")
 									cat("<div id=\"figures_meandiff\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$meandiff,"</br></br></div>")
 									if (is.null(fig.unorm$meandiff))
 										nn <- names(fig.norm$meandiff)
 									else
@@ -438,7 +593,7 @@
 								if (!is.null(fig.unorm$meanvar) || !is.null(fig.norm$meanvar)) {
 									cat("<h4 class=\"subtitle\">Mean-variance</h4>")
 									cat("<div id=\"figures_meanvar\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$meanvar,"</br></br></div>")
 									if (is.null(fig.unorm$meanvar))
 										nn <- names(fig.norm$meanvar)
 									else
@@ -466,9 +621,9 @@
 								%>
 								<%
 								if (!is.null(fig.other$filtered)) {
-									cat("<h4 class=\"subtitle\">Biotype distribution of filtered genes</h4>")
+									cat("<h4 class=\"subtitle\">Chromosome and biotype distribution of filtered genes</h4>")
 									cat("<div id=\"figures_filtered\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$filtered,"</br></br></div>")
 									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\"></div>")
 									cat("</div>")
 								}
@@ -477,7 +632,7 @@
 								if (!is.null(fig.stat$volcano)) {
 									cat("<h4 class=\"subtitle\">Volcano plots</h4>")
 									cat("<div id=\"figures_volcano\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$volcano,"</br></br></div>")
 									nn <- names(contrast.list)
 									counter <- 1
 									for (n in nn) {
@@ -496,8 +651,8 @@
 								<%
 								if (!is.null(fig.stat$deheatmap)) {
 									cat("<h4 class=\"subtitle\">DEG heatmaps</h4>")
-									cat("<div>",,"</br></br></div>")
 									cat("<div id=\"figures_deheatmap\">")
+									cat("<div>",report.messages$explain$deheatmap,"</br></br></div>")
 									nn <- names(fig.stat$deheatmap)
 									counter <- 1
 									for (n in nn) {
@@ -512,9 +667,9 @@
 								%>
 								<%
 								if (!is.null(fig.stat$biodist)) {
-									cat("<h4 class=\"subtitle\">DEG biotype distributions</h4>")
+									cat("<h4 class=\"subtitle\">Chromosome and biotype distributions of DEGs</h4>")
 									cat("<div id=\"figures_biodist\">")
-									cat("<div>",,"</br></br></div>")
+									cat("<div>",report.messages$explain$biodist,"</br></br></div>")
 									nn <- names(fig.stat$biodist)
 									counter <- 1
 									for (n in nn) {
@@ -541,8 +696,8 @@
 									for (n in nn) {
 										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>")
 										cat("<div>")
-										cat("<div>The following table presents the results for the contrast ",nn,". The fields of the table correspond to the ",
-										"requested features to be exported. The table can be searched using the search field on the top right</br></br></div>",sep="")
+										cat("<div>The following table presents the results for the contrast <strong>",n,"</strong>. The fields of the table correspond to the ",
+										"requested features to be exported. The table can be searched using the search field on the top right.</br></br></div>",sep="")
 										cat(html[[n]],"</br>")
 										cat("<strong><a href=\"lists/metaseqr_out_",n,".txt.gz\" download>Download</a> the result list for ",n,".</strong></br></br>",sep="")
 										cat("</div>")
@@ -557,6 +712,22 @@
 								}
 								%>
 							</div> <!-- End results container -->
+							<h3 id="references" class="title">References</h3>
+							<div id="references_container"> <!-- Start references container -->
+								<%
+									refs <- unique(c(
+										report.messages$references$norm[[normalization]],
+										unlist(report.messages$references$stat[statistics],use.names=FALSE),
+										unlist(report.messages$references$figure[qc.plots],use.names=FALSE),
+										report.messages$references$multiple[[adjust.method]],
+										report.messages$references$meta[[meta.p]]
+									))
+									cat("<ol>")
+									for (r in refs)
+										cat("<li>",r,"</li>")
+									cat("</ol>")
+								%>
+							</div> <!-- End references container -->
 						</div> <!-- End main accordion container -->
 
 						<!--Finally, render the accordions-->

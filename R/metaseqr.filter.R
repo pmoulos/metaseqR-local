@@ -134,8 +134,13 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 				else
 					the.dead.custom <- NULL
 				# Derive one common expression filter
-				the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,the.dead.known,the.dead.custom)
-				gene.filter.result$expression <- Reduce("union",the.dead)
+				gene.filter.result$expression$median <- the.dead.median
+				gene.filter.result$expression$mean <- the.dead.mean
+				gene.filter.result$expression$quantile <- the.dead.quantile
+				gene.filter.result$expression$known <- the.dead.known
+				gene.filter.result$expression$custom <- the.dead.custom
+				#the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,the.dead.known,the.dead.custom)
+				#gene.filter.result$expression <- Reduce("union",the.dead)
 			},
 			biotype = {
 				if (!is.null(gene.filters$biotype)) {

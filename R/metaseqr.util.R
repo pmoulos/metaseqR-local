@@ -1,3 +1,180 @@
+#' SAM/BAM/BED file reader helper for the metaseqr pipeline
+#'
+#' This function is a helper for the \code{metaseqr} pipeline, for reading SAM/BAM or BED files when a read counts file is not available.
+#'
+#' @param files.list a named list whose members are named vectors. The names of the list correspond to condition names (see the
+#' \code{sample.list} argument in the main \code{\link{metaseqr}} function). The names of the vectors are the sample names and the
+#' vector elements are full paths to BAM/BED files.
+#' @param file.type the type of raw input files. It can be \code{"bed"} for BED files or \code{"sam"}, \code{"bam"} for SAM/BAM files. 
+#' See the same argument in the main \code{\link{metaseqr}} function for the case of auto-guessing.
+#' @param annotation see the \code{annotation} argument in the main \code{\link{metaseqr}} function. The \code{"annotation"} parameter
+#' here is the result of the same parameter in the main function. See also \code{\link{get.annotation}} and \code{\link{read.annotation}}.
+#' @param has.all.fields a logical variable indicating if all annotation fields used by \code{metaseqr} are available (that is apart
+#' from the main chromosome, start, end, unique id and strand columns, if also present are the gene name and biotype columns). The
+#' default is \code{FALSE}.
+#' @return A data frame with counts for each sample, ready to be passed to the main \code{\link{metaseqr}} pipeline.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' # Not yet implenented
+read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
+	if (!require(GenomicRanges))
+		stop("The Bioconductor package GenomicRanges is required to proceed!")
+	if (file.type=="bed" && !require(rtracklayer))
+		stop("The Bioconductor package rtracklayer is required to process BED files!")
+	if (file.type %in% c("sam","bam") && !require(Rsamtools))
+		stop("The Bioconductor package Rsamtools is required to process BAM files!")
+
+	# Convert annotation to GRanges
+	disp("Converting annotation to GenomicRanges object...")
+	if (packageVersion("GenomicRanges")<1.14) { # Classic way
+		if (has.all.fields)
+			annotation.gr <- GRanges(
+				seqnames=Rle(annotation[,1]),
+				ranges=IRanges(start=annotation[,2],end=annotation[,3]),
+				strand=Rle(annotation[,6]),
+				name=as.character(annotation[,4]),
+				symbol=as.character(annotation[,7]),
+				biotype=as.character(annotation[,8])
+			)
+		else
+			annotation.gr <- GRanges(
+				seqnames=Rle(annotation[,1]),
+				ranges=IRanges(start=annotation[,2],end=annotation[,3]),
+				strand=Rle(annotation[,6]),
+				name=as.character(annotation[,4])
+			)
+	}
+	else # Use native method in newer versions of GenomicRanges
+		annotation.gr <- makeGRangesFromDataFrame(
+			df=annotation,
+			keep.extra.columns=TRUE,
+			seqnames.field="chromosome"
+		)
+
+	sample.names <- as.character(sapply(files.list,names))
+	sample.files <- unlist(files.list,use.names=FALSE)
+	names(sample.files) <- sample.names
+	counts <- matrix(0,nrow=length(annotation.gr),ncol=length(sample.names))
+	rownames(counts) <- as.character(annotation[,4])
+	colnames(counts) <- sample.names
+	libsize <- vector("list",length(sample.names))
+	names(libsize) <- sample.names
+	
+	if (file.type=="bed") {
+		for (n in sample.names) {
+			disp("Reading bed file ",basename(sample.files[n])," for sample with name ",n,". This might take some time...")
+			bed <- import.bed(sample.files[n],trackLine=FALSE,asRangedData=FALSE)
+			disp("  Checking for chromosomes not present in the annotation...")
+			bed <- bed[which(!is.na(match(seqnames(bed),seqlevels(annotation.gr))))]
+			libsize[[n]] <- length(bed)
+			if (length(bed)>0) {
+				disp("  Counting reads overlapping with given annotation...")
+				counts[,n] <- countOverlaps(annotation.gr,bed)
+			}
+			else
+				warning(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""),
+					call.=FALSE)
+			gc(verbose=FALSE)
+		}
+	}
+	else if (file.type %in% c("sam","bam")) {
+		if (suppressWarnings(!require(Repitools))) # Gives some warnings about reloaded functions
+			stop("Bioconductor package Repitools is required to proceed with reading BAM files!")
+		if (file.type=="sam") {
+			for (n in sample.names) {
+				dest <- file.path(dirname(sample.files[n]),n)
+				disp("Converting sam file ",basename(sample.files[n])," to bam file ",basename(dest),"...")
+				asBam(file=sample.files[n],destination=dest,overwrite=TRUE)
+				sample.files[n] <- paste(dest,"bam",sep=".")
+			}
+		}
+		# What about paired-end? Probably collapse to single-end...
+		for (n in sample.names) {
+			disp("Reading bam file ",basename(sample.files[n])," for sample with name ",n,". This might take some time...")
+			bam <- BAM2GRanges(sample.files[n],verbose=FALSE)
+			disp("  Checking for chromosomes not present in the annotation...")
+			bam <- bam[which(!is.na(match(seqnames(bam),seqlevels(annotation.gr))))]
+			libsize[[n]] <- length(bam)
+			if (length(bam)>0) {
+				disp("  Counting reads overlapping with given annotation...")
+				counts[,n] <- countOverlaps(annotation.gr,bam)
+			}
+			else
+				warning(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""),
+					call.=FALSE)
+			gc(verbose=FALSE)
+		}
+	}
+	
+	return(list(counts=counts,libsize=NULL))
+}
+
+#' Creates sample list and BAM/BED file list from file
+#'
+#' Create the main sample list and determine the BAM/BED files for each sample from an external file.
+#'
+#' @param input a tab-delimited file structured as follows: the first line of the external tab delimited file should contain column 
+#' names (names are not important). The first column MUST contain UNIQUE sample names. The second column MUST contain the raw BAM/BED
+#' files WITH their full path. Alternatively, the \code{path} argument should be provided (see below). The third column MUST contain 
+#' the biological condition where each of the samples in the first column should belong to.
+#' @param path an optional path where all the BED/BAM files are placed, to be prepended to the BAM/BED file names in the targets file.
+#' @return A named list with three members. The first member is a named list whose names are the conditions of the experiments and its
+#' members are the samples belonging to each condition. The second member is like the first, but this time the members are named vectors
+#' whose names are the sample names and the vector elements are full path to BAM/BED files. The third member is the guessed type of
+#' the input files (BAM or BED). It will be used if not given in the main \code{link\{read2count}} function.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' targets <- data.frame(sample=c("C1","C2","T1","T2"),
+#'   filename=c("C1_raw.bam","C2_raw.bam","T1_raw.bam","T2_raw.bam"),
+#'   condition=c("Control","Control","Treatment","Treatment"))
+#' path <- "/home/chakotay/bam"
+#' write.table(targets,file="targets.txt",sep="\t",row.names=F,quote="")
+#' the.list <- read.targets("targets.txt",path=path)
+#' sample.list <- the.list$samples
+#' bamfile.list <- the.list$files
+#'}
+read.targets <- function(input,path=NULL) {
+	if (missing(input) || !file.exists(input))
+		stop("The targets file should be a valid existing text file!")
+	tab <- read.delim(input)
+	samples <- as.character(tab[,1])
+	conditions <- unique(as.character(tab[,3]))
+	rawfiles <- as.character(tab[,2])
+	if (!is.null(path)) {
+		tmp <- dirname(rawfiles) # Test if there is already a path
+		if (any(tmp=="."))
+			rawfiles <- file.path(path,basename(rawfiles))
+	}
+	if (length(samples) != length(unique(samples)))
+		stop("Sample names must be unique for each sample!")
+	if (length(rawfiles) != length(unique(rawfiles)))
+		stop("File names must be unique for each sample!")
+	sample.list <- vector("list",length(conditions))
+	names(sample.list) <- conditions
+	for (n in conditions)
+		sample.list[[n]] <- samples[which(as.character(tab[,3])==n)]
+	file.list <- vector("list",length(conditions))
+	names(file.list) <- conditions
+	for (n in conditions) {
+		file.list[[n]] <- rawfiles[which(as.character(tab[,3])==n)]
+		names(file.list[[n]]) <- samples[which(as.character(tab[,3])==n)]
+	}
+	# Guess file type based on only one of them
+	tmp <- file.list[[1]][1]
+	if (length(grep("\\.bam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
+		type <- "bam"
+	else if (length(grep("\\.sam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
+		type <- "sam"
+	else if (length(grep("\\.bed$",tmp,ignore.case=TRUE,perl=TRUE)>0))
+		type <- "bed"
+	else
+		type <- NULL
+	return(list(samples=sample.list,files=file.list,type=type))
+}
+
 #' Fixed annotation updater
 #'
 #' A function to update the fixed annotations contained to avoid downloading every time if it's not embedded. It has no parameters.
@@ -970,9 +1147,9 @@ make.sample.list <- function(input) {
 #' @param f The input counts table file.
 #' @return A list with project path elements.
 #' @author Panagiotis Moulos
-make.project.path <- function(path,f) {
+make.project.path <- function(path,f=NULL) {
 	if (is.na(path) || is.null(path)) {
-		if (!is.data.frame(f) && file.exists(f))
+		if (!is.data.frame(f) && !is.null(f) && file.exists(f))
 			main.path <- file.path(dirname(f),paste("metaseqr_result_",format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
 		else
 			main.path <- file.path(getwd(),paste("metaseqr_result_",format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
@@ -1087,8 +1264,8 @@ make.report.messages <- function(lang) {
 					limma="limma"
 				),
 				meta=list(
-					intersection="Intersection of individual resutls",
-					union="Union of individual resutls",
+					intersection="Intersection of individual results",
+					union="Union of individual results",
 					fisher="Fisher's method (R package MADAM)",
 					perm="Fisher's method with permutations (R package MADAM)",
 					whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
@@ -1119,8 +1296,7 @@ make.report.messages <- function(lang) {
 					deheatmap="DEG heatmap",
 					volcano="Volcano plot",
 					biodist="DEG biotype detection",
-					filtered="Filtered biotypes",
-					none="No plot"
+					filtered="Filtered biotypes"
 				),
 				export=list(
 					annotation="Annotation",
@@ -1149,30 +1325,207 @@ make.report.messages <- function(lang) {
 						"the covariance matrix to find similarities among cases, MDS is using absolute distance metrics such as",
 						"the classical Euclidean distance. Because of the relative linear relations among sequencing samples, it",
 						"provides a more realistic clustering among samples. MDS serves quality control and it can be interpreted",
-						"as follows: when the distance among samples of the same biological condition in the MDS space is small,"
+						"as follows: when the distance among samples of the same biological condition in the MDS space is small,",
 						"this is an indication of high correlation and reproducibility among them. When this distance is larger",
 						"or heterogeneous (e.g. the 3rd sample of a triplicate set is further from the other 2), this comprises an",
 						"indication of low correlation and reproducibility among samples. It can help exclude poor samples from",
 						"further analysis.",collapse=" "
 					),
-					biodetection="Biotype detection",
-					countsbio="Biotype counts",
-					saturation="Sample and biotype saturation",
-					rnacomp="RNA composition",
-					boxplot=paste(
-						"The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of",
-						"a bar with extending lines. Write the rest of boxplot explanation...",
-						collaps=" "
+					biodetection=paste(
+						"The biotype detection bar diagrams are a set of quality control charts that show the percentage of each biotype",
+						"in the genome (i.e. in the whole set of features provided, for example, protein coding genes, non coding",
+						"RNAs or pseudogenes) in grey bars, which proportion has been detected in a sample before normalization and",
+						"after a basic filtering by removing features with zero counts in red lined bars, and the percentage of each",
+						"biotype within the sample in solid red bars. The difference between grey bars and solid red bars is that the",
+						"grey bars show the percentage of a feature in the genome while the solid red bars show the percentage in the",
+						"sample. Thus, the solid red bars may be sometimes higher than the grey bars because certain features (e.g.",
+						"protein coding genes) may be detected within a sample with a higher proportion relatively to their presence",
+						"in the genome, as compared with other features. For example, while the percentage of protein coding genes in",
+						"the whole genome is already higher than other biotypes, this percentage is expected to be even higher in an",
+						"RNA-Seq experiment where one expects protein-coding genes to exhibit greater abundance. The vertical green",
+						"line separates the most abundant biotypes (in the left-hand side, corresponding to the left axis scale)",
+						"from the rest (in the right-hand side, corresponding to the right axis scale). Otherwise, the lower abundance",
+						"biotypes would be indistiguishable. Unexpected outcomes in this quality control chart (e.g. very low detection",
+						"of protein coding genes) would signify possible low quality of a sample",collapse=" "
 					),
-					gcbias="GC-content bias",
-					lengthbias="Transcript length bias",
+					countsbio=paste(
+						"The biotype detection counts boxplots are a set of quality control charts that depict both the biological",
+						"classifcation for the detected features and the actual distribution of the read counts for each biological",
+						"type. The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of",
+						"a bar with extending lines, as commonly used way of graphically presenting groups of numerical data. A boxplot",
+						"also indicates which observations, if any, might be considered outliers and is able to visually show different",
+						"types of populations, without making any assumptions of the underlying statistical distribution. The spacings",
+						"between the different parts of the box help indicate variance, skewness and identify outliers. The thick bar",
+						"inside the colored box is the median of the observations while the box extends over the Interquartile Range",
+						"of the observations. The whiskers extend up (down) to +/-1.5xIQR. Unexpected outcomes (e.g. protein coding",
+						"read count distribution similar to pseudogene read count distribution) indicates poor sample quality.",
+						collapse=" "
+					),
+					saturation=paste(
+						"The read and biotype saturation plots are a set of quality control charts that depict the read count saturation",
+						"levels at several sequencing depths. Thus, they comprise a means of assessing whether the sequencing depth of",
+						"an RNA-Seq experiment is sufficient in order to detect the biological features under investigation. These quality",
+						"control charts are separated in two subgroups: the first subgroup (read saturation per biotype for all samples)",
+						"is a set of plots, one for each biological feature (e.g. protein coding, pseudogene, lincRNA, etc.), that depict",
+						"the number of detected features in different sequencing depths and for all samples in the same plot. The second",
+						"subgroup (read saturation per sample for all biotypes) is a set of plots similar to the above, but this time, there",
+						"is one pair of plots with two panels for each sample, presenting all biological features. The left panel depicts",
+						"the saturation levels for the less abundatnt features, while the right panel, the saturation for the more abundant",
+						"features, as placing them all together would make the less abundant features indistinguishable. All the saturation",
+						"plots should be interpreted as follows: if the read counts for a biotype tend to be saturated, the respective curve",
+						"should tend to reach a plateau in higher depths. Otherwise, more sequencing is needed for the specific biotype.",
+						collapse=" "
+					),
+					readnoise=paste(
+						"The read noise plots depict the percentage of biological features detected when subsampling the total number of",
+						"reads. Very steep curves in read noise plots indicate that although the sequencing depth reaches its maximum, a ",
+						"relatively small percentage of total features is detected, indicating that the level of background noise is relatively",
+						"high. Less steep RNA composition curves, indicate less noise. When a sample's curve deviate from the rest, it",
+						"could indicate lower or higher quality, depending on the curves of the rest of the samples.",
+						collapse=" "
+					),
+					rnacomp=paste(
+						"The RNA composition plots depict the differences in the distributions of reads in the same biological features",
+						"across samples. The following is taken from the NOISeq vignette: <em>'...when two samples have different RNA",
+						"composition, the distribution of sequencing reads across the features is different in such a way that although",
+						"a feature had the same number of read counts in both samples, it would not mean that it was equally expressed",
+						"in both... To check if this bias is present in the data, the RNA composition plot and the correponding diagnostic",
+						"test can be used. In this case, each sample s is compared to the reference sample r (which can be arbitrarily",
+						"chosen). To do that, M values are computed as log2(counts_sample = counts_reference). If no bias is present,",
+						"it should be expected that the median of M values for each comparison is 0. Otherwise, it would be indicating",
+						"that expression levels in one of the samples tend to be higher than in the other, and this could lead to false",
+						"discoveries when computing differencial expression. Confidence intervals for the M median are also computed by",
+						"bootstrapping. If value 0 does not fall inside the interval, it means that the deviation of the sample with regard",
+						"to the reference sample is statistically significant. Therefore, a normalization procedure is required.'</em>",
+						collapse=" "
+					),
+					boxplot=paste(
+						"The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of a",
+						"bar with extending lines, as commonly used way of graphically presenting groups of numerical data. A",
+						"boxplot also indicates which observations, if any, might be considered outliers and is able to visually",
+						"show different types of populations, without making any assumptions of the underlying statistical",
+						"distribution. The spacings between the different parts of the box help indicate variance, skewness and",
+						"identify outliers. The thick bar inside the colored box is the median of the observations while the box",
+						"extends over the Interquartile Range of the observations. The whiskers extend up (down) to +/-1.5xIQR.",
+						"Boxplots at similar levels indicate good quality of the normalization. When after normalization boxplots",
+						"remain at different levels, maybe another normaliation algorithm should be examined. The un-normalized",
+						"boxplots show the need for data normalization in order for the data from different samples to follow the",
+						"same underlying distribution and statistical testing becoming possible",collapse=" "
+					),
+					gcbias=paste(
+						"The GC-content bias plot is a quality control chart that shows the possible dependence of the read counts",
+						"(in log2 scale) under a gene to the GC content percentage of that gene. In order for the statistical tests",
+						"to be able to detect statistical significance which occurs due to real biological effects and not by other",
+						"systematic biases present in the data (e.g. a possible GC-content bias), the latter should be accounted for",
+						"by the applied normalization algorithm. Although the tests are performed for each gene across biological conditions",
+						"one could assume that the GC content does not represent a bias as it's the same for the tested gene across samples",
+						"and conditions. However, Risso et al. (2011) showed that the GC-content could have an impact in the statistical",
+						"testing procedure. The GC-content bias plot depicts the dependence of the read counts to the GC content",
+						"before and after normalization. The smoothing lines for each sample, should be as 'straight' as possible",
+						"after normalization. In addition, if the smoothing lines differ significantly aming biological conditions",
+						"it would comprise a possible quality warning.",collapse=" "
+					),
+					lengthbias=paste(
+						"The gene/transcript length bias plot is a quality control chart that shows the possible dependence of the",
+						"read counts (in log2 scale) under a gene to the length that gene (whole gene or sum of exons depending on",
+						"the analysis). In order for the statistical tests to be able to detect statistical significance which occurs",
+						"due to real biological effects and not by other systematic biases present in the data (e.g. a possible length",
+						"bias), the latter should be accounted for by the applied normalization algorithm. Although the tests are",
+						"performed for each gene across bioogical conditions, one could assume that the gene length does not represent",
+						"a bias as it's the same for the tested gene across samples and conditions. However, it has been shown in several",
+						"studies that the gene length could have an impact in the statistical testing procedure. The length bias plot",
+						"depicts the dependence of the read counts to the gene/transcript length before and after normalization. The",
+						"smoothing lines for each sample, should be as 'straight' as possible after normalization. In addition, if",
+						"the smoothing lines differ significantly aming biological conditions it would comprise a possible quality warning.",
+						collapse=" "
+					),
 					meandiff="Mean-difference plot",
 					meanvar="Mean-variance plot",
-					deheatmap="DEG heatmap",
+					deheatmap=paste(
+						"The Differentially Expressed Genes (DEGs) heatmaps depict how well samples from different conditions cluster",
+						"together according to their expression values after normalization and statistical testing, for each requested",
+						"statistical contrast. If samples from the same biological condition do not cluster together, this would comprise",
+						"a warning sign regarding the quality of the samples. In addition, DEG heatmaps provide an initial view of",
+						"possible clusters of co-expressed genes."
+					),
 					volcano="Volcano plot",
-					biodist="DEG biotype detection",
-					filtered="Filtered biotypes",
-					none="No plot"
+					biodist=paste(
+						"The chromosome and biotype distributions bar diagram for Differentially Expressed Genes (DEGs) is split in",
+						"two panels: i) on the left panel DEGs are distributed per chromosome and the percentage of each chromosome",
+						"in the genome is presented in grey bars, the percentage of DEGs in each chromosome is presented in red lined",
+						"bars and the percentage of certain chromosomes in the distribution of DEGs is presented in solid red bars.",
+						"ii) on the right panel, DEGs are distributed per biotype and the percentage of each biotype in the genome (i.e.",
+						"in the whole set of features provided, for example, protein coding genes, non coding RNAs or pseudogenes) is",
+						"presented in grey bars, the percentage of DEGs in each biotype is presented in blue lined bars and the percentage",
+						"of each biotype in DEGs is presented in solid blue lines. The vertical green line separates the most abundant",
+						"biotypes (in the left-hand side, corresponding to the left axis scale), from the rest (in the right-hand side,",
+						"corresponding to the right axis scale). Otherwise, the lower abundance, biotypes would be indistiguishable.",
+						collapse=" "
+					),
+					filtered=paste(
+						"The chromosome and biotype distribution of filtered genes is a quality control chart with two rows and four",
+						"panels: on the left panel of the first row, the bar chart depicts the numbers of filtered genes per chromosome",
+						"(actual numbers shown above the bars). On the right panel of the first row, the bar chart depicts the numbers",
+						"of filtered genes per biotype (actual numbers shown above the bars). On the left panel of the second row, the",
+						"bar chart depicts the fraction of the filtered genes to the total genes per chromosome (actual percentages",
+						"shown above the bars). On the right panel of the second row, the bar chart depicts the fraction of the filtered",
+						"genes to the total genes per biotype (actual percentages shown above the bars). This plot should indicate",
+						"possible quality problems when for example the filtered genes for a specific chromosome (or the fraction) is",
+						"extremely higher than the rest. Generally, the fractions per chromosome should be uniform and the fractions",
+						"per biotype should be proportional to the biotype fraction relative to the genome.",collapse=" "
+					)
+				),
+				references=list(
+					norm=list(
+						edaseq="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
+						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
+						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						none=NULL
+					),
+					stat=list(
+						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
+						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
+						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						limma="Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.",
+						bayseq="Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.",
+						nbpseq="",
+						ebseq="Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043"
+					),
+					meta=list(
+						fisher="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+						perm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+						whitlock=c(
+							"Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
+							"Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
+						),
+						none=NULL
+					),
+					multiple=list(
+						BH="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
+						fdr="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
+						BY="Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.",
+						bonferroni="Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.",
+						holm="Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics 6, 65-70.",
+						hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
+						hochberg="Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests of significance. Biometrika 75, 800-803.",
+						qvalue="Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445."
+					),
+					figure=list(
+						mds="Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012). htSeqTools: high-throughput sequencing quality control, processing and visualization in R. Bioinformatics 28, 589-590.",
+						biodetection="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						countsbio="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						saturation="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						readnoise="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						gcbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+						lengthbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+						meandiff="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+						meanvar="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+						rnacomp="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						biodist="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						venn="Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics 12, 35.",
+						filtered=NULL
+					)
 				)
 			)
 		}
@@ -1429,19 +1782,6 @@ disp <- function(...) {
 #			rownames(ann) <- ann$exon_id
 #		}
 #		dbDisconnect(db)
-#		return(ann)
-#	}
-#	else
-#		stop("metaseqr environmental variables are not properly set up! Annotations cannot be accessed...")
-#}
-#read.annotation <- function(org,type) {
-#	if (exists("ANNOTATION")) {
-#		load(file.path(ANNOTATION,paste(org,type,"rda",sep=".")))
-#		ann <- eval(parse(text=paste(org,type,sep="."))) # Is it loaded?
-#		if (type=="gene")
-#			rownames(ann) <- ann$gene_id
-#		else if (type=="exon")
-#			rownames(ann) <- ann$exon_id
 #		return(ann)
 #	}
 #	else

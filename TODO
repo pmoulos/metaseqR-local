@@ -1,0 +1,9 @@
+- Venn diagrams when meta-analysis is performed
+- Add NBPSeq in normalization and statistics
+- Add EBSeq in statistics
+- Think of some pre-defined settings for RNA-Seq analysis, e.g. strict: exon filter + only coding biotype + length > 750, loose: less strict exon filter + more biotypes + length > 500 etc.
+- Write evaluation functions for filters
+- Write evaluation functions for normalization and statistica list arguments
+- Study about efficiency of statistical algorithms and use it to make weights for the Whitlock method (e.g. Soneson and Delorenzi, 2013)
+- Create interactive MA plots with highcharts
+- Add diagnostic data tables (e.g. the results of dat2save from NOISeq or the RNA composition test results).

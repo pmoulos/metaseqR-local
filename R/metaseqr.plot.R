@@ -22,7 +22,7 @@
 #' @param diagplot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
 #' additional package, somethng that is checked while running the main metaseqr function. The supported plots are "mds", "biodetection",
 #' "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff", "meanvar", "deheatmap", "volcano", "biodist",
-#' "filtered".
+#' "filtered", "readnoise".
 #' For a brief description of these plots please see the main \code{\link{metaseqr}} help page.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
@@ -56,15 +56,15 @@
 #'}
 diagplot.metaseqr <- function(
 	object,sample.list,annotation=NULL,contrast.list=NULL,p.list=NULL,thresholds=list(p=0.05,f=1),
-	diagplot.type=c("mds","biodetection","countsbio","saturation","rnacomp","boxplot","gcbias","lengthbias",
+	diagplot.type=c("mds","biodetection","countsbio","saturation","readnoise","rnacomp","boxplot","gcbias","lengthbias",
 		"meandiff","meanvar","deheatmap","volcano","biodist","filtered"),
 	is.norm=FALSE,output="x11",path=NULL,...
 ) {
 	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
 	if (!is.matrix(object) && !is.data.frame(object))
 		stop("object argument must be a matrix or data frame!")
-	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist","gcbias","lengthbias","filtered")))
-		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"biodist\", \"gcbias\", \"lengthbias\" or \"filtered\"!")
+	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","readnoise","biodist","gcbias","lengthbias","filtered")))
+		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\" or \"filtered\"!")
 	if (any(diagplot.type %in% c("deheatmap","volcano","biodist"))) {
 		if (is.null(contrast.list))
 			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
@@ -73,7 +73,7 @@ diagplot.metaseqr <- function(
 	}
 	if (is.null(path)) path <- getwd()
 	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) object <- as.matrix(object)
-	if (any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist")))
+	if (any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist","readnoise")))
 		covars <- list(
 			data=object,
 			length=annotation$end - annotation$start,
@@ -83,8 +83,8 @@ diagplot.metaseqr <- function(
 			biotype=annotation$biotype
 		)
 
-	raw.plots <- c("mds","biodetection","countsbio","saturation","rnacomp")
-	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar")
+	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise")
+	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp")
 	stat.plots <- c("deheatmap","volcano","biodist")
 	other.plots <- c("filtered")
 	files <- list()
@@ -107,8 +107,8 @@ diagplot.metaseqr <- function(
 					files$saturation$biotype <- fil[["biotype"]]
 					files$saturation$sample <- fil[["sample"]]
 				},
-				rnacomp = {
-					files$rnacomp <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+				readnoise = {
+					files$readnoise <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
 				}
 			)
 		}
@@ -132,6 +132,9 @@ diagplot.metaseqr <- function(
 					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
 					for (n in names(fil))
 						files$meanvar[[n]] <- unlist(fil[[n]])
+				},
+				rnacomp = {
+					files$rnacomp <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,is.norm=is.norm,path=path,...)
 				}
 			)
 		}
@@ -394,7 +397,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 					fil[[n]][[i]] <- file.path(path,paste(which.plot,"_",status,"_",n,"_",s1,"_",s2,".",output,sep=""))
 					names(fil[[n]][i]) <- paste(s1,"vs",s2,sep="_")
 					graphics.open(output,fil[[n]][[i]])
-					meanVarPlot(s,main=paste("MV plot for ",n," ",status," samples ",s1," and ",s2,sep=""),cex.main=0.9)
+					suppressWarnings(meanVarPlot(s,main=paste("MV plot for ",n," ",status," samples ",s1," and ",s2,sep=""),cex.main=0.9))
 					graphics.close(output)
 				}
 			}
@@ -438,6 +441,8 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
 #' "bmp", "pdf" or "ps".
 #' @param path the path to create output files.
+#' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
+#' annotation purposes.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
 #' are produced.
@@ -470,11 +475,11 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #' diagplot.noiseq(data.matrix,sample.list,covars=covars,biodist.opts=list(p=p,pcut=0.1,name="A_vs_B"))
 #'}
 diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "countsbio", "saturation", "rnacomp", "biodist"),output="x11",
-	biodist.opts=list(p=NULL,pcut=NULL,name=NULL),path=NULL,...) {
+	biodist.opts=list(p=NULL,pcut=NULL,name=NULL),path=NULL,is.norm=FALSE,...) {
 	if (is.null(path)) path <- getwd()
 	# covars is a list of gc-content, factors, length, biotype, chromosomes, factors, basically copy of the noiseq object
 	which.plot <- tolower(which.plot[1])
-	check.text.args("which.plot",which.plot,c("biodetection","countsbio","saturation","rnacomp","biodist"),multiarg=FALSE)
+	check.text.args("which.plot",which.plot,c("biodetection","countsbio","saturation","readnoise","rnacomp","biodist"),multiarg=FALSE)
 	if (missing(covars))
 		stop("\"covars\" argument is required with NOISeq specific plots!")
 	else {
@@ -486,6 +491,10 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 			stop("A p-value must be provided for the \"biodist\" plot!")
 		if (is.null(biodist.opts$pcut) || is.na(biodist.opts$pcut)) biodist.opts$pcut=0.05
 	}
+	if (is.norm)
+		status<- "normalized"
+	else
+		status<- "raw"
 	
 	# All of these plots are NOISeq specific so we need a local NOISeq object
 	if (any(is.na(unique(covars$biotype))))
@@ -537,9 +546,17 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 		},
 		rnacomp = {
 			diagplot.data <- NOISeq::dat(local.obj,type="cd")
+			fil <- file.path(path,paste(which.plot,"_",status,".",output,sep=""))
+			graphics.open(output,fil)
+			explo.plot(diagplot.data)
+			grid()
+			graphics.close(output)
+		},
+		readnoise = {
+			D <- cddat(local.obj)
 			fil <- file.path(path,paste(which.plot,".",output,sep=""))
 			graphics.open(output,fil)
-			explo.plot(diagplot.data,main="RNA composition")
+			cdplot(D,main="RNA composition")
 			grid()
 			graphics.close(output)
 		},
@@ -655,8 +672,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		ylim.ab <- range(yab[,2:ncol(yab)])
 		ylim.nab <- range(ynab[,2:ncol(ynab)])
 		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lty=2,lwd=1.5,mfrow=c(1,2))
-		diagplot.new()
-		diagplot.window(xlim,ylim.nab)
+		plot.new()
+		plot.window(xlim,ylim.nab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.nab,10))
 		title(main="Non abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
@@ -677,8 +694,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 			box.lty=0,x.intersp=0.5,cex=0.6,text.font=2,
 			col=colspace[1:(ncol(ynab)-1)],pch=pchspace[1:(ncol(ynab)-1)]
 		)
-		diagplot.new()
-		diagplot.window(xlim,ylim.ab)
+		plot.new()
+		plot.window(xlim,ylim.ab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.ab,10))
 		title(main="Abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
@@ -716,8 +733,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		y <- do.call("cbind",y)
 		xlim <- range(do.call("c",depth))
 		ylim <- range(y)
-		diagplot.new()
-		diagplot.window(xlim,ylim)
+		plot.new()
+		plot.window(xlim,ylim)
 		axis(1,at=pretty(xlim,5),labels=as.character(pretty(xlim,5)/1e+6),line=0.5)
 		axis(2,at=pretty(ylim,5),line=0.5)
 		title(main=b,xlab="Depth in millions of reads",ylab="Detected features")
@@ -818,8 +835,8 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 	}
 	if (output!="json") {
 		par(cex.main=1.1,cex.lab=1.1,cex.axis=1.1,font.lab=2,font.axis=2,pty="m",lwd=1.5)
-		diagplot.new()
-		diagplot.window(xlim,ylim)
+		plot.new()
+		plot.window(xlim,ylim)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)))
 		axis(2,at=pretty(ylim,10))
 		title(paste(main="Volcano plot",con),xlab="Fold change",ylab="-log10(p-value)")
@@ -1060,8 +1077,8 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Chromosomes
 	barx.chr <- barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),yaxt="n",xaxt="n",plot=FALSE)
-	diagplot.new()
-	diagplot.window(xlim=c(0,ceiling(max(barx.chr))),ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
+	plot.new()
+	plot.window(xlim=c(0,ceiling(max(barx.chr))),ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(chr)+ceiling(max(chr)/10))),cex.axis=0.9,padj=1,font=2)
 	text(x=barx.chr,y=chr,label=barlab.chr,cex=0.7,font=2,col="green3",adj=c(0.5,-1.3))
 	title(main="Filtered genes per chromosome",cex.main=1.1)
@@ -1071,8 +1088,8 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Biotypes
 	barx.bt <- barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),yaxt="n",xaxt="n",plot=FALSE)
-	diagplot.new()
-	diagplot.window(xlim=c(0,ceiling(max(barx.bt))),ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
+	plot.new()
+	plot.window(xlim=c(0,ceiling(max(barx.bt))),ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(bt)+ceiling(max(bt)/10))),cex.axis=0.9,padj=1,font=2)
 	text(x=barx.bt,y=bt,label=barlab.bt,cex=0.7,font=2,col="blue",adj=c(0.5,-1.3),xpd=TRUE)
 	title(main="Filtered genes per biotype",cex.main=1.1)
@@ -1082,9 +1099,9 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Chromosome percentage
 	barx.per.chr <- barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),yaxt="n",xaxt="n",plot=FALSE)
-	diagplot.new()
+	plot.new()
 	par(mar=c(9,4,1,1))
-	diagplot.window(xlim=c(0,max(barx.per.chr)),ylim=c(0,max(per.chr)))
+	plot.window(xlim=c(0,max(barx.per.chr)),ylim=c(0,max(per.chr)))
 	#axis(1,at=barx.per.chr,labels=names(per.chr),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
 	axis(1,at=barx.per.chr,labels=FALSE,tcl=-0.3,col="lightgrey")
 	axis(2,at=seq(0,max(per.chr),length.out=5),labels=formatC(seq(0,max(per.chr),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
@@ -1096,9 +1113,9 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 	# Biotype percentage
 	barx.per.bt <- barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),yaxt="n",xaxt="n",plot=FALSE)
-	diagplot.new()
+	plot.new()
 	par(mar=c(9,4,1,1))
-	diagplot.window(xlim=c(0,max(barx.per.bt)),ylim=c(0,max(per.bt)))
+	plot.window(xlim=c(0,max(barx.per.bt)),ylim=c(0,max(per.bt)))
 	#axis(1,at=barx.per.bt,labels=names(per.bt),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
 	axis(1,at=barx.per.bt,labels=FALSE,tcl=-0.3,col="lightgrey")
 	axis(2,at=seq(0,max(per.bt),length.out=5),labels=formatC(seq(0,max(per.bt),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
@@ -1217,4 +1234,66 @@ nat2log <- function(x,base=2,off=1) {
 		return(log2(x))
 	else
 		return(log10(x))
+}
+
+#' Old functions from NOISeq
+#'
+#' Old functions from NOISeq to create the \code{readnoise} plots. Internal use only.
+cddat <- function (input) {
+	if (inherits(input,"eSet") == FALSE)
+		stop("ERROR: The input data must be an eSet object.\n")
+	if (!is.null(assayData(input)$exprs)) {
+		if (ncol( assayData(input)$exprs) < 2)
+			stop("ERROR: The input object should have at least two samples.\n")
+		datos <- assayData(input)$exprs
+	}
+	else {
+		if (ncol( assayData(input)$counts) < 2)
+			stop("ERROR: The input object should have at least two samples.\n")
+		datos <- assayData(input)$counts
+	}
+	datos <- datos[which(rowSums(datos) > 0),]
+	nu <- nrow(datos) # number of detected features
+	qq <- 1:nu
+	data2plot = data.frame("%features" = 100*qq/nu)
+	for (i in 1:ncol(datos)) {
+		acumu <- 100*cumsum(sort(datos[,i], decreasing = TRUE))/sum(datos[,i])
+		data2plot = cbind(data2plot, acumu)    
+	}
+	colnames(data2plot)[-1] = colnames(datos)
+  
+	# Diagnostic test
+	KSpval = mostres = NULL
+	for (i in 1:(ncol(datos)-1)) {
+		for (j in (i+1):ncol(datos)) {      
+			mostres = c(mostres, paste(colnames(datos)[c(i,j)], collapse = "_"))
+			KSpval = c(KSpval, suppressWarnings(ks.test(datos[,i], datos[,j], alternative = "two.sided"))$"p.value")
+		}
+	}	
+	KSpval = p.adjust(KSpval, method = "fdr")
+  
+	return(list(
+		"data2plot"=data2plot,
+		"DiagnosticTest"=data.frame("ComparedSamples"=mostres,"KSpvalue"=KSpval)
+	))
+}
+
+#' Old functions from NOISeq
+#'
+#' Old functions from NOISeq to create the \code{readnoise} plots. Internal use only.
+cdplot <- function (dat,samples=NULL,...) {
+	dat = dat$data2plot
+	if (is.null(samples)) samples <- 1:(ncol(dat)-1)
+	if (is.numeric(samples)) samples = colnames(dat)[samples+1]
+	colspace <- c("red","blue","yellowgreen","orange","aquamarine2","pink2","seagreen4","brown","purple","chocolate",
+		"gray10","gray30","darkblue","darkgreen","firebrick2","darkorange4","darkorchid","darkcyan","gold4","deeppink3")
+	if (length(samples)>length(colspace))
+		miscolores <- sample(colspace,length(samples),replace=TRUE)
+	else
+		miscolores <- sample(colspace,length(samples))
+	plot(dat[,1],dat[,samples[1]],xlab="% features",ylab="% reads",type="l",col=miscolores[1],...)
+	for (i in 2:length(samples))
+		lines(dat[,1],dat[,samples[i]],col=miscolores[i])
+
+	legend("bottom",legend=samples,text.col=miscolores[1:length(samples)],bty="n",lty=1,lwd=2,col=miscolores[1:length(samples)])
 }
