@@ -26,6 +26,9 @@ check.packages <- function(n,d,a,m,s,p,r) {
 		noiseq = {
 			if (!require(NOISeq)) stop("Bioconductor package NOISeq is required for \"noiseq\" normalization!")
 		},
+		nbpseq = {
+			if (!require(NBPSeq)) stop("Bioconductor package NBPSeq is required for \"nbpseq\" normalization!")
+		},
 		none = {}
 	)
 	# Check differential expression method
@@ -47,6 +50,9 @@ check.packages <- function(n,d,a,m,s,p,r) {
 			limma = {
 				if (!require(limma)) stop("Bioconductor package limma is required for \"limma\" differential expression!")
 				if (!require(edgeR)) stop("Bioconductor package edgeR is required for \"edger\" differential expression!")
+			},
+			nbpseq = {
+				if (!require(NBPSeq)) stop("Bioconductor package NBPSeq is required for \"nbpseq\" differential expression!")
 			},
 			none = {}
 		)

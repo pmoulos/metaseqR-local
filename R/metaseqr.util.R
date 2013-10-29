@@ -251,11 +251,12 @@ read.annotation <- function(org,type) {
 #' for details.
 #'
 #' @param what a keyword determining the procedure for which to fetch the default settings according to method parameter. It can be
-#' one of "normalization", "statistics", "gene.filter", "exon.filter" or "biotype.filter".
-#' @param method the supported algorithm included in metaseqr for which to fetch the default settings. When what is "normalization",
-#' method is one of "edaseq", "deseq", "edger" or "noiseq". When what is "statistics", method is one of "deseq", "edger", "noiseq",
-#' "bayseq", "limma" or "ebseq". When method is "biotype.filter", what is the input organism (see the main \code{\link{metaseqr}} 
-#' help page for a list of supported organisms).
+#' one of \code{"normalization"}, \code{"statistics"}, \code{"gene.filter"}, \code{"exon.filter"} or \code{"biotype.filter"}.
+#' @param method the supported algorithm included in metaseqr for which to fetch the default settings. When what is \code{"normalization"},
+#' method is one of \code{"edaseq"}, \code{"deseq"}, \code{"edger"}, \code{"noiseq"} or \code{"nbpseq"}. When what is \code{"statistics"},
+#' method is one of \code{"deseq"}, \code{"edger"}, \code{"noiseq"}, \code{"bayseq"}, \code{"limma"} or \code{"nbpseq"}. When method is
+#' \code{"biotype.filter"}, \code{what} is the input organism (see the main \code{\link{metaseqr}} help page for a list of
+#' supported organisms).
 #' @return A list with default setting that can be used directly in the call of metaseqr.
 #' @export
 #' @author Panagiotis Moulos
@@ -292,12 +293,13 @@ get.defaults <- function(what,method=NULL) {
 						refColumn=1,logratioTrim=0.3,sumTrim=0.05,
 						doWeighting=TRUE,Acutoff=-1e+10			# TMM normalization arguments
 					))
-				}
+				},
+				nbpseq = { return(list(main.method="nbpseq",method="AH2010",thinning=TRUE)) }
 			)
 		},
 		statistics = {
 			switch(method,
-				deseq = { return(list()) },
+				deseq = { return(list(method="blind",sharingMode="fit-only")) },
 				edger = {
 					return(list(
 						main.method="classic",							# classic or glm fit
@@ -324,7 +326,15 @@ get.defaults <- function(what,method=NULL) {
 						consensus=FALSE,moderate=TRUE,pET="BIC",marginalise=FALSE,subset=NULL,priorSubset=NULL,bootStraps=1,
 						conv=1e-4,nullData=FALSE,returnAll=FALSE,returnPD=FALSE,discardSampling=FALSE,cl=NULL))
 				},
-				limma = { return(list()) }
+				limma = { return(list()) },
+				nbpseq = {
+					return(list(
+						main.method="nbpseq",
+						method=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
+						tests="HOA",
+						alternative="two.sided"
+					))
+				}
 			)
 		},
 		gene.filter = {
@@ -1254,14 +1264,16 @@ make.report.messages <- function(lang) {
 					edaseq="EDASeq",
 					deseq="DESeq",
 					edger="edgeR",
-					noiseq="NOISeq"
+					noiseq="NOISeq",
+					nbpseq="NBPSeq"
 				),
 				stat=list(
 					deseq="DESeq",
 					edger="edgeR",
 					noiseq="NOISeq",
 					bayseq="baySeq",
-					limma="limma"
+					limma="limma",
+					nbpseq="NBPSeq"
 				),
 				meta=list(
 					intersection="Intersection of individual results",
@@ -1481,6 +1493,7 @@ make.report.messages <- function(lang) {
 						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
 						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
 						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+						nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
 						none=NULL
 					),
 					stat=list(
@@ -1489,7 +1502,7 @@ make.report.messages <- function(lang) {
 						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
 						limma="Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.",
 						bayseq="Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.",
-						nbpseq="",
+						nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
 						ebseq="Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043"
 					),
 					meta=list(

@@ -8,8 +8,11 @@
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param norm.args a list of DESeq normalization parameters. See the result of \code{get.defaults("normalization", "deseq")} for
-#' an example and how you can modify it.
+#' @param stat.args a list of DESeq statistical algorithm parameters. See the result of \code{get.defaults("statistics", "deseq")}
+#' for an example and how you can modify it. It is not required when the input object is already a CountDataSet from DESeq normalization
+#' as the dispersions are already estimated.
+#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
+#' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
 #' @return A named list of p-values, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
 #' @export
@@ -22,9 +25,11 @@
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
 #' p <- stat.deseq(norm.data.matrix,sample.list,contrast)
 #'}
-stat.deseq <- function(object,sample.list,contrast.list=NULL,norm.args=NULL) {
+stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL) {
 	if (is.null(norm.args) && class(object)=="DGEList")
 		norm.args <- get.defaults("normalization","edger")
+	if (is.null(stat.args) && class(object)!="CountDataSet")
+		stat.args <- get.defaults("statistics","deseq")
 	if (is.null(contrast.list))
 		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
 	if (!is.list(contrast.list))
@@ -46,7 +51,7 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,norm.args=NULL) {
 				cds <- newCountDataSet(round(t(t(object$counts)/scl)*mean(scl)),the.design$condition)
 			}
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+			cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode)
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			cds <- newCountDataSet(object,the.design$condition)
@@ -454,6 +459,135 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		tmp <- topCounts(cd,group="DE",number=nrow(cd))
 		p[[con.name]] <- as.numeric(tmp[,"FDR"])
 		names(p[[con.name]]) <- rownames(tmp)
+	}
+	return(p)
+}
+
+#' Statistical testing with NBPSeq
+#'
+#' This function is a wrapper over NBPSeq statistical testing. It accepts a matrix of normalized gene counts or an S4 object specific
+#' to each normalization algorithm supported by metaseqr.
+#'
+#' @param object a matrix or an object specific to each normalization algorithm supported by metaseqr, containing normalized counts.
+#' Apart from matrix (also for NOISeq), the object can be a SeqExpressionSet (EDASeq), CountDataSet (DESeq), DGEList (edgeR) or list
+#' (NBPSeq).
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}.
+#' @param stat.args a list of NBPSeq statistical algorithm parameters. See the result of \code{get.defaults("statistics", "nbpseq")}
+#' for an example and how you can modify it. It is not required when the input object is already a list from NBPSeq normalization
+#' as the dispersions are already estimated.
+#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
+#' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
+#' \code{gene.counts} matrix.
+#' @return A named list of p-values, whose names are the names of the contrasts.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' contrast <- "A_vs_B"
+#' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)
+#' p <- stat.nbpseq(norm.data.matrix,sample.list,contrast)
+#'}
+stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,libsize.list=NULL) {
+	if (is.null(norm.args) && class(object)=="DGEList")
+		norm.args <- get.defaults("normalization","edger")
+	if (is.null(stat.args) && class(object)!="list")
+		stat.args <- get.defaults("statistics","nbpseq")
+	if (is.null(contrast.list))
+		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
+	if (!is.list(contrast.list))
+		contrast.list <- make.contrast.list(contrast.list,sample.list)
+	if (is.null(libsize.list)) {
+		libsize.list <- vector("list",length(classes))
+		names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+		for (n in names(libsize.list))
+			libsize.list[[n]] <- sum(gene.counts[,n])
+	}
+	lib.sizes <- unlist(libsize.list)
+	classes <- as.class.vector(sample.list)
+	p <- vector("list",length(contrast.list))
+	names(p) <- names(contrast.list)
+	switch(class(object),
+		CountDataSet = { # Has been normalized with DESeq
+			counts <- round(counts(object,normalized=TRUE))
+		},
+		DGEList = { # Has been normalized with edgeR
+			if (norm.args$main.method=="classic") {
+				counts <- round(object$pseudo.counts)
+			}
+			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+				scl <- object$samples$lib.size * object$samples$norm.factors
+				counts <- round(t(t(object$counts)/scl)*mean(scl))
+			}
+		},
+		matrix = { # Has been normalized with EDASeq or NOISeq
+			counts <- object
+		},
+		list = { # Has been normalized with NBPSeq
+			nb.data <- object
+		},
+		nbp = { # Same...
+			nb.data <- object
+		}	
+	)
+	if (class(object)!="list" && class(object)!="nbp") { # To avoid repeating the following chunk in the above
+		if (stat.args$main.method=="nbpseq") {
+			nb.data <- list(
+				counts=as.matrix(counts),
+				lib.sizes=lib.sizes,
+				norm.factors=rep(1,dim(counts)[2]),
+				eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
+				rel.frequencies=as.matrix(sweep(counts,2,lib.sizes*rep(1,dim(counts)[2]),"/")),
+				tags=matrix(row.names(counts),dim(counts)[1],1)
+			)
+		}
+		else if (stat.args$main.method=="nbsmyth") {
+			nb.data <- new("nbp",list(
+				counts=as.matrix(counts),
+				lib.sizes=lib.sizes,
+				grp.ids=classes,
+				eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
+				pseudo.counts=as.matrix(counts),
+				pseudo.lib.sizes=colSums(as.matrix(counts))*rep(1,dim(counts)[2])
+			))
+		}
+	}
+	for (con.name in names(contrast.list)) {
+		disp("  Contrast: ", con.name,"\n")
+		con <- contrast.list[[con.name]]
+		cons <- unique(unlist(con))
+		if (length(con)==2) {
+			if (stat.args$main.method=="nbpseq") {
+				dispersions <- estimate.dispersion(nb.data,model.matrix(~classes),method=stat.args$method$nbpseq)
+				res <- test.coefficient(nb.data,dispersion=dispersions,x=model.matrix(~classes),beta0=c(NA,0),tests=stat.args$tests,
+					alternative=stat.args$alternative,print.level=1)
+				p[[con.name]] <- res[[stat.args$tests]]$p.values
+			}
+			else if (stat.args$main.method=="nbsmyth") {
+				obj <- suppressWarnings(estimate.disp(nb.data,method=stat.args$method$nbsmyth,print.level=0))
+				obj <- exact.nb.test(obj,cons[1],cons[2],print.level=0)
+				p[[con.name]] <- obj$p.values
+			}
+		}
+		else {
+			warning(
+				paste("NBPSeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name),
+				call.=FALSE
+			)
+			cds <- newCountDataSet(nb.data$counts,data.frame(condition=unlist(con),row.names=names(unlist(con))))
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+			fit0 <- fitNbinomGLMs(cds,count~1)
+			fit1 <- fitNbinomGLMs(cds,count~condition)
+			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
+		}
+		names(p[[con.name]]) <- rownames(nb.data$counts)
 	}
 	return(p)
 }

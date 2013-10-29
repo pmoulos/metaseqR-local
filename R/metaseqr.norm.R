@@ -283,3 +283,63 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 	else if (output=="matrix")
 		return(round(M)) # Class: matrix
 }
+
+#' Normalization based on the NBPSeq package
+#'
+#' This function is a wrapper over DESeq normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
+#' generated table of counts to the main metaseqr pipeline)
+#'
+#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
+#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param norm.args a list of NBPSeq normalization parameters. See the result of \code{get.defaults("normalization", "nbpseq")} for
+#' an example and how you can modify it.
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
+#' \code{gene.counts} matrix.
+#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
+#' NBPSeq native S4 object (a specific list). In the latter case it should be handled with suitable NBPSeq methods.
+#' @return A matrix with normalized counts or a list with the normalized counts and other NBPSeq specific parameters.
+#' @author Panagiotis Moulos
+#' @export
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' diagplot.boxplot(data.matrix,sample.list)
+#'
+#' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)
+#' diagplot.boxplot(norm.data.matrix,sample.list)
+#'}
+normalize.nbpseq <- function(gene.counts,sample.list,norm.args=NULL,libsize.list=NULL,output=c("matrix","native")) {
+	if (is.null(norm.args))
+		norm.args <- get.defaults("normalization","nbpseq")
+	output <- tolower(output[1])
+	check.text.args("output",output,c("matrix","native"))
+	classes <- as.class.vector(sample.list)
+	if (is.null(libsize.list)) {
+		libsize.list <- vector("list",length(classes))
+		names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+		for (n in names(libsize.list))
+			libsize.list[[n]] <- sum(gene.counts[,n])
+	}
+	lib.sizes <- unlist(libsize.list)
+	norm.factors <- estimate.norm.factors(gene.counts,lib.sizes=lib.sizes,method=norm.args$method)
+	if (norm.args$main.method=="nbpseq")
+		nb.data <- prepare.nb.data(gene.counts,lib.sizes=lib.sizes,norm.factors=norm.factors)
+	else if (norm.args$main.method=="nbsmyth")
+		nb.data <- prepare.nbp(gene.counts,classes,lib.sizes=lib.sizes,norm.factors=norm.factors,thinning=norm.args$thinning)
+	if (output=="native")
+		return(nb.data) # Class: list or nbp
+	else if (output=="matrix") {
+		if (norm.args$main.method=="nbpseq") {
+			norm.counts <- matrix(0,nrow(gene.counts),ncol(gene.counts))
+			for (i in 1:ncol(gene.counts))
+				norm.counts[,i] <- norm.factors[i]*gene.counts[,i]
+		}
+		else if (norm.args$main.method=="nbsmyth") 
+			norm.counts <- nb.data$pseudo.counts
+		return(as.matrix(round(norm.counts))) # Class: matrix
+	}
+}

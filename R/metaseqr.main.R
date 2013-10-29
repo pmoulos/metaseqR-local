@@ -22,9 +22,9 @@
 #' @param counts a text tab-delimited file containing gene or exon counts in one of the following formats: i) the first column contains
 #' unique gene or exon identifiers and the rest of the columns contain the read counts for each sample. Thus the first cell of each
 #' row is a gene or exon accession and the rest are integers representing the counts for that accession. In that case, the \code{annotation}
-#' parameter should strictly be "fixed", "download" or an external file in proper format. ii) The first n columns should contain
+#' parameter should strictly be \code{"fixed"}, \code{"download"} or an external file in proper format. ii) The first n columns should contain
 #' gene or exon annotation elements like chromosomal locations, gene accessions, exon accessions, GC content etc. In that case, the
-#' \code{annotation} parameter can also be "embedded". The ideal embedded annotation contains 8 columns, chromosome, gene or exon start,
+#' \code{annotation} parameter can also be \code{"embedded"}. The ideal embedded annotation contains 8 columns, chromosome, gene or exon start,
 #' gene or exon end, gene or exon accession, GC-content (fraction or percentage), strand, HUGO gene symbol and gene biotype (e.g.
 #' "protein_coding" or "ncRNA"). When the \code{annotation} parameter is "embedded", certain of these features are mandatory (co-ordinates
 #' and accessions). If they are not present, the pipeline will not run. If additional elements are not present (e.g. GC content or
@@ -87,15 +87,17 @@
 #' @param normalization the normalization algorithm to be applied on the count data. It can be one of "edaseq" (default) for EDASeq
 #' normalization, "deseq" for the normalization algorithm (individual options specified by the \code{norm.args} argument) in the DESeq
 #' package, "edger" for the normalization algorithms present in the edgeR package (specified by the \code{norm.args} argument), "noiseq"
-#' for the normalization algorithms present in the NOISeq package (specified by the \code{norm.args} argument) or "none" to not
-#' normalize the data (highly unrecommended).
+#' for the normalization algorithms present in the NOISeq package (specified by the \code{norm.args} argument), "nbpseq" for the
+#' normalization algorithms present in the NBPSeq package (specified by the \code{norm.args} argument)  or "none" to not normalize 
+#' the data (highly unrecommended).
 #' @param norm.args a named list whose names are the names of the normalization algorithm parameters and its members parameter values.
 #' See section "Normalization parameters" below for details. Leave NULL for the defaults of \code{normalization}.
 #' @param statistics one or more statistical analyses to be performed by the metaseqr pipeline.It can be one or more of "deseq" (default)
 #' to conduct statistical test(s) implemented in the DESeq package, "edger" to conduct statistical test(s) implemented in the edgeR
 #' package, "limma" to conduct the RNA-Seq version of statistical test(s) implemented in the limma package, "noiseq" to conduct statistical
-#' test(s) implemented in the NOISeq package and "baySeq" to conduct statistical test(s) implemented in the baySeq package. In any case
-#' individual algorithm parameters are controlled by the contents of the \code{stat.args} list.
+#' test(s) implemented in the NOISeq package, "bayseq" to conduct statistical test(s) implemented in the baySeq package and "nbpseq" to
+#' conduct statistical test(s) implemented in the baySeq package In any case individual algorithm parameters are controlled by the
+#' contents of the \code{stat.args} list.
 #' @param stat.args a named list whose names are the names of the statistical algorithms used in the pipeline. Each member is another
 #' named list whose names are the algorithm parameters and its members are the parameter values. See section "Statistics parameters"
 #' below for details. Leave NULL for the defaults of \code{statistics}.
@@ -200,23 +202,30 @@
 #' for user-defined filters in the form of a function.
 #' @section Normalization parameters: The normalization parameters are passed again as a named list where the names of the members
 #' are the normalization parameter names and the values are the normalization parameter values. You should check the documentation
-#' of the packages EDASeq, DESeq, edgeR and NOISeq for the parameter names and parameter values. There are two exceptions in parameter
-#' names: in case of \code{normalization="edaseq"} the only parameter names are \code{within.which} and \code{between.which}, controlling
-#' the withing lane/sample and between lanes/samples normalization algorithm. In case of \code{normalization="edger"}, apart from
-#' the rest of the edgeR normalization arguments, there is the argument \code{main.method} which can be either "classic" or "glm"
-#' (see the edgeR's manual for details, briefly these are different algorithms for estimating sample dispersion parameters and
-#' normalization factors), and \code{norm.method} which controls the normalization method and replaces the \code{method} parameter
-#' respective edgeR's calls (again see edgeR's manual). For the rest of the algorithms, the parameter names are the same as the names
-#' used in the respective packages. For examples, please use the \code{\link{get.defaults}} function.
+#' of the packages EDASeq, DESeq, edgeR, NOISeq and NBPSeq for the parameter names and parameter values. There are a few two exceptions
+#' in parameter names: in case of \code{normalization="edaseq"} the only parameter names are \code{within.which} and \code{between.which}, 
+#' controlling the withing lane/sample and between lanes/samples normalization algorithm. In case of \code{normalization="edger"}, 
+#' apart from the rest of the edgeR normalization arguments, there is the argument \code{main.method} which can be either "classic" 
+#' or "glm" (see the edgeR's manual for details, briefly these are different algorithms for estimating sample dispersion parameters and
+#' normalization factors), and \code{norm.method} which controls the normalization method and replaces the \code{method} parameter in
+#' respective edgeR's calls (again see edgeR's manual). For the rest of the algorithms, the parameter names are the same as the
+#' names used in the respective packages. For examples, please use the \code{\link{get.defaults}} function.
 #' @section Statistics parameters: The statistics parameters as passed to statistical algorithms in metaseqr, exactly with the same
 #' way as the normalization parametes above. In this case, there is one more layer in list nesting. Thus, \code{stat.args} is a named
 #' list whose names are the names the algorithms used (see the \code{statistics} parameter). Each member is another named list,with
 #' parameters to be used for each statistical algorithm. Again, the names of the member lists are parameter names and the values of
-#' the member lists are parameter values. You should check the documentations of DESeq, edgeR, NOISeq, baySeq and limma for these
-#' parameters. There is one exception in parameter names: In case of \code{normalization="edger"}, apart from the rest of the edgeR
-#' statistical testing arguments, there is the argument \code{main.method} which can be either "classic" or "glm", again defining
+#' the member lists are parameter values. You should check the documentations of DESeq, edgeR, NOISeq, baySeq, limma and NBPSeq for 
+#' these parameters. There are a few exceptions in parameter names: In case of \code{statistics="edger"}, apart from the rest of the 
+#' edgeR statistical testing arguments, there is the argument \code{main.method} which can be either "classic" or "glm", again defining
 #' whether the binomial test or GLMs will be used for statistical testing. For examples, please use the \code{\link{get.defaults}}
-#' function.
+#' function. When \code{statistics="nbpseq"}, apart from the rest arguments of the NBPSeq functions \code{estimate.disp} and
+#' \code{estimate.dispersion}, there is the argument \code{main.method} which can be \code{"nbpseq"} or \code{"nbsmyth"}. This
+#' argument determines the parameters to be used by the \code{estimate.dispersion} function or by the \code{estimate.disp} function
+#' to estimate RNA-Seq count dispersions. The difference between the two is that they constitute different starting points for two
+#' workflows in the package NBPSeq. The first worklfow (with \code{main.method="nbpseq"} and the \code{estimate.dispersion} function
+#' is NBPSeq package specific, while the second (with \code{main.method="nbsmyth"} and the \code{estimate.disp} function is similar
+#' to the workflow of the edgeR package. For additional information regarding the statistical testing in NBPSeq, please consult
+#' the documentation of the NBPSeq package.
 #' @note Please note that currently only gene and exon annotation from Ensembl (http://www.ensembl.org) are supported. Thus, the
 #' unique gene or exon ids in the counts files should correspond to valid Ensembl gene or exon accessions for the organism of interest.
 #' If you are not sure about the source of your counts file or do not know how to produce it, it's better to start from the original
@@ -357,9 +366,9 @@ metaseqr <- function(
 		),
 		biotype=get.defaults("biotype.filter",org[1])
 	),
-	normalization=c("edaseq","deseq","edger","noiseq","none"),
+	normalization=c("edaseq","deseq","edger","noiseq","nbpseq","none"),
 	norm.args=NULL,
-	statistics=c("deseq","edger","noiseq","bayseq","limma"),
+	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
 	meta.p=if (length(statistics)>1) c("fisher","perm","whitlock","intersection","union","none") else "none",
@@ -449,8 +458,8 @@ metaseqr <- function(
 	check.text.args("annotation",annotation,c("embedded","download","fixed"),multiarg=FALSE)
 	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
-	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","none"),multiarg=FALSE)
-	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma"),multiarg=TRUE)
+	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","nbpseq","none"),multiarg=FALSE)
+	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
 	check.text.args("meta.p",meta.p,c("fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("x11","png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),multiarg=TRUE)
@@ -868,11 +877,14 @@ metaseqr <- function(
 		noiseq = {
 			norm.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="native")
 		},
+		nbpseq = {
+			norm.genes <- normalize.nbpseq(gene.counts,sample.list,norm.args,libsize.list,output="native")
+		},
 		none = { # In case some external normalization is applied (e.g. equal read counts from all samples)
 			norm.genes <- gene.counts
 		}
 	)
-
+	
 	switch(class(norm.genes),
 		CountDataSet = { # Has been normalized with DESeq
 			temp.matrix <- round(counts(norm.genes,normalized=TRUE))
@@ -885,8 +897,14 @@ metaseqr <- function(
 				temp.matrix <- round(t(t(norm.genes$counts)/scl)*mean(scl))
 			}
 		},
-		matrix = { # Has been normalized with EDASeq or NOISeq
+		matrix = { # Has been normalized with EDASeq or NOISeq or nothing
 			temp.matrix <- norm.genes
+		},
+		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+			temp.matrix <- as.matrix(round(sweep(norm.genes$counts,2,norm.genes$norm.factors,"*")))
+		},
+		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+			 temp.matrix <- as.matrix(round(norm.genes$pseudo.counts))
 		}
 	)
 
@@ -918,6 +936,18 @@ metaseqr <- function(
 			},
 			matrix = { # Has been normalized with EDASeq or NOISeq
 				norm.genes.expr <- norm.genes[-the.dead,]
+			},
+			list = { # Has been normalized with NBPSeq, main.method="nbpseq"
+				norm.genes.expr <- norm.genes
+				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead,])
+				norm.genes.expr$rel.frequencies <- norm.genes.expr$rel.frequencies[-the.dead,]
+				norm.genes.expr$tags <- as.matrix(norm.genes.expr$tags[-the.dead,])
+			},
+			nbp = {
+				norm.genes.expr <- norm.genes
+				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead,])
+				norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead,])
+				norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$counts))*rep(1,dim(norm.genes.expr$counts)[2])
 			}
 		)
 		gene.counts.expr <- gene.counts[rownames(norm.genes.expr),]
@@ -976,6 +1006,9 @@ metaseqr <- function(
 			},
 			limma = {
 				p.list <- stat.limma(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]])
+			},
+			nbpseq = {
+				p.list <- stat.nbpseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args,libsize.list)
 			}
 		)
 		for (n in names(p.list))
@@ -1077,6 +1110,14 @@ metaseqr <- function(
 				scl.n <- norm.genes.expr$samples$lib.size * norm.genes.expr$samples$norm.factors
 				norm.genes.expr <- round(t(t(norm.genes.expr$counts)/scl.n)*mean(scl.n))
 			}
+		},
+		list = {
+			norm.genes <- as.matrix(round(sweep(norm.genes$counts,2,norm.genes$norm.factors,"*")))
+			norm.genes.expr <- as.matrix(round(sweep(norm.genes.expr$counts,2,norm.genes$norm.factors,"*")))
+		},
+		nbp = {
+			norm.genes <- as.matrix(round(norm.genes$pseudo.counts))
+			norm.genes.expr <- as.matrix(round(norm.genes.expr$pseudo.counts))
 		}
 		# We don't need the matrix case
 	)
