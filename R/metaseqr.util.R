@@ -226,7 +226,7 @@ annotations.update <- function() {
 #' A function to read fixed annotations from the local repository.
 #'
 #' @param org one of the supported organisms.
-#' @param type "gene" or "exon".
+#' @param type \code{"gene"} or \code{"exon"}.
 #' @return A data frame with the \code{type} annotation for \code{org}.
 #' @author Panagiotis Moulos
 #' @export
@@ -252,11 +252,11 @@ read.annotation <- function(org,type) {
 #'
 #' @param what a keyword determining the procedure for which to fetch the default settings according to method parameter. It can be
 #' one of \code{"normalization"}, \code{"statistics"}, \code{"gene.filter"}, \code{"exon.filter"} or \code{"biotype.filter"}.
-#' @param method the supported algorithm included in metaseqr for which to fetch the default settings. When what is \code{"normalization"},
-#' method is one of \code{"edaseq"}, \code{"deseq"}, \code{"edger"}, \code{"noiseq"} or \code{"nbpseq"}. When what is \code{"statistics"},
-#' method is one of \code{"deseq"}, \code{"edger"}, \code{"noiseq"}, \code{"bayseq"}, \code{"limma"} or \code{"nbpseq"}. When method is
-#' \code{"biotype.filter"}, \code{what} is the input organism (see the main \code{\link{metaseqr}} help page for a list of
-#' supported organisms).
+#' @param method the supported algorithm included in metaseqr for which to fetch the default settings. When \code{what} is 
+#' \code{"normalization"}, method is one of \code{"edaseq"}, \code{"deseq"}, \code{"edger"}, \code{"noiseq"} or \code{"nbpseq"}. 
+#' When \code{what} is \code{"statistics"}, method is one of \code{"deseq"}, \code{"edger"}, \code{"noiseq"}, \code{"bayseq"},
+#' \code{"limma"} or \code{"nbpseq"}. When \code{method} is \code{"biotype.filter"}, \code{what} is the input organism (see the 
+#' main \code{\link{metaseqr}} help page for a list of supported organisms).
 #' @return A list with default setting that can be used directly in the call of metaseqr.
 #' @export
 #' @author Panagiotis Moulos
@@ -531,9 +531,9 @@ get.defaults <- function(what,method=NULL) {
 #' for a list of supported organisms. The function downloads annotation for an organism genes or exons.
 #'
 #' @param org the organism for which to download annotation.
-#' @param type either "gene" or "exon".
-#' @return A data frame with the canonical (not isoforms!) genes or exons of the requested organism. When type="genes", the data
-#' frame has the following columns: chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype. When type="exon" the
+#' @param type either \code{"gene"} or \code{"exon"}.
+#' @return A data frame with the canonical (not isoforms!) genes or exons of the requested organism. When \code{type="genes"}, the data
+#' frame has the following columns: chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype. When \code{type="exon"} the
 #' data frame has the following columns: chromosome, start, end, exon_id, gene_id, strand, gene_name, biotype. The gene_id and exon_id
 #' correspond to Ensembl gene and exon accessions respectively. The gene_name corresponds to HUGO nomenclature gene names.
 #' @note The data frame that is returned contains only "canonical" chromosomes for each organism. It does not contain haplotypes or
@@ -760,8 +760,8 @@ get.exon.attributes <- function() {
 #' Calculates fold changes
 #'
 #' Returns a matrix of fold changes based on the requested contrast, the list of all samples and the data matrix which is produced
-#' by the metaseqr workflow. For details on the contrast, sample.list and log.offset parameters, see the main usage page of metaseqr.
-#' This function is intended mostly for internal use but can also be used independently.
+#' by the metaseqr workflow. For details on the \code{contrast}, \code{sample.list} and \code{log.offset} parameters, see the main 
+#' usage page of metaseqr. This function is intended mostly for internal use but can also be used independently.
 #'
 #' @param contrast the vector of requested statistical comparison contrasts.
 #' @param sample.list the list containing condition names and the samples under each condition.
@@ -808,9 +808,9 @@ make.fold.change <- function(contrast,sample.list,data.matrix,log.offset=1) {
 #' a <td></td> tag set. Internal use.
 #'
 #' @param mat the data matrix (numeric or character)
-#' @param type the type of data in the matrix ("numeric" or "character")
+#' @param type the type of data in the matrix (\code{"numeric"} or \code{"character"})
 #' @param digits the number of digits on the right of the decimal points to pass to \code{\link{formatC}}. It has meaning when
-#' type="numeric".
+#' \code{type="numeric"}.
 #' @return A character matrix with html formatted cells.
 #' @export
 #' @author Panagiotis Moulos
@@ -940,11 +940,11 @@ make.html.table <- function(b,h=NULL,id=NULL) {
 #' Calculates several transformation of counts
 #'
 #' Returns a list of transformed (normalized) counts, based on the input count matrix data.matrix. The data transformations are passed
-#' from the export.scale parameter and the output list is named accordingly. This function is intended mostly for internal use but can
-#' also be used independently.
+#' from the \code{export.scale} parameter and the output list is named accordingly. This function is intended mostly for internal use 
+#' but can also be used independently.
 #'
 #' @param data.matrix the raw or normalized counts matrix. Each column represents one input sample.
-#' @param export.scale a character vector containing one of the supported data transformations ("natural", "log2","log10","vst").
+#' @param export.scale a character vector containing one of the supported data transformations \code{("natural", "log2","log10","vst")}.
 #' See also the main help page of metaseqr.
 #' @param log.offset a number to be added to each element of data.matrix in order to avoid Infinity on log type data transformations.
 #' @return A named list whose names are the elements in export.scale. Each list member is the respective transformed data matrix.
@@ -986,11 +986,11 @@ make.transformation <- function(data.matrix,export.scale,log.offset=1) {
 #'
 #' Returns a matrix of statistics calculated for a set of given samples. Internal use.
 #'
-#' @param samples a set of samples from the dataset under processing. They should match sample names from sample.list. See also the
+#' @param samples a set of samples from the dataset under processing. They should match sample names from \code{sample.list}. See also the
 #' main help page of \code{\link{metaseqr}}.
 #' @param data.list a list containing natural or transformed data, typically an output from
 #' \code{\link{make.transformation}}.
-#' @param stat the statistics to calculate. Can be one or more of "mean", "median", "sd", "mad", "cv", "rcv". See also the main help
+#' @param stat the statistics to calculate. Can be one or more of \code{"mean", "median", "sd", "mad", "cv", "rcv"}. See also the main help
 #' page of metaseqr.
 #' @param export.scale the output transformations used as input also to \code{\link{make.transformation}}.
 #' @return A matrix of statistics calculated based on the input sample names. The different data transformnations are appended columnwise.
@@ -1049,13 +1049,13 @@ make.stat <- function(samples,data.list,stat,export.scale) {
 #' Results output build helper
 #'
 #' Returns a list of matrices based on the export scales that have been chosen from the main function and a subset of samples based
-#' on the sample names provided in the sample.list argument of the main \code{\link{metaseqr}} function. Internal use.
+#' on the sample names provided in the \code{sample.list} argument of the main \code{\link{metaseqr}} function. Internal use.
 #'
-#' @param samples a set of samples from the dataset under processing. They should match sample names from sample.list. See also the
-#' main help page of \code{\link{metaseqr}}.
+#' @param samples a set of samples from the dataset under processing. They should match sample names from \code{sample.list}. See also 
+#' the main help page of \code{\link{metaseqr}}.
 #' @param data.list a list containing natural or transformed data, typically an output from \code{\link{make.transformation}}.
 #' @param export.scale the output transformations used as input also to \code{\link{make.transformation}}.
-#' @return A named list whose names are the elements in export.scale. Each list member is the respective sample subest data matrix.
+#' @return A named list whose names are the elements in \code{export.scale}. Each list member is the respective sample subest data matrix.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1080,9 +1080,9 @@ make.matrix <- function(samples,data.list,export.scale="natural") {
 
 #' Create contrast lists from contrast vectors
 #'
-#' Returns a list, properly structured to be used within the stat.* functions of the metaseqr package. See the main documentation for
-#' the structure of this list and the example below. This function is mostly for internal use, as the stat.* functions can be supplied
-#' directly with the contrasts vector which is one of the main \code{\link{metaseqr}} arguments.
+#' Returns a list, properly structured to be used within the \code{stat.*} functions of the metaseqr package. See the main documentation 
+#' for the structure of this list and the example below. This function is mostly for internal use, as the \code{stat.*} functions can be 
+#' supplied directly with the contrasts vector which is one of the main \code{\link{metaseqr}} arguments.
 #'
 #' @param contrast a vector of contrasts in the form "ConditionA_vs_ConditionB" or
 #' "ConditionA_vs_ConditionB_vs_ConditionC_vs_...".
@@ -1184,7 +1184,7 @@ make.project.path <- function(path,f=NULL) {
 
 #' Project path constructor helper
 #'
-#' Helper for make.project.path. Internal use only.
+#' Helper for \code{make.project.path}. Internal use only.
 #'
 #' @param main.path The desired project path.
 #' @return A named list whose names are the conditions of the experiments and its members are the samples belonging to each condition.
@@ -1219,8 +1219,8 @@ make.export.list <- function(con) {
 
 #' Optimize rectangular grid plots
 #'
-#' Returns a vector for an optimized m x m plot grid to be used with e.g. par(mfrow). m x m is as close as possible to the input n.
-#' Of course, there will be empty grid positions if n < m x m
+#' Returns a vector for an optimized m x m plot grid to be used with e.g. \code{par(mfrow)}. m x m is as close as possible to 
+#' the input n. Of course, there will be empty grid positions if n < m x m.
 #'
 #' @param n An integer, denoting the total number of plots to be created.
 #' @return A 2-element vector with the dimensions of the grid.
@@ -1253,7 +1253,7 @@ make.grid <- function(n) {
 #'
 #' Initializes metaseqr report tmeplate messages output. Internal use only.
 #'
-#' @param lang The language of the report. For now, only english ("en")
+#' @param lang The language of the report. For now, only english (\code{"en"}) is supported.
 #' @return An named list with messages for each input option.
 #' @author Panagiotis Moulos
 make.report.messages <- function(lang) {
@@ -1587,7 +1587,7 @@ make.highcharts.points <- function(x,y,a) {
 
 #' Create a class vector
 #'
-#' Creates a class vector from a sample list. Internal to the stat.* functions. Mostly internal use.
+#' Creates a class vector from a sample list. Internal to the \code{stat.*} functions. Mostly internal use.
 #'
 #' @param sample.list the list containing condition names and the samples under each condition
 #' @return A vector of condition names.
@@ -1628,8 +1628,8 @@ get.arg <- function(arg.list,arg.name) {
 #' @param arg.list the initial list of a method's (e.g. normalization) arguments. Can be created with the \code{\link{get.defaults}}
 #' function.
 #' @param arg.name a named list with names the new arguments to be set, and mebers the values to be set or a vector of argument
-#' names. In this case, arg.value must be supplied.
-#' @param arg.value when arg.name is a vector of argument names, the values corresponding to these arguments.
+#' names. In this case, \code{arg.value} must be supplied.
+#' @param arg.value when \code{arg.name} is a vector of argument names, the values corresponding to these arguments.
 #' @return the \code{arg.list} with the changed \code{arg.value} for \code{arg.name}.
 #' @author Panagiotis Moulos
 #' @examples
@@ -1655,7 +1655,7 @@ set.arg <- function(arg.list,arg.name,arg.value=NULL) {
 
 #' Multiple testing correction helper
 #'
-#' A wrapper around the \code{\link{p.adjust}} function to include also the qvalue adjustment procedure from the "qvalue" package.
+#' A wrapper around the \code{\link{p.adjust}} function to include also the qvalue adjustment procedure from the qvalue package.
 #' Internal use.
 #'
 #' @param p a vector of p-values.
@@ -1675,7 +1675,7 @@ wp.adjust <- function(p,m) {
 #' of single or parallel code execution. Internal use.
 #'
 #' @param m a logical indicating whether to execute in parallel or not.
-#' @param ... the rest arguments to lapply (or mclapply)
+#' @param ... the rest arguments to \code{\link{lapply}} (or \code{mclapply})
 #' @export
 #' @author Panagiotis Moulos
 wapply <- function(m,...) {

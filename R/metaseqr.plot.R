@@ -6,38 +6,40 @@
 #' diagnostic plots present in other RNA-Seq analysis packages such as EDASeq and NOISeq.
 #'
 #' @param object a matrix or a data frame containing count data derived before or after the normalization procedure, filtered or not
-#' by the metaseqr's filters and/or p-value. The object can be fed to any of the diagplot.metaseqr plotting systems but not every plot is
-#' meaningful. For example, it's meaningless to create a "biodist" plot for a count matrix before normalization or statistical testing.
+#' by the metaseqr's filters and/or p-value. The object can be fed to any of the \code{diagplot.metaseqr} plotting systems but not 
+#' every plot is meaningful. For example, it's meaningless to create a \code{"biodist"} plot for a count matrix before normalization or 
+#' statistical testing.
 #' @param sample.list the list containing condition names and the samples under each condition.
-#' @param annotation a data.frame containing annotation elements for each row in object. Usually, a subset of the annotation obtained
+#' @param annotation a data frame containing annotation elements for each row in object. Usually, a subset of the annotation obtained
 #' by \code{\link{get.annotation}} or a subset of possibly embedded annotation with the input counts table. This parameter is optional
-#' and required only when diagplot.type is any of "biodetection", "countsbio", "saturation","rnacomp", "biodist", "gcbias", "lengthbias" 
-#' or "filtered".
+#' and required only when diagplot.type is any of \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, 
+#' \code{"readnoise"}, \code{"biodist"}, \code{"gcbias"}, \code{"lengthbias"} or \code{"filtered"}.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
-#' contrasts as defined in the main help page of \code{\link{metaseqr}}. This parameter is optional and required only when diagplot.type
-#' is any of "deheatmap", "volcano" or "biodist".
-#' @param p.list a list of p-values for each contrast as obtained from any of the stat.* methods of the metaseqr package. This parameter
-#' is optional and required only when diagplot.type is any of "deheatmap", "volcano" or "biodist".
-#' @param thresholds a list with the elements "p" and "f" which are the p-value and the fold change cutoff when diagplot.type="volcano".
+#' contrasts as defined in the main help page of \code{\link{metaseqr}}. This parameter is optional and required only when 
+#' \code{diagplot.type} is any of \code{"deheatmap"}, \code{"volcano"} or \code{"biodist"}.
+#' @param p.list a list of p-values for each contrast as obtained from any of the \code{stat.*} methods of the metaseqr package. This 
+#' parameter is optional and required only when \code{diagplot.type} is any of \code{"deheatmap"}, \code{"volcano"} or \code{"biodist"}.
+#' @param thresholds a list with the elements \code{"p"} and \code{"f"} which are the p-value and the fold change cutoff when 
+#' \code{diagplot.type="volcano"}.
 #' @param diagplot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
-#' additional package, somethng that is checked while running the main metaseqr function. The supported plots are "mds", "biodetection",
-#' "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff", "meanvar", "deheatmap", "volcano", "biodist",
-#' "filtered", "readnoise".
+#' additional package, something that is checked while running the main metaseqr function. The supported plots are \code{"mds"}, 
+#' \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"boxplot"}, \code{"gcbias"}, \code{"lengthbias"},
+#' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"}.
 #' For a brief description of these plots please see the main \code{\link{metaseqr}} help page.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf", "ps" or "json". The latter is currently available for the creation of interactive volcano plots only when reporting
-#' the output, through the highcharts javascript library.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"",
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of 
+#' interactive volcano plots only when reporting the output, through the highcharts javascript library.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return A named list containing the file names of the produced plots. Each list member is names according to the selected plotting
 #' device and is also a named list, whose names are the plot types. The final contents are the file names in case the plots are written
-#' to a physical location (not meaningful for "x11").
+#' to a physical location (not meaningful for \code{"x11"}).
 #' @note In order to make the best out of this function, you should generally provide the annotation argument as most and also the
 #' most informative plots depend on this. If you don't know what is inside your counts table or how many annotation elements you can
-#' provide by embedding it, it's always best to set the annotation parameter of the main metaseqr function to "download" or "fixed"
-#' to use predefined annotations that work better with the functions of the whole package.
+#' provide by embedding it, it's always best to set the annotation parameter of the main metaseqr function to \code{"download"} or 
+#' \code{"fixed"} to use predefined annotations that work better with the functions of the whole package.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -177,17 +179,17 @@ diagplot.metaseqr <- function(
 #' internal use but can be easily used as stand-alone. It can colors boxes based on group depending on the name argument.
 #'
 #' @param mat the count data matrix.
-#' @param name the names of the samples plotted on the boxdiagplot. If NULL, the function check the column names of mat. If they are also
-#' NULL, sample names are autogenerated. If name="none", no sample names are plotted. If name is a list, it should be the sample.list
-#' argument provided to the manin metaseqr function. In that case, the boxes are colored per group.
-#' @param log.it whether to log transform the values of mat or not. It can be TRUE, FALSE or "auto" for auto-detection. Auto-detection
-#' log transforms by default so that the boxplots are smooth and visible.
-#' @param y.lim custom y-axis limits. Leave the string "default" for default behavior.
+#' @param name the names of the samples plotted on the boxdiagplot. If \code{NULL}, the function check the column names of mat. If they 
+#' are also \code{NULL}, sample names are autogenerated. If \code{name="none"}, no sample names are plotted. If name is a list, it should 
+#' be the sample.list argument provided to the manin metaseqr function. In that case, the boxes are colored per group.
+#' @param log.it whether to log transform the values of mat or not. It can be \code{TRUE}, \code{FALSE} or \code{"auto"} for auto-detection. 
+#' Auto-detection log transforms by default so that the boxplots are smooth and visible.
+#' @param y.lim custom y-axis limits. Leave the string \code{"default"} for default behavior.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf", "ps" or "json". The latter is currently available for the creation of interactive volcano plots only when reporting
-#' the output, through the highcharts javascript library (JSON for boxplots not yet available).
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"}, 
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive 
+#' volcano plots only when reporting the output, through the highcharts javascript library (JSON for boxplots not yet available).
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return The filename of the boxplot produced if it's a file.
@@ -267,9 +269,9 @@ diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param method which correlation method to use. Same as the method parameter in \code{\link{cor}} function.
 #' @param log.it whether to log transform the values of x or not.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf", "ps" or "json". The latter is currently available for the creation of interactive volcano plots only when reporting
-#' the output, through the highcharts javascript library.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive 
+#' volcano plots only when reporting the output, through the highcharts javascript library.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return The filename of the MDS plot produced if it's a file.
@@ -324,19 +326,20 @@ diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11
 #'
 #' @param x the count data matrix.
 #' @param sample.list the list containing condition names and the samples under each condition.
-#' @param covar The covariate to plot counts against. Usually "gc" or "length".
+#' @param covar The covariate to plot counts against. Usually \code{"gc"} or \code{"length"}.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
-#' @param which.plot the EDASeq package plot to generate. It can be one or more of "meanvar", "meandiff", "gcbias" or "lengthbias".
-#' Please refer to the documentation of the EDASeq package for details on the use of these plots. The which.plot="lengthbias" case
+#' @param which.plot the EDASeq package plot to generate. It can be one or more of \code{"meanvar"}, \code{"meandiff"}, \code{"gcbias"}
+#' or \code{"lengthbias"}.
+#' Please refer to the documentation of the EDASeq package for details on the use of these plots. The \code{which.plot="lengthbias"} case
 #' is not covered by EDASeq documentation, however it is similar to the GC-bias plot when the covariate is the gene length instead
 #' of the GC content.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf" or "ps".
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plot produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
+#' @return The filenames of the plot produced in a named list with names the which.plot argument. If \code{output="x11"}, no output 
+#' filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -432,23 +435,24 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #' with the following members: data (the data matrix), length (gene length), gc (the gene gc_content), chromosome (a data frame with
 #' chromosome name and co-ordinates), factors (a factor with the experimental condition names replicated by the number of samples in
 #' each experimental condition) and biotype (each gene's biotype as depicted in Ensembl-like annotations).
-#' @param which.plot the NOISeq package plot to generate. It can be one or more of "biodetection", "countsbio", "saturation", "rnacomp"
-#' or "biodist". Please refer to the documentation of the EDASeq package for details on the use of these plots. The which.plot="saturation"
-#' case is modified to be more informative by producing two kinds of plots. See \code{\link{diagplot.noiseq.saturation}}.
+#' @param which.plot the NOISeq package plot to generate. It can be one or more of \code{"biodetection"}, \code{"countsbio"}, 
+#' \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise} or \code{"biodist"}. Please refer to the documentation of the EDASeq 
+#' package for details on the use of these plots. The \code{which.plot="saturation"} case is modified to be more informative by 
+#' producing two kinds of plots. See \code{\link{diagplot.noiseq.saturation}}.
 #' @param biodist.opts a list with the following members: p (a vector of p-values, e.g. the p-values of a contrast), pcut (a unique
-#' number depicting a p-value cutoff, required for the "biodist" case), name (a name for the "biodist" plot, e.g. the name of the
-#' contrast.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf" or "ps".
+#' number depicting a p-value cutoff, required for the \code{"biodist"} case), name (a name for the \code{"biodist"} plot, e.g. the 
+#' name of the contrast.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
-#' @note Please note that in case of "biodist" plots, the behavior of the function is unstable, mostly due to the very specific inputs
-#' this plotting function accepts in the NOISeq package. We have tried to predict unstable behavior and avoid exceptions through the
-#' use of tryCatch but it's still possible that you might run onto an error.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
+#' output filenames are produced.
+#' @note Please note that in case of \code{"biodist"} plots, the behavior of the function is unstable, mostly due to the very specific 
+#' inputs this plotting function accepts in the NOISeq package. We have tried to predict unstable behavior and avoid exceptions through 
+#' the use of tryCatch but it's still possible that you might run onto an error.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -627,12 +631,12 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 #' \code{\link{diagplot.noiseq}}.
 #'
 #' @param x the count data matrix.
-#' @param o one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf" or "ps".
+#' @param o one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"}, 
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param tb the vector of biotypes, one for each row of x.
 #' @param path the path to create output files.
-#' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
+#' output filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -765,15 +769,15 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano diagplot.
 #' @param fcut a fold change cutoff so as to draw two vertical lines indicating the cutoff threshold for biological significance.
 #' @param pcut a p-value cutoff so as to draw a horizontal line indicating the cutoff threshold for statistical significance.
-#' @param alt.names an optional vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique names of f or p (one of
-#' them must be named!). It is used only in JSON output.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf", "ps" or "json". The latter is currently available for the creation of interactive volcano plots only when reporting
-#' the output, through the highcharts javascript library.
+#' @param alt.names an optional vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique names of \code{f}
+#' or \code{p} (one of them must be named!). It is used only in JSON output.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of 
+#' interactive volcano plots only when reporting the output, through the highcharts javascript library.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no
+#' output filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -989,13 +993,13 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 #' e.g. whether samples belonging to the same group cluster together.
 #'
 #' @param x the data matrix to create a heatmap for.
-#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano diagplot.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf", "ps".
+#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano plot.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
+#' output filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1033,16 +1037,16 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 #' column and per biotype in the second column. In the second row, the percentages of filtered genes  per chromosome related to the
 #' whole genome in the first columns and per biotype in the second column.
 #'
-#' @param x an annotation data frame like the ones produced by \code{\link{get.annotation}}. x should be the filtered annotation
+#' @param x an annotation data frame like the ones produced by \code{\link{get.annotation}}. \code{x} should be the filtered annotation
 #' according to metaseqr's filters.
-#' @param y an annotation data frame like the ones produced by \code{\link{get.annotation}}. x should contain the total annotation
+#' @param y an annotation data frame like the ones produced by \code{\link{get.annotation}}. \code{y} should contain the total annotation
 #' without the application of any metaseqr filter.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: "x11" (default), "png", "jpg", 
-#' "bmp", "pdf" or "ps".
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the which.plot argument. If output="x11", no output filenames
-#' are produced.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If output=\code{"x11"}, no 
+#' output filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1135,7 +1139,7 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' Wrapper function to open a plotting device. Internal use only.
 #'
 #' @param o the plotting device, see main metaseqr function
-#' @param f a filename, if the plotting device requires it (e.g. "pdf")
+#' @param f a filename, if the plotting device requires it (e.g. \code{"pdf"})
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @author Panagiotis Moulos
 #' @export
@@ -1238,7 +1242,7 @@ nat2log <- function(x,base=2,off=1) {
 
 #' Old functions from NOISeq
 #'
-#' Old functions from NOISeq to create the \code{readnoise} plots. Internal use only.
+#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
 cddat <- function (input) {
 	if (inherits(input,"eSet") == FALSE)
 		stop("ERROR: The input data must be an eSet object.\n")
@@ -1280,7 +1284,7 @@ cddat <- function (input) {
 
 #' Old functions from NOISeq
 #'
-#' Old functions from NOISeq to create the \code{readnoise} plots. Internal use only.
+#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
 cdplot <- function (dat,samples=NULL,...) {
 	dat = dat$data2plot
 	if (is.null(samples)) samples <- 1:(ncol(dat)-1)

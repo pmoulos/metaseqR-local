@@ -77,7 +77,7 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 #' @param gene.data an annotation data frame usually obtained with \code{\link{get.annotation}} containing the unique gene accession
 #' identifiers.
 #' @param gene.filters a named list with gene filters and their parameters. See the main help page of \code{\link{metaseqr}} for details.
-#' @return a named list whose names are the gene filter names and its members are the filtered row indices of gene.data.
+#' @return a named list whose names are the gene filter names and its members are the filtered row indices of \code{gene.data}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -160,4 +160,3 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 	}
 	return(gene.filter.result)
 }
-

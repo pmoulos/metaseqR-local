@@ -95,9 +95,9 @@ check.packages <- function(n,d,a,m,s,p,r) {
 #' 
 #' @param arg.name the name of the argument that is checked (for display purposes).
 #' @param arg.value the value(s) of the argument to be checked.
-#' @param arg.list a vector of valid argument values for arg.value to be matched against.
-#' @param multiarg a logical scalar indicating whether arg.name accepts multiple arguments or not. In that case, all of the values
-#' in arg.value are checked against arg.list.
+#' @param arg.list a vector of valid argument values for \code{arg.value} to be matched against.
+#' @param multiarg a logical scalar indicating whether \code{arg.name} accepts multiple arguments or not. In that case, all of the values
+#' in \code{arg.value} are checked against \code{arg.list}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -133,15 +133,16 @@ check.text.args <- function(arg.name,arg.value,arg.list,multiarg=FALSE) {
 #' 
 #' @param arg.name the name of the argument that is checked (for display purposes).
 #' @param arg.value the value(s) of the argument to be checked.
-#' @param arg.type either the string "numeric" to denote generic double-like R numerics or "integer" for integer values.
-#' @param arg.bounds a numeric or a vector with 2 elements, restraining arg.value to be within the bounds defined by the input vector
+#' @param arg.type either the string \code{"numeric"} to denote generic double-like R numerics or \code{"integer"} for integer values.
+#' @param arg.bounds a numeric or a vector with 2 elements, restraining \code{arg.value} to be within the bounds defined by the input vector
 #' or e.g. larger (smaller) than the numeric value. See examples.
-#' @param direction a string denoting to which direction the arg.value should be compared with arg.bounds. For example, "both" should
-#' be given with a two element vector against which, arg.value will be checked to see whether it is smaller than the low boundary or
-#' larger than the higher boundary. In that case, the function will throw an error. The direction parameter can be one of: "both" 
-#' (described above), "botheq" (as above, but the arg.val is also checked for equality -closed intervals), "gt" or "gte" (check
-#' whether arg.val is smaller or smaller than or equal to the first value of arg.bounds), "lt" or "lte" (check whether arg.val is
-#' larger or larger than or equal to the first value of arg.bounds).
+#' @param direction a string denoting to which direction the \code{arg.value} should be compared with \code{arg.bounds}. For example, 
+#' \code{"both"} should be given with a two element vector against which, \code{arg.value} will be checked to see whether it is smaller 
+#' than the low boundary or larger than the higher boundary. In that case, the function will throw an error. The direction parameter can 
+#' be one of: \code{"both"} (described above), \code{"botheq"} (as above, but the \code{arg.val} is also checked for equality -closed 
+#' intervals), \code{"gt"} or \code{"gte"} (check whether \code{arg.val} is smaller or smaller than or equal to the first value of 
+#' \code{arg.bounds}), \code{"lt"} or \code{"lte"} (check whether \code{arg.val} is larger or larger than or equal to the first value 
+#' of \code{arg.bounds}).
 #' @author Panagiotis Moulos
 #' @export
 #' @examples

@@ -400,7 +400,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' for an example and how you can modify it.
 #' @param norm.args a list of normalization parameters required only if normalization has been performed with edgeR. See the result
 #' of \code{get.defaults("normalization","edger")} for an example and how you can modify it.
-#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, they will be estimated from baySeq.
 #' @return A named list of the value 1-likelihood that a gene is differentially expressed, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
@@ -479,7 +479,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' as the dispersions are already estimated.
 #' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
 #' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
-#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples \code{in sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
 #' \code{gene.counts} matrix.
 #' @return A named list of p-values, whose names are the names of the contrasts.

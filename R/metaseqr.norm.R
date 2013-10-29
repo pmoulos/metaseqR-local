@@ -10,9 +10,9 @@
 #' an example and how you can modify it.
 #' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation}) which contains the GC content
 #' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
-#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
-#' EDASeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable EDASeq methods.
-#' @return A matrix or an SeqExpressionSet with normalized counts.
+#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
+#' for the EDASeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable EDASeq methods.
+#' @return A matrix or a SeqExpressionSet with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -96,8 +96,8 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param norm.args a list of DESeq normalization parameters. See the result of \code{get.defaults("normalization", "deseq")} for
 #' an example and how you can modify it.
-#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
-#' DESeq native S4 object (CountDataSet). In the latter case it should be handled with suitable DESeq methods.
+#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
+#' for the DESeq native S4 object (CountDataSet). In the latter case it should be handled with suitable DESeq methods.
 #' @return A matrix or a CountDataSet with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -139,8 +139,8 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
 #' an example and how you can modify it.
-#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
-#' edgeR native S4 object (DGEList). In the latter case it should be handled with suitable edgeR methods.
+#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
+#' for the edgeR native S4 object (DGEList). In the latter case it should be handled with suitable edgeR methods.
 #' @return A matrix or a DGEList with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -201,8 +201,8 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation} which contains the GC content
 #' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
 #' @param log.offset an offset to use to avoid infinity in logarithmic data transformations.
-#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
-#' NOISeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable NOISeq methods.
+#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
+#' for the NOISeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable NOISeq methods.
 #' @return A matrix with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -294,11 +294,11 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param norm.args a list of NBPSeq normalization parameters. See the result of \code{get.defaults("normalization", "nbpseq")} for
 #' an example and how you can modify it.
-#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in sample.list) and
+#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
 #' \code{gene.counts} matrix.
-#' @param output the class of the output object. It can be "matrix" (default) for versatility with other tools or "native" for the
-#' NBPSeq native S4 object (a specific list). In the latter case it should be handled with suitable NBPSeq methods.
+#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
+#' for the NBPSeq native S4 object (a specific list). In the latter case it should be handled with suitable NBPSeq methods.
 #' @return A matrix with normalized counts or a list with the normalized counts and other NBPSeq specific parameters.
 #' @author Panagiotis Moulos
 #' @export
