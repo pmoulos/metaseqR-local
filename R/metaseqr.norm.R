@@ -281,7 +281,7 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 			)) # Class: CD
 	}
 	else if (output=="matrix")
-		return(round(M)) # Class: matrix
+		return(as.matrix(round(M))) # Class: matrix
 }
 
 #' Normalization based on the NBPSeq package
@@ -326,19 +326,19 @@ normalize.nbpseq <- function(gene.counts,sample.list,norm.args=NULL,libsize.list
 	}
 	lib.sizes <- unlist(libsize.list)
 	norm.factors <- estimate.norm.factors(gene.counts,lib.sizes=lib.sizes,method=norm.args$method)
-	if (norm.args$main.method=="nbpseq")
-		nb.data <- prepare.nb.data(gene.counts,lib.sizes=lib.sizes,norm.factors=norm.factors)
-	else if (norm.args$main.method=="nbsmyth")
+	#if (norm.args$main.method=="nbpseq")
+	#	nb.data <- prepare.nb.data(gene.counts,lib.sizes=lib.sizes,norm.factors=norm.factors)
+	#else if (norm.args$main.method=="nbsmyth")
 		nb.data <- prepare.nbp(gene.counts,classes,lib.sizes=lib.sizes,norm.factors=norm.factors,thinning=norm.args$thinning)
 	if (output=="native")
 		return(nb.data) # Class: list or nbp
 	else if (output=="matrix") {
-		if (norm.args$main.method=="nbpseq") {
-			norm.counts <- matrix(0,nrow(gene.counts),ncol(gene.counts))
-			for (i in 1:ncol(gene.counts))
-				norm.counts[,i] <- norm.factors[i]*gene.counts[,i]
-		}
-		else if (norm.args$main.method=="nbsmyth") 
+		#if (norm.args$main.method=="nbpseq") {
+		#	norm.counts <- matrix(0,nrow(gene.counts),ncol(gene.counts))
+		#	for (i in 1:ncol(gene.counts))
+		#		norm.counts[,i] <- norm.factors[i]*gene.counts[,i]
+		#}
+		#else if (norm.args$main.method=="nbsmyth") 
 			norm.counts <- nb.data$pseudo.counts
 		return(as.matrix(round(norm.counts))) # Class: matrix
 	}

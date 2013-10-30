@@ -294,7 +294,7 @@ get.defaults <- function(what,method=NULL) {
 						doWeighting=TRUE,Acutoff=-1e+10			# TMM normalization arguments
 					))
 				},
-				nbpseq = { return(list(main.method="nbpseq",method="AH2010",thinning=TRUE)) }
+				nbpseq = { return(list(main.method="nbsmyth",method="AH2010",thinning=TRUE)) }
 			)
 		},
 		statistics = {
@@ -329,7 +329,7 @@ get.defaults <- function(what,method=NULL) {
 				limma = { return(list()) },
 				nbpseq = {
 					return(list(
-						main.method="nbpseq",
+						main.method="nbsmyth",
 						method=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
 						tests="HOA",
 						alternative="two.sided"
@@ -755,6 +755,421 @@ get.exon.attributes <- function() {
 		"external_gene_id",
 		"gene_biotype"
 	))
+}
+
+#' Group together a more strict biotype filter
+#'
+#' Returns a list with TRUE/FALSE according to the biotypes that are going to be filtered in a more strict way than the defaults. This
+#' is a helper function for the analysis presets of metaseqr. Internal use only.
+#'
+#' @param org one of the supported organisms.
+#' @return A list of booleans, one for each biotype.
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' sf <- get.strict.biofilter("hg18")
+#'}
+get.strict.biofilter <- function(org) {
+	switch(org,
+		hg18 = {
+			return(list(
+				unprocessed_pseudogene=TRUE,
+				pseudogene=TRUE,
+				miRNA=FALSE,
+				retrotransposed=FALSE,
+				protein_coding=FALSE,
+				processed_pseudogene=TRUE,
+				snRNA=FALSE,
+				snRNA_pseudogene=TRUE,
+				Mt_tRNA_pseudogene=TRUE,
+				miRNA_pseudogene=TRUE,
+				misc_RNA=TRUE,
+				tRNA_pseudogene=TRUE,
+				snoRNA=TRUE,
+				scRNA_pseudogene=TRUE,
+				rRNA_pseudogene=TRUE,
+				snoRNA_pseudogene=TRUE,
+				rRNA=TRUE,
+				misc_RNA_pseudogene=TRUE,
+				IG_V_gene=FALSE,
+				IG_D_gene=FALSE,
+				IG_J_gene=FALSE,
+				IG_C_gene=FALSE,
+				IG_pseudogene=TRUE,
+				scRNA=FALSE
+			))
+		},
+		hg19 = {
+			return(list(
+				pseudogene=TRUE,
+				lincRNA=FALSE,
+				protein_coding=FALSE,
+				antisense=FALSE,
+				processed_transcript=FALSE,
+				snRNA=FALSE,
+				sense_intronic=FALSE,
+				miRNA=FALSE,
+				misc_RNA=FALSE,
+				snoRNA=TRUE,
+				rRNA=TRUE,
+				polymorphic_pseudogene=TRUE,
+				sense_overlapping=FALSE,
+				three_prime_overlapping_ncrna=FALSE,
+				TR_V_gene=FALSE,
+				TR_V_pseudogene=TRUE,
+				TR_D_gene=FALSE,
+				TR_J_gene=FALSE,
+				TR_C_gene=FALSE,
+				TR_J_pseudogene=TRUE,
+				IG_C_gene=FALSE,
+				IG_C_pseudogene=TRUE,
+				IG_J_gene=FALSE,
+				IG_J_pseudogene=TRUE,
+				IG_D_gene=FALSE,
+				IG_V_gene=FALSE,
+				IG_V_pseudogene=TRUE
+			))
+		},
+		mm9 = {
+			return(list(
+				pseudogene=TRUE,
+				snRNA=FALSE,
+				protein_coding=FALSE,
+				antisense=FALSE,
+				miRNA=FALSE,
+				lincRNA=FALSE,
+				snoRNA=TRUE,
+				processed_transcript=FALSE,
+				misc_RNA=TRUE,
+				rRNA=TRUE,
+				sense_overlapping=FALSE,
+				sense_intronic=FALSE,
+				polymorphic_pseudogene=TRUE,
+				non_coding=FALSE,
+				three_prime_overlapping_ncrna=FALSE,
+				IG_C_gene=FALSE,
+				IG_J_gene=FALSE,
+				IG_D_gene=FALSE,
+				IG_V_gene=FALSE,
+				ncrna_host=FALSE
+			))
+		},
+		mm10 = {
+			return(list(
+				pseudogene=TRUE,
+				snRNA=FALSE,
+				protein_coding=FALSE,
+				antisense=FALSE,
+				miRNA=FALSE,
+				snoRNA=TRUE,
+				lincRNA=FALSE,
+				processed_transcript=FALSE,
+				misc_RNA=TRUE,
+				rRNA=TRUE,
+				sense_intronic=FALSE,
+				sense_overlapping=FALSE,
+				polymorphic_pseudogene=TRUE,
+				IG_C_gene=FALSE,
+				IG_J_gene=FALSE,
+				IG_D_gene=FALSE,
+				IG_LV_gene=FALSE,
+				IG_V_gene=FALSE,
+				IG_V_pseudogene=TRUE,
+				TR_V_gene=FALSE,
+				TR_V_pseudogene=TRUE,
+				three_prime_overlapping_ncrna=FALSE
+			))
+		},
+		dm3 = {
+			return(list(
+				protein_coding=FALSE,
+				ncRNA=FALSE,
+				snoRNA=TRUE,
+				pre_miRNA=FALSE,
+				pseudogene=TRUE,
+				snRNA=FALSE,
+				tRNA=FALSE,
+				rRNA=TRUE
+			))
+		},
+		rn5 = {
+			return(list(
+				protein_coding=FALSE,
+				pseudogene=TRUE,
+				processed_pseudogene=FALSE,
+				miRNA=FALSE,
+				rRNA=TRUE,
+				misc_RNA=TRUE
+			))
+		},
+		danRer7 = {
+			return(list(
+				antisense=FALSE,
+				protein_coding=FALSE,
+				miRNA=FALSE,
+				snoRNA=TRUE,
+				rRNA=TRUE,
+				lincRNA=FALSE,
+				processed_transcript=FALSE,
+				snRNA=FALSE,
+				pseudogene=TRUE,
+				sense_intronic=FALSE,
+				misc_RNA=TRUE,
+				polymorphic_pseudogene=TRUE,
+				IG_V_pseudogene=TRUE,
+				IG_C_pseudogene=TRUE,
+				IG_J_pseudogene=TRUE,
+				non_coding=FALSE,
+				sense_overlapping=FALSE
+			))
+		}
+	)
+}
+
+#' Return several analysis options given an analysis preset
+#'
+#' This is a helper function which returns a set of metaseqr pipeline options, grouped together according to a preset keyword. It is
+#' intended mostly for internal use.
+#'
+#' @param preset preset can be one of \code{"all.basic"}, \code{"all.normal"}, \code{"all.full"}, \code{"medium.basic"}, \code{"medium.normal"},
+#' @param org one of the supported organisms. See \code\link{metaseqr}} main help page.
+#' \code{"medium.full"}, \code{"strict.basic"}, \code{"strict.normal"} or \code{"strict.full"}, each of which control the strictness of
+#' the analysis and the amount of data to be exported. For an explanation of the presets, see the main \code{\link{metaseqr}} help page.
+#' @return A named list with names \code{exon.filters}, \code{gene.filters}, \code{pcut}, \code{export.what}, \code{export.scale},
+#' \code{export.values} and \code{export.stats}, each of which correspond to an element of the metaseqr pipeline.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' strict.preset <- get.preset.opts("strict.basic")
+#'}
+get.preset.opts <- function(preset,org) {
+	# Override filter rules and maybe norm.args and stat.args
+	switch(preset,
+		all.basic = {
+			exon.filters <- NULL
+			gene.filters <- NULL
+			pcut <- 1
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean")
+		},
+		all.normal = {
+			exon.filters <- NULL
+			gene.filters <- NULL
+			pcut <- 1
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean","sd","cv")
+		},
+		all.full = {
+			exon.filters <- NULL
+			gene.filters <- NULL
+			pcut <- 1
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2","log10","vst")
+			export.values <- c("raw","normalized")
+			export.stats <- c("mean","median","sd","mad","cv","rcv")
+		},
+		medium.basic = {
+			exon.filters <- list(
+				min.active.exons=list(
+					exons.per.gene=5,
+					min.exons=2,
+					frac=1/5
+				)
+			)
+			gene.filters <- list(
+				length=list(
+					length=500
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.75
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.defaults("biotype.filter",org[1])
+			)
+			pcut <- 0.05
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean")
+		},
+		medium.normal = {
+			exon.filters <- list(
+				min.active.exons=list(
+					exons.per.gene=5,
+					min.exons=2,
+					frac=1/5
+				)
+			)
+			gene.filters <- list(
+				length=list(
+					length=500
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.75
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.defaults("biotype.filter",org[1])
+			)
+			pcut <- 0.05
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean","sd","cv")
+		},
+		medium.full = {
+			exon.filters <- list(
+				min.active.exons=list(
+					exons.per.gene=5,
+					min.exons=2,
+					frac=1/5
+				)
+			)
+			gene.filters <- list(
+				length=list(
+					length=500
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.75
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.defaults("biotype.filter",org[1])
+			)
+			pcut <- 0.05
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2","log10","vst")
+			export.values <- c("raw","normalized")
+			export.stats <- c("mean","median","sd","mad","cv","rcv")
+		},
+		strict.basic = {
+			exon.filters=list(
+				min.active.exons=list(
+					exons.per.gene=4,
+					min.exons=2,
+					frac=1/4
+				)
+			)
+			gene.filters=list(
+				length=list(
+					length=750
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.9
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.strict.biofilter(org[1])
+			)
+			pcut <- 0.01
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean")
+		},
+		strict.normal = {
+			exon.filters=list(
+				min.active.exons=list(
+					exons.per.gene=4,
+					min.exons=2,
+					frac=1/4
+				)
+			)
+			gene.filters=list(
+				length=list(
+					length=750
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.9
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.strict.biofilter(org[1])
+			)
+			pcut <- 0.01
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2")
+			export.values <- c("normalized")
+			export.stats <- c("mean","sd","cv")
+		},
+		strict.full = {
+			exon.filters=list(
+				min.active.exons=list(
+					exons.per.gene=4,
+					min.exons=2,
+					frac=1/4
+				)
+			)
+			gene.filters=list(
+				length=list(
+					length=750
+				),
+				avg.reads=list(
+					average.per.bp=100,
+					quantile=0.9
+				),
+				expression=list(
+					median=TRUE,
+					mean=FALSE,
+					quantile=NA,
+					known=NA,
+					custom=NA
+				),
+				biotype=get.strict.biofilter(org[1])
+			)
+			pcut <- 0.01
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.scale <- c("natural","log2","log10","vst")
+			export.values <- c("raw","normalized")
+			export.stats <- c("mean","median","sd","mad","cv","rcv")
+		}
+	)
+	preset.opts <- list(
+		exon.filters=exon.filters,
+		gene.filters=gene.filters,
+		pcut=pcut,
+		export.what=export.what,
+		export.scale=export.scale,
+		export.values=export.values,
+		export.stats=export.stats
+	)
+	return(preset.opts)
 }
 
 #' Calculates fold changes
@@ -1330,6 +1745,17 @@ make.report.messages <- function(lang) {
 					cv="Coefficient of Variation",
 					rcv="Robust Coefficient of Variation"
 				),
+				preset=list(
+					all.basic="Use all genes and export all genes and basic annotation and statistics elements",
+					all.normal="Use all genes and export all genes and normal annotation and statistics elements",
+					all.full="Use all genes and export all genes and all available annotation and statistics elements",
+					medium.basic="Apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
+					medium.normal="Apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+					medium.full="Apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
+					strict.basic="Apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
+					strict.normal="Apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+					strict.full="Apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
+				),
 				explain=list(
 					mds=paste(
 						"The Multi-Dimensional Scaling (MDS) plots comprise a means of visualizing the level of similarity of",
@@ -1451,8 +1877,30 @@ make.report.messages <- function(lang) {
 						"the smoothing lines differ significantly aming biological conditions it would comprise a possible quality warning.",
 						collapse=" "
 					),
-					meandiff="Mean-difference plot",
-					meanvar="Mean-variance plot",
+					meandiff=paste(
+						"A mean-difference plot (or a Bland–Altman plot) is a method of data plotting used in analyzing the agreement between",
+						"two different assays/variables. In this graphical method the differences (or alternatively the ratios) between the two",
+						"variables are plotted against the averages of the two. Such a plot is useful, for example, to analyze data with strong",
+						"correlation between x and y axes, when the (x,y) dots on the plot are close to the diagonal x=y. In this case, the",
+						"value of the transformed variable X is about the same as x and y and the variable Y shows the difference between x and",
+						"y. When the data cloud in a mean difference plot is centered around the horizontal zero line, this is an indication",
+						"of good data quality and good normalization results. On the other hand, when the data cloud deviates from the center",
+						"line or has a 'banana' shape, this constitutes an indication of systematic biases present in the data and that either",
+						"the chosen normalization algorithm has not worked well, or that data are not normalized. The smoothing curve that",
+						"traverses the data (red curve) summarizes the above trends.",collapse=" "
+					),
+					meanvar=paste(
+						"The mean-variance plot comprises a graphical means to display a possible relationship between the means of",
+						"gene expression (counts) values and their variances across replicates of the same biological condition. Thus",
+						"data can be inspected for possible overdispersion (greater variability in a dataset than would be expected",
+						"based on a given simple statistical model). In such plots for RNA-Seq data, overdispersion is usually manifested",
+						"as increasing variance with increasing gene expression (counts) and it is summarized through a smoothing curve",
+						"(red curve). The following is taken from the EDASeq package vignette: '<em>...although the Poisson distribution",
+						"is a natural and simple way to model count data, it has the limitation of assuming equality of the mean and",
+						"variance. For this reason, the negative binomial distribution has been proposed as an alternative when the data",
+						"show over-dispersion...'</em> If overdispersion is not present, the data cloud is expected to be evenly scattered",
+						"around the smoothing curve",collapse=" "
+					),
 					deheatmap=paste(
 						"The Differentially Expressed Genes (DEGs) heatmaps depict how well samples from different conditions cluster",
 						"together according to their expression values after normalization and statistical testing, for each requested",
@@ -1460,7 +1908,15 @@ make.report.messages <- function(lang) {
 						"a warning sign regarding the quality of the samples. In addition, DEG heatmaps provide an initial view of",
 						"possible clusters of co-expressed genes."
 					),
-					volcano="Volcano plot",
+					volcano=paste(
+						"A volcano plot is a scatterplot that is often used when analysing high-throughput -omics data (e.g. microarray",
+						"data, RNA-Seq data) to give an overview of interesting genes. The log2 fold change is plotted on the x-axis and",
+						"the negative log10 p-value is plotted on the y-axis. A volcano plot combines the results of a statistical test",
+						"(aka, p-values) with the magnitude of the change enabling quick visual identification of those genes that display",
+						"large-magnitude changes that are also statistically significant. The horizontal dashed line sets the threshold for",
+						"statistical significance, while the vertical dashed lines set the thresholds for biological significance.",
+						collapse=" "
+					),
 					biodist=paste(
 						"The chromosome and biotype distributions bar diagram for Differentially Expressed Genes (DEGs) is split in",
 						"two panels: i) on the left panel DEGs are distributed per chromosome and the percentage of each chromosome",

@@ -35,6 +35,7 @@
 					<td class="menuCell"><a href="#summary">Summary</a></td>
 					<td class="menuCell"><a href="#figures">Figures</a></td>
 					<td class="menuCell"><a href="#results">Results</a></td>
+					<td class="menuCell"><a href="#references">References</a></td>
 				</tr>
 			</table>
 		</td>
@@ -273,8 +274,15 @@
 										} else if (is.na(pcut)) {
 											msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", no statistical threshold defined",sep="")
 										} else {
-											msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),",",length(which(p.list[[cnt]]<pcut))," differentially expressed genes",
-												" were found with a p-value threshold of ",pcut)
+											if (length(strsplit(cnt,"_vs_")[[1]])==2) {
+												tmp <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(p.list[[cnt]]<pcut),],log.offset))
+												msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", ",length(which(p.list[[cnt]]<pcut))," differentially expressed genes",
+													" were found with a p-value threshold of ",pcut," and of these, ",length(which(tmp>=0))," were up-regulated and ",length(which(tmp<0)),
+													" were down-regulated",sep="")
+											}
+											else
+												msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", ",length(which(p.list[[cnt]]<pcut))," differentially expressed genes",
+													" were found with a p-value threshold of ",pcut," at least in one condition",sep="")
 										}
 									}
 									cat(paste(msg.contrast,collapse=", "))
@@ -317,6 +325,10 @@
 											cat("</ul>")
 										}
 									} else cat("not available","</br>")
+									%>
+									<%=
+									if (!is.null(preset))
+										cat("<strong>Analysis preset:</strong>",report.messages$preset[[preset]],"</br>")
 									%>
 									<strong>Gene filters:</strong>
 									<%=
@@ -420,15 +432,22 @@
 								<div id="summary_nde_container">
 									<strong>Number of differentially expressed genes per contrast: </strong>
 									<ul>
-										<%=
+										<%
 										for (cnt in contrast) {
 											cat("<li>",cnt,": ")
 											if (!is.na(pcut) && length(which(p.list[[cnt]]<pcut))==0)
 												cat("no differentially expressed genes","</li>")
 											else if (is.na(pcut))
 												cat("no statistical threshold defined","</li>")
-											else
-												cat(length(which(p.list[[cnt]]<pcut)))
+											else {
+												if (length(strsplit(cnt,"_vs_")[[1]])==2) {
+													tmp <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(p.list[[cnt]]<pcut),],log.offset))
+													cat(length(which(p.list[[cnt]]<pcut)),"differentially expressed genes of which ",length(which(tmp>=0)),
+														"up regulated and",length(which(tmp<0)),"down regulated")
+												}
+												else
+													cat(length(which(p.list[[cnt]]<pcut)),"differentially expressed in at least one condition")
+											}
 										}
 										%>
 									</ul>

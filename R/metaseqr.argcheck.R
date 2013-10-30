@@ -27,7 +27,7 @@ check.packages <- function(n,d,a,m,s,p,r) {
 			if (!require(NOISeq)) stop("Bioconductor package NOISeq is required for \"noiseq\" normalization!")
 		},
 		nbpseq = {
-			if (!require(NBPSeq)) stop("Bioconductor package NBPSeq is required for \"nbpseq\" normalization!")
+			if (!require(NBPSeq)) stop("R package NBPSeq is required for \"nbpseq\" normalization!")
 		},
 		none = {}
 	)
@@ -52,7 +52,7 @@ check.packages <- function(n,d,a,m,s,p,r) {
 				if (!require(edgeR)) stop("Bioconductor package edgeR is required for \"edger\" differential expression!")
 			},
 			nbpseq = {
-				if (!require(NBPSeq)) stop("Bioconductor package NBPSeq is required for \"nbpseq\" differential expression!")
+				if (!require(NBPSeq)) stop("R package NBPSeq is required for \"nbpseq\" differential expression!")
 			},
 			none = {}
 		)

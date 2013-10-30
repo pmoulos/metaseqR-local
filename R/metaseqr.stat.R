@@ -483,6 +483,9 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
 #' \code{gene.counts} matrix.
 #' @return A named list of p-values, whose names are the names of the contrasts.
+#' @note There is currently a problem with the NBPSeq package and the workflow that is specific to the NBPSeq package. The problem
+#' has to do with function exporting as there are certain functions which are not recognized from the package internally. For this
+#' reason and until it is fixed, only the Smyth workflow will be available with the NBPSeq package.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -537,43 +540,56 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		}	
 	)
 	if (class(object)!="list" && class(object)!="nbp") { # To avoid repeating the following chunk in the above
-		if (stat.args$main.method=="nbpseq") {
+		#if (stat.args$main.method=="nbpseq") {
+		#	nb.data <- list(
+		#		counts=as.matrix(counts),
+		#		lib.sizes=lib.sizes,
+		#		norm.factors=rep(1,dim(counts)[2]),
+		#		eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
+		#		rel.frequencies=as.matrix(sweep(counts,2,lib.sizes*rep(1,dim(counts)[2]),"/")),
+		#		tags=matrix(row.names(counts),dim(counts)[1],1)
+		#	)
+		#}
+		#else if (stat.args$main.method=="nbsmyth") {
+		#	nb.data <- new("nbp",list(
+		#		counts=as.matrix(counts),
+		#		lib.sizes=lib.sizes,
+		#		grp.ids=classes,
+		#		eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
+		#		pseudo.counts=as.matrix(counts),
+		#		pseudo.lib.sizes=colSums(as.matrix(counts))*rep(1,dim(counts)[2])
+		#	))
 			nb.data <- list(
-				counts=as.matrix(counts),
-				lib.sizes=lib.sizes,
-				norm.factors=rep(1,dim(counts)[2]),
-				eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
-				rel.frequencies=as.matrix(sweep(counts,2,lib.sizes*rep(1,dim(counts)[2]),"/")),
-				tags=matrix(row.names(counts),dim(counts)[1],1)
-			)
-		}
-		else if (stat.args$main.method=="nbsmyth") {
-			nb.data <- new("nbp",list(
 				counts=as.matrix(counts),
 				lib.sizes=lib.sizes,
 				grp.ids=classes,
 				eff.lib.sizes=lib.sizes*rep(1,dim(counts)[2]),
 				pseudo.counts=as.matrix(counts),
 				pseudo.lib.sizes=colSums(as.matrix(counts))*rep(1,dim(counts)[2])
-			))
-		}
+			)
+			class(nb.data) <- "nbp"
+		#}
 	}
 	for (con.name in names(contrast.list)) {
 		disp("  Contrast: ", con.name,"\n")
 		con <- contrast.list[[con.name]]
 		cons <- unique(unlist(con))
 		if (length(con)==2) {
-			if (stat.args$main.method=="nbpseq") {
-				dispersions <- estimate.dispersion(nb.data,model.matrix(~classes),method=stat.args$method$nbpseq)
-				res <- test.coefficient(nb.data,dispersion=dispersions,x=model.matrix(~classes),beta0=c(NA,0),tests=stat.args$tests,
-					alternative=stat.args$alternative,print.level=1)
-				p[[con.name]] <- res[[stat.args$tests]]$p.values
-			}
-			else if (stat.args$main.method=="nbsmyth") {
+			#if (stat.args$main.method=="nbpseq") {
+			#	dispersions <- estimate.dispersion(nb.data,model.matrix(~classes),method=stat.args$method$nbpseq)
+			#	res <- test.coefficient(nb.data,dispersion=dispersions,x=model.matrix(~classes),beta0=c(NA,0),tests=stat.args$tests,
+			#		alternative=stat.args$alternative,print.level=1)
+			#	#print(names(res))
+			#	#res <- nb.glm.test(nb.data$counts,x=model.matrix(~classes),beta0=c(NA,0),lib.sizes=lib.sizes,
+			#	#	dispersion.method=stat.args$method$nbpseq,tests=stat.args$tests)
+			#	p[[con.name]] <- res[[stat.args$tests]]$p.values
+			#	#p[[con.name]] <- res$test[[stat.args$tests]]$p.values
+			#}
+			#else if (stat.args$main.method=="nbsmyth") {
 				obj <- suppressWarnings(estimate.disp(nb.data,method=stat.args$method$nbsmyth,print.level=0))
 				obj <- exact.nb.test(obj,cons[1],cons[2],print.level=0)
 				p[[con.name]] <- obj$p.values
-			}
+			#}
 		}
 		else {
 			warning(

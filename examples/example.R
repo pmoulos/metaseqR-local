@@ -5,7 +5,7 @@ data("mm9.gene.data",package="metaseqr")
 out <- metaseqr(
 	counts=mm9.gene.counts,
 	sample.list=sample.list.mm9,
-	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60"),
+	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
 	id.col=4,
 	annotation="fixed",

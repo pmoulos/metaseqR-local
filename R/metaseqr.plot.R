@@ -24,8 +24,8 @@
 #' @param diagplot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
 #' additional package, something that is checked while running the main metaseqr function. The supported plots are \code{"mds"}, 
 #' \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"boxplot"}, \code{"gcbias"}, \code{"lengthbias"},
-#' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"}.
-#' For a brief description of these plots please see the main \code{\link{metaseqr}} help page.
+#' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"},
+#' \code{"venn"}. For a brief description of these plots please see the main \code{\link{metaseqr}} help page.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"",
@@ -59,19 +59,19 @@
 diagplot.metaseqr <- function(
 	object,sample.list,annotation=NULL,contrast.list=NULL,p.list=NULL,thresholds=list(p=0.05,f=1),
 	diagplot.type=c("mds","biodetection","countsbio","saturation","readnoise","rnacomp","boxplot","gcbias","lengthbias",
-		"meandiff","meanvar","deheatmap","volcano","biodist","filtered"),
+		"meandiff","meanvar","deheatmap","volcano","biodist","filtered","venn"),
 	is.norm=FALSE,output="x11",path=NULL,...
 ) {
 	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
 	if (!is.matrix(object) && !is.data.frame(object))
 		stop("object argument must be a matrix or data frame!")
 	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","readnoise","biodist","gcbias","lengthbias","filtered")))
-		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\" or \"filtered\"!")
-	if (any(diagplot.type %in% c("deheatmap","volcano","biodist"))) {
+		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\", \"filtered\" or \"venn\"!")
+	if (any(diagplot.type %in% c("deheatmap","volcano","biodist","venn"))) {
 		if (is.null(contrast.list))
-			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
+			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
 		if (is.null(p.list))
-			stop("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\",\"volcano\" or \"biodist\"!")
+			stop("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\"!")
 	}
 	if (is.null(path)) path <- getwd()
 	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) object <- as.matrix(object)
@@ -88,7 +88,7 @@ diagplot.metaseqr <- function(
 	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise")
 	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp")
 	stat.plots <- c("deheatmap","volcano","biodist")
-	other.plots <- c("filtered")
+	other.plots <- c("filtered","venn")
 	files <- list()
 
 	for (p in diagplot.type) {
@@ -165,6 +165,9 @@ diagplot.metaseqr <- function(
 			switch(p,
 				filtered = {
 					files$filtered <- diagplot.filtered(object,annotation,output=output,path=path)
+				},
+				filtered = {
+					files$venn <- diagplot.venn(p.list,output=output,path=path)
 				}
 			)
 		}
@@ -1132,6 +1135,35 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 	graphics.close(output)
 
 	return(fil)
+}
+
+#' Venn diagrams when performing meta-analysis
+#'
+#' This function uses the R package VennDiagram and plots an up to 5-way Venn diagram depicting the common and specific to each statistical
+#' algorithm genes, for each contrast. Mostly for internal use because of its main argument which is difficult to construct, but can be
+#' used independently if the user grasps the logic.
+#'
+#' @param p.list a named list with p-value matrices. The names of the list correspond to contrasts (see the main \code{\link{metaseqr}}
+#' documentation. Each member of the list is a matrix of p-values corresponding to the application of each statistical algorithm. The
+#' p-value matrices must have the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the
+#' specific column.
+#' @param pcut a p-value cutoff for statistical significance. Defaults to \code{0.05}.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If output=\code{"x11"}, no 
+#' output filenames are produced.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available...
+#'}
+diagplot.venn <- function(p.list,pcut=0.05,output="x11",path=NULL,...) {
+	if (is.na(pcut) || is.null(pcut) || pcut==1)
+		warning("Illegal pcut argument! Using the default (0.05)",call.=FALSE)
+	NULL
 }
 
 #' Open plotting device

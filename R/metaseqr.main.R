@@ -114,11 +114,13 @@
 #' as a very lose statistical threshold to aggregate results from all methods regardless of their False Positive Rate.
 #' @param pcut a p-value cutoff for exporting differentially genes, default is to export all the non-filtered genes.
 #' @param log.offset an offset to be added to values during logarithmic transformations in order to avoid Infinity (default is \code{1}).
-#' @param preset an analysis strictness preset. Not yet implemented but in the end it should be a vector like \code{c("strict","loose",
-#' "verystrict","everything")} etc.
-#' @param qc.plots a set of diagnostic plots to show/create. It can be one or more of \code{"mds"}, \code{"biodetection"}, 
-#' \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise"}, \code{"filtered"}, \code{"boxplot"}, \code{"gcbias"},
-#' \code{"lengthbias"}, \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}. The \code{"mds"}
+#' @param preset an analysis strictness preset. \code{preset} can be one of \code{"all.basic"}, \code{"all.normal"}, \code{"all.full"},
+#' \code{"medium.basic"}, \code{"medium.normal"}, \code{"medium.full"}, \code{"strict.basic"}, \code{"strict.normal"} or \code{"strict.full"},
+#' each of which control the strictness of the analysis and the amount of data to be exported. For an explanation of the presets, see
+#' the section "Presets" below.
+#' @param qc.plots a set of diagnostic plots to show/create. It can be one or more of \code{"mds"}, \code{"biodetection"}, \code{"rnacomp"},
+#' \code{"countsbio"}, \code{"saturation"}, \code{"readnoise"}, \code{"filtered"}, \code{"boxplot"}, \code{"gcbias"}, \code{"lengthbias"},
+#' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"venn"}. The \code{"mds"}
 #' stands for Mutlti-Dimensional Scaling and it creates a PCA-like plot but using the MDS dimensionality reduction instead. It has
 #' been succesfully used for NGS data (e.g. see the package htSeqTools) and it shows how well samples from the same condition cluster
 #' together. For \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise"}, \code{"biodist"}
@@ -131,8 +133,9 @@
 #' genome. See also the help page of \code{\link{diagplot.filtered}}. The \code{"deheatmap"} option performs hierarchical clustering
 #' and draws a heatmap of differentially expressed genes. In the context of diagnostic plots, it's useful to see if samples
 #' from the same groups cluster together after statistical testing. The \code{"volcano"} option draws a volcano plot for each contrast and
-#' if a report is requested, an interactive volcano plot is presented in the HTML report. Set to \code{NULL} if you don't want any
-#' diagnostic plots created.
+#' if a report is requested, an interactive volcano plot is presented in the HTML report. The \code{"venn"} option will draw an up to
+#' 5-way Venn diagram depicting the common and specific to each statistical algorithm genes and for each contrast, when meta-analysis
+#' is performed. Set \code{qc.plots=NULL} if you don't want any diagnostic plots created.
 #' @param fig.format the format of the output diagnostic plots. It can be one or more of \code{"x11"} (for direct display), \code{"png"},
 #' \code{"jpg"}, \code{"tiff"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
 #' @param out.list a logical controlling whether to export a list with the results in the running environment.
@@ -233,7 +236,138 @@
 #' starting points for the two workflows in the package NBPSeq. The first worklfow (with \code{main.method="nbpseq"} and the 
 #' \code{estimate.dispersion} function is NBPSeq package specific, while the second (with \code{main.method="nbsmyth"} and the 
 #' \code{estimate.disp} function is similar to the workflow of the edgeR package. For additional information regarding the statistical 
-#' testing in NBPSeq, please consult the documentation of the NBPSeq package.
+#' testing in NBPSeq, please consult the documentation of the NBPSeq package. \strong{Additinally, please note that there is currently
+#' a problem with the NBPSeq package and the workflow that is specific to the NBPSeq package. The problem has to do with function
+#' exporting as there are certain functions which are not recognized from the package internally. For this reason and until it is
+#' fixed, only the Smyth workflow will be available with the NBPSeq package (thus} \code{stat.args$main.method="nbpseq"} \strong{
+#' will not be available)!}
+#' @section Presets: The analysis presets are a set of keywords (only one can be used) that predefine some of the parameters of the
+#' metaseqr pipeline. For the time being they are quite simple and they control i) the strictness of filtering and statistical thresholding
+#' with three basic levels ("all", "medium", "strict") and ii) the data columns that are exported, again in three basic ways ("basic",
+#' "normal", "full") controlling the amount of data to be exported. These keywords can be combined with a dot in the middle (e.g.
+#' \code{"all.basic"} to define an analysis preset. When using analysis presets, the following argumentsof metaseqr are overriden:
+#' \code{exon.filters}, \code{gene.filters}, \code{pcut}, \code{export.what}, \code{export.scale}, \code{export.values}, \code{exon.stats}.
+#' If you want to explicitly control the above arguments, the \code{preset} argument should be set to \code{NULL} (default). Following
+#' is a synopsis of the different presets and the values of the arguments they moderate:
+#' \itemize{
+#'  \item \code{"all.basic"}: use all genes (do not filter) and export all genes and basic annotation and statistics elements. In this
+#'   case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=NULL}
+#'   \item \code{gene.filters=NULL}
+#'   \item \code{pcut=1}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean")}
+#'  }
+#'  \item \code{"all.normal"}: use all genes (do not filter) and export all genes and normal annotation and statistics elements. In 
+#'   this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=NULL}
+#'   \item \code{gene.filters=NULL}
+#'   \item \code{pcut=1}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean","sd","cv")}
+#'  }
+#  \item \code{"all.full"}: use all genes (do not filter) and export all genes and all available annotation and statistics elements. 
+#'  In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=NULL}
+#'   \item \code{gene.filters=NULL}
+#'   \item \code{pcut=1}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2","log10","vst")}
+#'   \item \code{export.values=c("raw","normalized")}
+#'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
+#'  }
+#'  \item \code{"medium.basic"}: apply a medium set of filters and and export statistically significant genes and basic annotation 
+#'   and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
+#'   \item \code{gene.filters=list(length=list(length=500),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.05}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean")}
+#'  }
+#'  \item \code{"medium.normal"}: apply a medium set of filters and and export statistically significant genes and normal annotation 
+#'   and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
+#'   \item \code{gene.filters=list(length=list(length=500),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.05}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean","sd","cv")}
+#'  }
+#  \item \code{"medium.full"}: apply a medium set of filters and and export statistically significant genes and all available annotation. 
+#'  and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
+#'   \item \code{gene.filters=list(length=list(length=500),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.05}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2","log10","vst")}
+#'   \item \code{export.values=c("raw","normalized")}
+#'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
+#'  }
+#'  \item \code{"strict.basic"}: apply a strict set of filters and and export statistically significant genes and basic annotation 
+#'   and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
+#'   \item \code{gene.filters=list(length=list(length=750),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.01}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean")}
+#'  }
+#'  \item \code{"strict.normal"}: apply a strict set of filters and and export statistically significant genes and normal annotation 
+#'   and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
+#'   \item \code{gene.filters=list(length=list(length=750),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.01}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2")}
+#'   \item \code{export.values=c("normalized")}
+#'   \item \code{export.stats=c("mean","sd","cv")}
+#'  }
+#  \item \code{"strict.full"}: apply a strict set of filters and and export statistically significant genes and all available annotation. 
+#'  and statistics elements. In this case, the above described arguments become:
+#'  \itemize{
+#'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
+#'   \item \code{gene.filters=list(length=list(length=750),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
+#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{pcut=0.01}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.scale=c("natural","log2","log10","vst")}
+#'   \item \code{export.values=c("raw","normalized")}
+#'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
+#'  }
+#' }
 #' @note Please note that currently only gene and exon annotation from Ensembl (http://www.ensembl.org) are supported. Thus, the
 #' unique gene or exon ids in the counts files should correspond to valid Ensembl gene or exon accessions for the organism of interest.
 #' If you are not sure about the source of your counts file or do not know how to produce it, it's better to start from the original
@@ -257,21 +391,21 @@
 #' require(metaseqr)
 #'
 #' # An example pipeline with exon counts
-#' data("hg18.exon.data",package="metaseqr")
+#' data("hg19.exon.data",package="metaseqr")
 #' metaseqr(
-#'  counts=hg18.exon.counts,
-#'  sample.list=list(CON=c("CON_BR1","CON_BR2"),DOX=c("DOX_BR1","DOX_BR2")),
-#'  contrast=c("CON_vs_DOX"),
-#'  libsize.list=list(CON_BR1=17041268,CON_BR2=23579904,DOX_BR1=16018639,DOX_BR2=26294259),
+#'  counts=hg19.exon.counts,
+#'  sample.list=list(normal="normal",paracancerous="paracancerous",cancerous="cancerous"),
+#'  contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+#'  libsize.list=libsize.list.hg19,
 #'  id.col=4,
 #'  annotation="download",
-#'  org="hg18",
+#'  org="hg19",
 #'  count.type="exon",
 #'  normalization="edaseq",
 #'  statistics="deseq",
 #'  pcut=0.05,
 #'  qc.plots=c("mds", "biodetection", "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff",
-#'    "meanvar", "readnoise", "deheatmap", "volcano", "biodist", "filtered"),
+#'    "readnoise","meanvar", "readnoise", "deheatmap", "volcano", "biodist", "filtered"),
 #'  fig.format=c("png","pdf"),
 #'  export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
 #'  export.scale=c("natural","log2","log10","vst"),
@@ -298,10 +432,9 @@
 #' data("mm9.gene.data",package="metaseqr")
 #' result <- metaseqr(
 #'  counts=mm9.gene.counts,
-#'  sample.list=list(e15.5=c("e15.5_1","e15.5_2"), P0.5=c("P0.5_1","P0.5_2"), P60=c("P60_1","P60_2")),
-#'  contrast=c("e15.5_vs_P0.5","e15.5_vs_P60","P0.5_vs_P60","e15.5_vs_P0.5_vs_P60"),
-#'  libsize.list=list(e15.5_1=46546134, e15.5_2=18439760, P0.5_1=21822789, P0.5_2=40813977,
-#'    P60_1=35855191, P60_2=43611778),
+#'  sample.list=list(e14.5=c("e14.5_1","e14.5_2"), adult_8_weeks=c("a8w_1","a8w_2")),
+#'  contrast=c("e14.5_vs_adult_8_weeks"),
+#'  libsize.list=libsize.list.mm9,
 #'  annotation="fixed",
 #'  org="mm9",
 #'  count.type="gene",
@@ -335,7 +468,7 @@
 #'  ),
 #'  out.list=TRUE
 #' )
-#' head(result$data[["e15.5_vs_P0.5"]])
+#' head(result$data[["e14.5_vs_adult_8_weeks"]])
 #' }
 metaseqr <- function(
 	counts,
@@ -383,7 +516,7 @@ metaseqr <- function(
 	meta.p=if (length(statistics)>1) c("fisher","perm","whitlock","intersection","union","none") else "none",
 	pcut=NA, # A p-value cutoff for exporting DE genes, default is to export all
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
-	preset=NULL, # In the end it should be a vector like c("strict","loose","verystrict","everything") etc.
+	preset=NULL, # An analysis strictness preset
 	qc.plots=c(
 		"mds","biodetection","countsbio","saturation","readnoise","filtered", # Raw count data
 		"boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp", # Pre and post normalization
@@ -452,6 +585,7 @@ metaseqr <- function(
 	export.scale <- tolower(export.scale)
 	export.values <- tolower(export.values)
 	export.stats <- tolower(export.stats)
+	if (!is.null(preset)) preset <- tolower(preset[1])
 
 	if (!is.data.frame(counts) && !is.null(counts))
 	{
@@ -475,9 +609,11 @@ metaseqr <- function(
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)
 	check.text.args("export.values",export.values,c("raw","normalized"),multiarg=TRUE)
 	check.text.args("export.stats",export.stats,c("mean","median","sd","mad","cv","rcv"),multiarg=TRUE)
+	if (!is.null(preset)) check.text.args("preset",preset,c("all.basic","all.normal","all.full","medium.basic","medium.normal","medium.full",
+		"strict.basic","strict.normal","strict.full"),multiarg=FALSE)
 	if (!is.null(qc.plots))
 		check.text.args("qc.plots",qc.plots,c("mds","biodetection","countsbio","saturation","readnoise","boxplot","gcbias","lengthbias",
-			"meandiff","meanvar","rnacomp","deheatmap","volcano","biodist","filtered"),multiarg=TRUE)
+			"meandiff","meanvar","rnacomp","deheatmap","volcano","biodist","filtered","venn"),multiarg=TRUE)
 	if (!is.na(restrict.cores)) check.num.args("restrict.cores",restrict.cores,"numeric",c(0,1),"botheq")
 	if (!is.na(pcut)) check.num.args("pcut",pcut,"numeric",c(0,1),"botheq")
 	if (!is.na(gc.col)) check.num.args("gc.col",gc.col,"numeric",0,"gt")
@@ -514,13 +650,26 @@ metaseqr <- function(
 			no.match <- which(is.na(to.remove))
 			if (length(no.match)>0)
 				to.remove <- to.remove[-no.match]
-			qc.plots <- qc.plots[-to.remove]
+			if (length(to.remove)>0)
+				qc.plots <- qc.plots[-to.remove]
 		}
 	}
 	else if (annotation=="download" || count.type=="exon") # Requires package biomaRt
 	{
 		if (!require(biomaRt))
 			stop("Bioconductor package biomaRt is required when annotation is \"download\" or type argument is \"exon\"!")
+	}
+	# Check if drawing a Venn diagram is possible
+	if ("venn" %in% qc.plots && length(statistics)==1)
+	{
+		warning("The creation of a Venn diagram is possible only when more than one statistical algorithms are used (meta-analysis)! Removing from figures list...",
+			call.=FALSE)
+		to.remove <- match("venn",qc.plots)
+		no.match <- which(is.na(to.remove))
+		if (length(no.match)>0)
+			to.remove <- to.remove[-no.match]
+		if (length(to.remove)>0)
+			qc.plots <- qc.plots[-to.remove]
 	}
 
 	# Check additional input arguments for normalization and statistics
@@ -546,7 +695,14 @@ metaseqr <- function(
 	# Override settigs if a preset is given
 	if (!is.null(preset))
 	{
-		# Override filter rules and maybe norm.args and stat.args
+		preset.opts <- get.preset.opts(preset,org)
+		exon.filters <- preset.opts$exon.filters
+		gene.filters <- preset.opts$gene.filters
+		pcut <- preset.opts$pcut
+		export.what <- preset.opts$export.what
+		export.scale <- preset.opts$export.scale
+		export.values <- preset.opts$export.values
+		export.stats <- preset.opts$export.stats
 	}
 
 	if (report)
@@ -575,6 +731,8 @@ metaseqr <- function(
 	disp("Annotation: ",annotation)
 	disp("Organism: ",org)
 	disp("Count type: ",count.type)
+	if (!is.null(preset))
+		disp("Analysis preset: ",preset)
 	if (!is.null(exon.filters))
 	{
 		disp("Exon filters: ",paste(names(exon.filters),collapse=", "))
@@ -884,7 +1042,7 @@ metaseqr <- function(
 			norm.genes <- normalize.edger(gene.counts,sample.list,norm.args,output="native")
 		},
 		noiseq = {
-			norm.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="native")
+			norm.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="matrix")
 		},
 		nbpseq = {
 			norm.genes <- normalize.nbpseq(gene.counts,sample.list,norm.args,libsize.list,output="native")
@@ -956,7 +1114,7 @@ metaseqr <- function(
 				norm.genes.expr <- norm.genes
 				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead,])
 				norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead,])
-				norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$counts))*rep(1,dim(norm.genes.expr$counts)[2])
+				norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$pseudo.counts))*rep(1,dim(norm.genes.expr$counts)[2])
 			}
 		)
 		gene.counts.expr <- gene.counts[rownames(norm.genes.expr),]
@@ -1081,26 +1239,6 @@ metaseqr <- function(
 		sum.p.list <- cp.list
 	if ("adj.meta.p.value" %in% export.what) # Useless for one statistics but just for safety
 		adj.sum.p.list <- wapply(multic,sum.p.list,function(x,a) return(p.adjust(x,a)),adjust.method)
-	
-	#disp("Running statistical tests with: ",statistics)
-	#contrast.list <- make.contrast.list(contrast,sample.list)
-	#switch(statistics,
-	#	deseq = {
-	#		p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,norm.args)
-	#	},
-	#	edger = {
-	#		p.list <- stat.edger(norm.genes.expr,sample.list,contrast.list,stat.args)
-	#	},
-	#	noiseq = {
-	#		p.list <- stat.noiseq(norm.genes.expr,sample.list,contrast.list,stat.args,norm.args,gene.data.expr,log.offset)
-	#	},
-	#	bayseq = {
-	#		p.list <- stat.bayseq(norm.genes.expr,sample.list,contrast.list,stat.args,norm.args,libsize.list)
-	#	},
-	#	limma = {
-	#		p.list <- stat.limma(norm.genes.expr,sample.list,contrast.list,stat.args)
-	#	}
-	#)
 	
 	# At this point, all method-specific objects must become a matrices for exporting and plotting
 	switch(class(norm.genes.expr),
@@ -1436,7 +1574,7 @@ metaseqr <- function(
 			raw=c("mds","biodetection","countsbio","saturation","readnoise"),
 			norm=c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp"),
 			stat=c("deheatmap","volcano","biodist"),
-			other=c("filtered")
+			other=c("filtered","venn")
 		)
 		fig.raw <- fig.unorm <- fig.norm <- fig.stat <- fig.other <- vector("list",length(fig.format))
 		names(fig.raw) <- names(fig.unorm) <- names(fig.norm) <- names(fig.stat) <- names(fig.other) <- fig.format
