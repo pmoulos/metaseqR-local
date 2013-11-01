@@ -374,7 +374,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 				call.=FALSE
 			)
 			M <- assayData(ns.obj)$exprs
-			cds <- newCountDataSet(M,data.frame(condition=unlist(con),row.names=names(unlist(con))))
+			cds <- newCountDataSet(round(M),data.frame(condition=unlist(con),row.names=names(unlist(con))))
 			sizeFactors(cds) <- rep(1,ncol(cds))
 			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
 			fit0 <- fitNbinomGLMs(cds,count~1)
@@ -457,7 +457,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			bootStraps=stat.args$bootStraps,conv=stat.args$conv,nullData=stat.args$nullData,returnAll=stat.args$returnAll,returnPD=stat.args$returnPD,
 			discardSampling=stat.args$discardSampling,cl=stat.args$cl)
 		tmp <- topCounts(cd,group="DE",number=nrow(cd))
-		p[[con.name]] <- as.numeric(tmp[,"FDR"])
+		p[[con.name]] <- 1 - as.numeric(tmp[,"Likelihood"])
 		names(p[[con.name]]) <- rownames(tmp)
 	}
 	return(p)

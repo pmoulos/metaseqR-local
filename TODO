@@ -1,5 +1,4 @@
-- Standardize a way to export ALL genes, irrespective of filtering and zero counts when pcut=1 (of course if filtering applied, they do not have a p-value)
-- Venn diagrams when meta-analysis is performed
+- Provide the option of pre and post normalization filtering
 - Add EBSeq in statistics
 - Write evaluation functions for filters
 - Write evaluation functions for normalization and statistical list arguments

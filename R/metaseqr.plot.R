@@ -72,6 +72,11 @@ diagplot.metaseqr <- function(
 			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
 		if (is.null(p.list))
 			stop("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\"!")
+		if (is.na(thresholds$p) || is.null(thresholds$p) || thresholds$p==1) {
+			warning(paste("The p-value threshold when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\" must allow the normal plotting of DEG diagnostic plots!",
+				"Setting to 0.05..."),call.=FALSE)
+			thresholds$p <- 0.05
+		}
 	}
 	if (is.null(path)) path <- getwd()
 	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) object <- as.matrix(object)
@@ -88,7 +93,8 @@ diagplot.metaseqr <- function(
 	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise")
 	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp")
 	stat.plots <- c("deheatmap","volcano","biodist")
-	other.plots <- c("filtered","venn")
+	other.plots <- c("filtered")
+	venn.plots <- c("venn")
 	files <- list()
 
 	for (p in diagplot.type) {
@@ -165,9 +171,16 @@ diagplot.metaseqr <- function(
 			switch(p,
 				filtered = {
 					files$filtered <- diagplot.filtered(object,annotation,output=output,path=path)
-				},
-				filtered = {
-					files$venn <- diagplot.venn(p.list,output=output,path=path)
+				}
+			)
+		}
+		if (p %in% venn.plots) {
+			switch(p,
+				venn = {
+					for (cnt in names(contrast.list)) {
+						disp("  Contrast: ",cnt)		
+						files$venn[[cnt]] <- diagplot.venn(p.list[[cnt]],pcut=thresholds$p,nam=cnt,output=output,path=path)
+					}
 				}
 			)
 		}
@@ -609,10 +622,12 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 				DE.plot(dummy,chromosomes=NULL,q=biodist.opts$pcut,graphic="distr"),
 				error=function(e) {
 					disp("      Known problem with NOISeq and external p-values detected! Trying to make a plot with alternative p-values (median of p-value distribution)...")
+					fil="error"
 					tryCatch(
 						DE.plot(dummy,chromosomes=NULL,q=quantile(biodist.opts$p,0.5),graphic="distr"),
 						error=function(e) {
 							disp("      Cannot create DEG biotype plot! This is not related to a problem with the results. Excluding...")
+							fil="error"
 						},
 						finally=""
 					)
@@ -1148,6 +1163,7 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' p-value matrices must have the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the
 #' specific column.
 #' @param pcut a p-value cutoff for statistical significance. Defaults to \code{0.05}.
+#' @param nam a name to be appended to the output graphics file (if \code{"output"} is not \code{"x11"}).
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
 #' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
@@ -1160,10 +1176,470 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' \dontrun{
 #' # Not yet available...
 #'}
-diagplot.venn <- function(p.list,pcut=0.05,output="x11",path=NULL,...) {
+diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),output="x11",path=NULL,...) {
 	if (is.na(pcut) || is.null(pcut) || pcut==1)
 		warning("Illegal pcut argument! Using the default (0.05)",call.=FALSE)
-	NULL
+	algs <- colnames(pmat)
+	if (is.null(algs))
+		stop("The p-value matrices must have the colnames attribute (names of statistical algorithms)!")
+	nalg <- length(algs)
+	if(nalg>5) {
+		warning(paste("Cannot create a Venn diagram for more than 5 result sets!",nalg,
+			"found, only the first 5 will be used..."),call.=FALSE)
+		algs <- algs[1:5]
+		nalg <- 5
+	}
+	lenalias <- c("two","three","four","five")
+	aliases <- toupper(letters[1:nalg])
+	names(algs) <- aliases
+	genes <- rownames(pmat)
+	pairs <- make.venn.pairs(algs)
+	areas <- make.venn.areas(length(algs))
+	counts <- make.venn.counts(length(algs))
+	# Initially populate the results and counts lists so they can be used to create the rest of the intersections
+	results <- vector("list",nalg+length(pairs))
+	names(results)[1:nalg] <- aliases
+	names(results)[(nalg+1):length(results)] <- names(pairs)
+	for (a in aliases) {
+		results[[a]] <- genes[which(pmat[,algs[a]]<pcut)]
+		counts[[areas[[a]]]] <- length(results[[a]])
+	}
+	# Now, perform the intersections
+	for (p in names(pairs)) {
+		a = pairs[[p]][1]
+		b = pairs[[p]][2]
+		results[[p]] <- intersect(results[[a]],results[[b]])
+		counts[[areas[[p]]]] <- length(results[[p]])
+	}
+	# And now, the Venn diagrams must be constructed
+	color.scheme <- make.venn.colorscheme(length(algs))
+	fil <- file.path(path,paste("venn_plot_",nam,".",output,sep=""))
+	if (output %in% c("pdf","ps","x11"))
+		graphics.open(output,fil,width=8,height=8)
+	else
+		graphics.open(output,fil,width=800,height=800,res=100)
+	switch(lenalias[length(algs)-1],
+		two = {
+			v <- draw.pairwise.venn(
+				area1=counts$area1,
+				area2=counts$area2,
+				cross.area=counts$cross.area,
+				category=algs,
+				lty="blank",
+				fill=color.scheme$fill,
+				cex=1.5,
+				cat.cex=1.5,
+				#cat.pos=c(0,0),
+				cat.col=color.scheme$font,
+				#cat.dist=0.07,
+				cat.fontfamily=rep("Bookman",2)
+			)
+		},
+		three = {
+			#overrideTriple <<- TRUE
+			v <- draw.triple.venn(
+				area1=counts$area1,
+				area2=counts$area2,
+				area3=counts$area3,
+				n12=counts$n12,
+				n13=counts$n13,
+				n23=counts$n23,
+				n123=counts$n123,
+				category=algs,
+				lty="blank",
+				fill=color.scheme$fill,
+				cex=1.5,
+				cat.cex=1.5,
+				#cat.pos=c(0,0,180),
+				cat.col=color.scheme$font,
+				#cat.dist=0.07,
+				cat.fontfamily=rep("Bookman",3)
+			)
+		},
+		four = {
+			v <- draw.quad.venn(
+				area1=counts$area1,
+				area2=counts$area2,
+				area3=counts$area3,
+				area4=counts$area4,
+				n12=counts$n12,
+				n13=counts$n13,
+				n14=counts$n14,
+				n23=counts$n23,
+				n24=counts$n24,
+				n34=counts$n34,
+				n123=counts$n123,
+				n124=counts$n124,
+				n134=counts$n134,
+				n234=counts$n234,
+				n1234=counts$n1234,
+				category=algs,
+				lty="blank",
+				fill=color.scheme$fill,
+				cex=1.5,
+				cat.cex=1.5,
+				c(0.1,0.1,0.05,0.05),
+				cat.col=color.scheme$font,
+				cat.fontfamily=rep("Bookman",4)
+			)
+		},
+		five = {
+			v <- draw.quintuple.venn(
+				area1=counts$area1,
+				area2=counts$area2,
+				area3=counts$area3,
+				area4=counts$area4,
+				area5=counts$area5,
+				n12=counts$n12,
+				n13=counts$n13,
+				n14=counts$n14,
+				n15=counts$n15,
+				n23=counts$n23,
+				n24=counts$n24,
+				n25=counts$n25,
+				n34=counts$n34,
+				n35=counts$n35,
+				n45=counts$n45,
+				n123=counts$n123,
+				n124=counts$n124,
+				n125=counts$n125,
+				n134=counts$n134,
+				n135=counts$n135,
+				n145=counts$n145,
+				n234=counts$n234,
+				n235=counts$n235,
+				n245=counts$n245,
+				n345=counts$n345,
+				n1234=counts$n1234,
+				n1235=counts$n1235,
+				n1245=counts$n1245,
+				n1345=counts$n1345,
+				n2345=counts$n2345,
+				n12345=counts$n12345,
+				category=algs,
+				lty="blank",
+				fill=color.scheme$fill,
+				cex=1.5,
+				cat.cex=1.5,
+				cat.dist=0.1,
+				cat.col=color.scheme$font,
+				cat.fontfamily=rep("Bookman",5)
+			)
+		}
+	)
+	graphics.close(output)
+	return(fil)		
+}
+
+#' Helper for Venn diagrams
+#'
+#' This function creates a list of pairwise comparisons to be performed in order to create an up to 5-way Venn diagram using the R
+#' package VennDiagram. Internal use mostly.
+#'
+#' @param sets a vector with the names of the sets (up to length 5, if larger, it will be truncated with a warning).
+#' @return A list with as many pairs as the comparisons to be made for the construction of the Venn diagram. The pairs are encoded
+#' with the uppercase letters A through E, each one corresponding to order of the input sets.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' sets <- c("apple","pear","banana")
+#' pairs <- make.venn.pairs(sets)
+#'}
+make.venn.pairs <- function(algs)
+{
+	lenalias <- c("two","three","four","five")
+	switch(lenalias[length(algs)-1],
+		two = {
+			return(list(
+				AB=c("A","B")
+			))
+		},
+		three = {
+			return(list(
+				AB=c("A","B"),
+				AC=c("A","C"),
+				BC=c("B","C"),
+				ABC=c("AB","C")
+			))
+		},
+		four = {
+			return(list(
+				AB=c("A","B"),
+				AC=c("A","C"),
+				AD=c("A","D"),
+				BC=c("B","C"),
+				BD=c("B","D"),
+				CD=c("C","D"),
+				ABC=c("AB","C"),
+				ABD=c("AB","D"),
+				ACD=c("AC","D"),
+				BCD=c("BC","D"),
+				ABCD=c("ABC","D")
+			))
+		},
+		five = {
+			return(list(
+				AB=c("A","B"),
+				AC=c("A","C"),
+				AD=c("A","D"),
+				AE=c("A","E"),
+				BC=c("B","C"),
+				BD=c("B","D"),
+				BE=c("B","E"),
+				CD=c("C","D"),
+				CE=c("C","E"),
+				DE=c("D","E"),
+				ABC=c("AB","C"),
+				ABD=c("AB","D"),
+				ABE=c("AB","E"),
+				ACD=c("AC","D"),
+				ACE=c("AC","E"),
+				ADE=c("AD","E"),
+				BCD=c("BC","D"),
+				BCE=c("BC","E"),
+				BDE=c("BD","E"),
+				CDE=c("CD","E"),
+				ABCD=c("ABC","D"),
+				ABCE=c("ABC","E"),
+				ABDE=c("ABD","E"),
+				ACDE=c("ACD","E"),
+				BCDE=c("BCD","E"),
+				ABCDE=c("ABCD","E")
+			))
+		}
+	)
+}
+
+#' Helper for Venn diagrams
+#'
+#' This function creates a list with names the arguments of the Venn diagram construction functions of the R package VennDiagram and
+#' list members the internal encoding (uppercase letters A to E and combinations among then) used to encode the pairwise comparisons
+#' to create the intersections needed for the Venn diagrams. Internal use mostly.
+#'
+#' @param n the number of the sets used for the Venn diagram.
+#' @return A named list, see descritpion.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' sets <- c("apple","pear","banana")
+#' pairs <- make.venn.pairs(sets)
+#' areas <- make.venn.areas(length(sets))
+#'}
+make.venn.areas <- function(n)
+{
+	lenalias <- c("two","three","four","five")
+	switch(lenalias[n-1],
+		two = {
+			return(list(
+				A="area1",
+				B="area2",
+				AB="cross.area"
+			))
+		},
+		three = {
+			return(list(
+				A="area1",
+				B="area2",
+				C="area3",
+				AB="n12",
+				AC="n13",
+				BC="n23",
+				ABC="n123"
+			))
+		},
+		four = {
+			return(list(
+				 A="area1",
+				 B="area2",
+				 C="area3",
+				 D="area4",
+				 AB="n12",
+				 AC="n13",
+				 AD="n14",
+				 BC="n23",
+				 BD="n24",
+				 CD="n34",
+				 ABC="n123",
+				 ABD="n124",
+				 ACD="n134",
+				 BCD="n234",
+				 ABCD="n1234"
+			))
+		},
+		five = {
+			return(list(
+				 A="area1",
+				 B="area2",
+				 C="area3",
+				 D="area4",
+				 E="area5",
+				 AB="n12",
+				 AC="n13",
+				 AD="n14",
+				 AE="n15",
+				 BC="n23",
+				 BD="n24",
+				 BE="n25",
+				 CD="n34",
+				 CE="n35",
+				 DE="n45",
+				 ABC="n123",
+				 ABD="n124",
+				 ABE="n125",
+				 ACD="n134",
+				 ACE="n135",
+				 ADE="n145",
+				 BCD="n234",
+				 BCE="n235",
+				 BDE="n245",
+				 CDE="n345",
+				 ABCD="n1234",
+				 ABCE="n1235",
+				 ABDE="n1245",
+				 ACDE="n1345",
+				 BCDE="n2345",
+				 ABCDE="n12345"
+			))
+		}
+	)
+}
+
+#' Helper for Venn diagrams
+#'
+#' This function creates a list with names the arguments of the Venn diagram construction functions of the R package VennDiagram and
+#' list members are initially \code{NULL}. They are filled by the \code{\link{diagplot.venn}} function. Internal use mostly.
+#'
+#' @param n the number of the sets used for the Venn diagram.
+#' @return A named list, see descritpion.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' sets <- c("apple","pear","banana")
+#' counts <- make.venn.counts(length(sets))
+#'}
+make.venn.counts <- function(n)
+{
+	lenalias <- c("two","three","four","five")
+	switch(lenalias[n-1],
+		two = {
+			return(list(
+				area1=NULL,
+				area2=NULL,
+				cross.area=NULL
+			))
+		},
+		three = {
+			return(list(
+				area1=NULL,
+				area2=NULL,
+				area3=NULL,
+				n12=NULL,
+				n13=NULL,
+				n23=NULL,
+				n123=NULL
+			))
+		},
+		four = {
+			return(list(
+				 area1=NULL,
+				 area2=NULL,
+				 area3=NULL,
+				 area4=NULL,
+				 n12=NULL,
+				 n13=NULL,
+				 n14=NULL,
+				 n23=NULL,
+				 n24=NULL,
+				 n34=NULL,
+				 n123=NULL,
+				 n124=NULL,
+				 n134=NULL,
+				 n234=NULL,
+				 n1234=NULL
+			))
+		},
+		five = {
+			return(list(
+				 area1=NULL,
+				 area2=NULL,
+				 area3=NULL,
+				 area4=NULL,
+				 area5=NULL,
+				 n12=NULL,
+				 n13=NULL,
+				 n14=NULL,
+				 n15=NULL,
+				 n23=NULL,
+				 n24=NULL,
+				 n25=NULL,
+				 n34=NULL,
+				 n35=NULL,
+				 n45=NULL,
+				 n123=NULL,
+				 n124=NULL,
+				 n125=NULL,
+				 n134=NULL,
+				 n135=NULL,
+				 n145=NULL,
+				 n234=NULL,
+				 n235=NULL,
+				 n245=NULL,
+				 n345=NULL,
+				 n1234=NULL,
+				 n1235=NULL,
+				 n1245=NULL,
+				 n1345=NULL,
+				 n2345=NULL,
+				 n12345=NULL
+			))
+		}
+	)
+}
+
+#' Helper for Venn diagrams
+#'
+#' This function returns a list of colorschemes accroding to the number of sets. Internal use.
+#'
+#' @param n the number of the sets used for the Venn diagram.
+#' @return A list with colors for fill and font.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' sets <- c("apple","pear","banana")
+#' cs <- make.venn.colorscheme(length(sets))
+#'}
+make.venn.colorscheme <- function(n) {
+	lenalias <- c("two","three","four","five")
+	switch(lenalias[n-1],
+		two = {
+			return(list(
+				fill=c("blue","orange2"),
+				font=c("darkblue","orange4")
+			))
+		},
+		three = {
+			return(list(
+				fill=c("red","green","mediumpurple"),
+				font=c("darkred","darkgreen","mediumpurple4")
+			))
+		},
+		four = {
+			return(list(
+				fill=c("red","green","mediumpurple","orange2"),
+				font=c("darkred","darkgreen","mediumpurple4","orange4")
+			))
+		},
+		five = {
+			return(list(
+				fill=c("red","green","blue","mediumpurple","orange2"),
+				font=c("darkred","darkgreen","darkblue","mediumpurple4","orange4")
+			))
+		}
+	)
 }
 
 #' Open plotting device

@@ -12,6 +12,14 @@
 <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="http://code.highcharts.com/highcharts.js"></script>
+<script type="text/javascript">// <![CDATA[
+	function preloader() {
+		document.getElementById("loading").style.display="none";
+		document.getElementById("report").style.display="block";
+	}//preloader
+	window.onload = preloader;
+// ]]>
+</script>
 </head>
 <body>
 <table class="headContainer">
@@ -112,7 +120,19 @@
 										nn <- names(fig.stat$biodist)
 										counter <- 1
 										for (n in nn) {
-											cat("<li class=\"tocli\"><a href=\"#biodist_",counter,"\">",n,"</a></li>",sep="")
+											if (fig.stat$biodist[[n]] != "error") {
+												cat("<li class=\"tocli\"><a href=\"#biodist_",counter,"\">",n,"</a></li>",sep="")
+												counter <- counter + 1
+											}
+										}
+										cat("</ul></li>")
+									}
+									if (!is.null(fig.venn$venn)) {
+										cat("<li class=\"tocli\"><a href=\"#figures_venn\">Venn diagrams</a><ul>")
+										nn <- names(fig.venn$venn)
+										counter <- 1
+										for (n in nn) {
+											cat("<li class=\"tocli\"><a href=\"#venn_",counter,"\">",n,"</a></li>",sep="")
 											counter <- counter + 1
 										}
 										cat("</ul></li>")
@@ -140,7 +160,8 @@
 						</div>
 					</td>
 					<td class="mainContainer">
-						<div id="report"> <!-- Start main accordion container -->
+						<div id="loading" style="margin:auto; position:absolute; z-index:1000; width:350px; height:350px; background:url(loader.gif) no-repeat; cursor:wait;"></div>
+						<div id="report" style="display:none;"> <!-- Start main accordion container -->
 							<h3 id="summary" class="title">Summary </h3>
 							<div id="summary_container"> <!-- Start summary container -->
 								<h4 id="summary_summary" class="subtitle">Analysis summary </h4>
@@ -165,7 +186,7 @@
 													"least ",exon.filters$min.active.exons$min.exons," of the exons, else if an annotated gene had more than ",
 													exon.filters$min.active.exons$exons.per.gene,", then read presence was required in at least ",exon.filters$min.active.exons,
 													"x&lceil;E&rceil; exons, where &lceil;<sup>.</sup>&rceil; is the <em>ceiling</em> mathematical function. The application ",
-													"of this filter resulted in the exclusion of ",length(exon.filter.results$min.active.exons)," genes from further analysis. ",
+													"of this filter resulted in the exclusion of ",length(exon.filter.result$min.active.exons)," genes from further analysis. ",
 													sep=""
 												)
 											}
@@ -254,9 +275,10 @@
 										cat(". The total number of genes excluded due to the application of gene filters was ",sum(as.numeric(sapply(gene.filter.result,length))),". ",sep="")
 										cat("The total (unified) number of genes excluded due to the application of all filters was ",length(the.zeros) + length(the.dead),". ",sep="")
 									}
-									cat("The resulting gene counts table was subjected to differential expression analysis for the contrasts ",gsub("_vs_"," versus ",contrast),". ",sep="")
+									cat("The resulting gene counts table was subjected to differential expression analysis for the contrasts ",
+										paste(gsub("_vs_"," versus ",contrast),collapse=", "),sep="")
 									if (length(statistics)>1) {
-										cat(" using the Bioconductor packages ",paste(unlist(report.messages$stat[statistics],use.names=FALSE),collapse=", "),".",sep="")
+										cat(" using the Bioconductor packages ",paste(unlist(report.messages$stat[statistics],use.names=FALSE),collapse=", "),". ",sep="")
 										if (meta.p!="none") {
 											cat("In order to combine the statistical significance from multiple algorithms and perform meta-analysis, the ")
 											cat(report.messages$meta[[meta.p]],"method was applied. ")
@@ -324,7 +346,7 @@
 											cat("</ul></li>")
 											cat("</ul>")
 										}
-									} else cat("not available","</br>")
+									} else cat("none applied","</br>")
 									%>
 									<%=
 									if (!is.null(preset))
@@ -348,7 +370,7 @@
 											cat("</ul></li>")
 											cat("</ul>")
 										}
-									} else cat("not available","</br>")
+									} else cat("none applied","</br>")
 									%>
 									<strong>Normalization algorithm:</strong> <%=report.messages$norm[[normalization]]%></br>
 									<strong>Normalization arguments:</strong>
@@ -692,11 +714,30 @@
 									nn <- names(fig.stat$biodist)
 									counter <- 1
 									for (n in nn) {
-										cat("<div id=\"biodist_",counter,"\"><span class=\"subtitle\">Biotype distribution in DEG for the contrast ",n,"</span></br>",sep="")
-										s <- gsub(PROJECT.PATH$main,".",fig.stat$biodist[n])
-										cat("<img src=\"",s,"\" alt=\"deg biodist\"></br></br>")
-										cat("</div></br>")
+										if (fig.stat$biodist[[n]] != "error") {
+											cat("<div id=\"biodist_",counter,"\"><span class=\"subtitle\">Biotype distribution in DEG for the contrast ",n,"</span></br>",sep="")
+											s <- gsub(PROJECT.PATH$main,".",fig.stat$biodist[n])
+											cat("<img src=\"",s,"\" alt=\"deg biodist\"></br></br>")
+											cat("</div></br>")
+											counter <- counter + 1
+										}
+									}
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.venn$venn)) {
+									cat("<h4 class=\"subtitle\">Meta-analysis Venn diagrams</h4>")
+									cat("<div id=\"figures_venn\">")
+									cat("<div>",report.messages$explain$venn,"</br></br></div>")
+									nn <- names(fig.venn$venn)
+									counter <- 1
+									for (n in nn) {
+										cat("<div id=\"venn_",counter,"\"><span class=\"subtitle\">Venn diagram for the contrast ",n,"</span></br>",sep="")
+										s <- gsub(PROJECT.PATH$main,".",fig.venn$venn[n])
+										cat("<img src=\"",s,"\" alt=\"deg heatmap\"></br></br>")
 										counter <- counter + 1
+										cat("</div></br>")
 									}
 									cat("</div>")
 								}
@@ -718,8 +759,10 @@
 										cat("<div>The following table presents the results for the contrast <strong>",n,"</strong>. The fields of the table correspond to the ",
 										"requested features to be exported. The table can be searched using the search field on the top right.</br></br></div>",sep="")
 										cat(html[[n]],"</br>")
-										cat("<strong><a href=\"lists/metaseqr_out_",n,".txt.gz\" download>Download</a> the result list for ",n,".</strong></br></br>",sep="")
-										cat("</div>")
+										cat("<strong><a href=\"lists/metaseqr_sig_out_",n,".txt.gz\" download>Download</a> the DEG result list for ",n,".</strong></br>",sep="")
+										if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
+											cat("<strong><a href=\"lists/metaseqr_all_out_",n,".txt.gz\" download>Download</a> the whole result list for ",n,".</strong></br>",sep="")
+										cat("</br></div>")
 									}
 									counter <- 1
 									cat("<script type=\"text/javascript\">")

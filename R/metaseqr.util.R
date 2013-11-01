@@ -987,7 +987,8 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.75
+					#quantile=0.75
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1018,7 +1019,8 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.75
+					#quantile=0.75
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1049,7 +1051,8 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.75
+					#quantile=0.75
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1238,7 +1241,8 @@ make.fold.change <- function(contrast,sample.list,data.matrix,log.offset=1) {
 #'}
 make.html.cells <- function(mat,type="numeric",digits=3) {
 	if (type=="numeric")
-		tmp <- formatC(mat,digits=digits,format="f")
+		tmp <- format(mat,digits=digits)
+		#tmp <- formatC(mat,digits=digits,format="f")
 	else
 		tmp <- mat
 	if (!is.matrix(tmp)) tmp <- as.matrix(tmp)
@@ -1914,7 +1918,12 @@ make.report.messages <- function(lang) {
 						"the negative log10 p-value is plotted on the y-axis. A volcano plot combines the results of a statistical test",
 						"(aka, p-values) with the magnitude of the change enabling quick visual identification of those genes that display",
 						"large-magnitude changes that are also statistically significant. The horizontal dashed line sets the threshold for",
-						"statistical significance, while the vertical dashed lines set the thresholds for biological significance.",
+						"statistical significance, while the vertical dashed lines set the thresholds for biological significance. You should",
+						"also keep in mind that when using more than one statistical algorithm and performing meta-analysis, the volcano",
+						"plots become harder to interpret. This happens because the genes that have stronger evidence of being differentially",
+						"experessed obtain lower p-values while the rest either remain at similar levels or obtain higher p-values. The",
+						"result is a 'warped' volcano plot, with two main data clouds: one in the upper part of the plot, and one in the",
+						"lower part of the plot. You can always zoom in when using interacting mode (the default).",
 						collapse=" "
 					),
 					biodist=paste(
@@ -1941,6 +1950,12 @@ make.report.messages <- function(lang) {
 						"possible quality problems when for example the filtered genes for a specific chromosome (or the fraction) is",
 						"extremely higher than the rest. Generally, the fractions per chromosome should be uniform and the fractions",
 						"per biotype should be proportional to the biotype fraction relative to the genome.",collapse=" "
+					),
+					venn=paste(
+						"The Venn diagrams are an intuitive way of presenting overlaps between lists, based on the overlap of basic",
+						"geometrical shapes. The numbers of overlapping genes per statistical algorithm are shown in the different areas",
+						"of the Venn diagrams, one for each contrast.",
+						collapse=" "
 					)
 				),
 				references=list(

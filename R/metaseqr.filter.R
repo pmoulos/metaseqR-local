@@ -11,7 +11,7 @@
 #' @param restrict.cores in case of parallel execution of several subfunctions, the fraction of the available cores to use. In some 
 #' cases if all available cores are used (\code{restrict.cores=1} and the system does not have sufficient RAM, the running machine 
 #' might significantly slow down.
-#' @return a named list whose names are the exon filter names and its members are the filtered row indices of gene.data.
+#' @return a named list whose names are the exon filter names and its members are the filtered rownames of \code{gene.data}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -27,7 +27,7 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 	multic <- check.parallel(restrict.cores)
 	exon.filter.result <- vector("list",length(exon.filters))
 	names(exon.filter.result) <- names(exon.filters)
-	the.genes <- gene.data$gene_id
+	the.genes <- as.character(gene.data$gene_id)
 	if (!is.null(exon.filters))
 	{
 		for (xf in names(exon.filters))
@@ -58,7 +58,7 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 						pass[[n]] <- do.call("c",pass[[n]])
 					}
 					pass.matrix <- do.call("cbind",pass)
-					exon.filter.result[[xf]] <- which(apply(pass.matrix,1,function(x) return(any(x))))
+					exon.filter.result[[xf]] <- the.genes[which(apply(pass.matrix,1,function(x) return(any(x))))]
 				}
 				# More to come...
 				# TODO: Write more rules based in exons
@@ -77,7 +77,7 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 #' @param gene.data an annotation data frame usually obtained with \code{\link{get.annotation}} containing the unique gene accession
 #' identifiers.
 #' @param gene.filters a named list with gene filters and their parameters. See the main help page of \code{\link{metaseqr}} for details.
-#' @return a named list whose names are the gene filter names and its members are the filtered row indices of \code{gene.data}.
+#' @return a named list whose names are the gene filter names and its members are the filtered rownames of \code{gene.data}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -98,24 +98,24 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 		disp("Applying gene filter ",gf,"...")
 		switch(gf,
 			length = { # This is real gene length independently of exons
-				gene.filter.result$length <- which(gene.data$end - gene.data$start < gene.filters$length$length)
+				gene.filter.result$length <- rownames(gene.data)[which(gene.data$end - gene.data$start < gene.filters$length$length)]
 			},
 			avg.reads = {
 				avg.mat <- sweep(gene.counts,1,attr(gene.data,"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
 				q.t <- max(apply(avg.mat,2,quantile,gene.filters$avg.reads$quantile))
-				gene.filter.result$avg.reads <- which(apply(avg.mat,1,filter.low,q.t))
+				gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,1,filter.low,q.t))]
 			},
 			expression = {
 				if (gene.filters$expression$median)
-					the.dead.median <- which(apply(gene.counts,1,filter.low,median(gene.counts)))
+					the.dead.median <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,median(gene.counts)))]
 				else
 					the.dead.median <- NULL
 				if (gene.filters$expression$mean)
-					the.dead.mean <- which(apply(gene.counts,1,filter.low,mean(gene.counts)))
+					the.dead.mean <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,mean(gene.counts)))]
 				else
 					the.dead.mean <- NULL
 				if (!is.na(gene.filters$expression$quantile))
-					the.dead.quantile <- which(apply(gene.counts,1,filter.low,quantile(gene.counts,gene.filters$expression$quantile)))
+					the.dead.quantile <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,quantile(gene.counts,gene.filters$expression$quantile)))]
 				else
 					the.dead.quantile <- NULL
 				if (!is.na(gene.filters$expression$known)) {
@@ -123,7 +123,7 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 					bio.cut <- bio.cut[-which(is.na(bio.cut))]
 					bio.cut.counts <- as.vector(gene.counts[bio.cut,])
 					the.bio.cut <- quantile(bio.cut.counts,0.9)
-					the.dead.known <- which(apply(gene.counts,1,filter.low,the.bio.cut))
+					the.dead.known <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,the.bio.cut))]
 				}
 				else
 					the.dead.known <- NULL
@@ -150,7 +150,7 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 					filter.ind <- vector("list",length(filter.out))
 					names(filter.ind) <- filter.out
 					for (bt in filter.out)
-						filter.ind[[bt]] <- which(gene.data$biotype==bt)
+						filter.ind[[bt]] <- rownames(gene.data)[which(gene.data$biotype==bt)]
 					gene.filter.result$biotype <- Reduce("union",filter.ind)
 				}
 				else

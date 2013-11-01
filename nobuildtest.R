@@ -10,6 +10,7 @@ source(file.path(SCRIPT,"metaseqr.filter.R"))
 source(file.path(SCRIPT,"metaseqr.norm.R"))
 source(file.path(SCRIPT,"metaseqr.stat.R"))
 source(file.path(SCRIPT,"metaseqr.plot.R"))
+source(file.path(SCRIPT,"metaseqr.export.R"))
 
 # Redefine function based on the package data and path
 read.annotation <- function(org,type) {

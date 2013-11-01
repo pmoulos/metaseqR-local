@@ -75,6 +75,8 @@ check.packages <- function(n,d,a,m,s,p,r) {
 		stop("Bioconductor package EDASeq is required for some of the selected QC plots!")
 	if ("deheatmap" %in% p && !require(gplots))
 		stop("R package gplots is required for some of the selected QC plots!")
+	if ("venn" %in% p && !require(VennDiagram))
+		stop("R package VennDiagram is required for some of the selected QC plots!")
 	if (r && !require(brew))
 		stop("R package brew is required to create an HTML report!")
 	# Check biomaRt

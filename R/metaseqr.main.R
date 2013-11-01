@@ -750,6 +750,8 @@ metaseqr <- function(
 			}
 		}
 	}
+	else
+		disp("Exon filters: none applied")
 	if (!is.null(gene.filters))
 	{
 		disp("Gene filters: ",paste(names(gene.filters),collapse=", "))
@@ -767,6 +769,8 @@ metaseqr <- function(
 			}
 		}
 	}
+	else
+		disp("Gene filters: none applied")
 	disp("Normalization algorithm: ",normalization)
 	if (!is.null(norm.args))
 	{
@@ -919,6 +923,7 @@ metaseqr <- function(
 		}
 		gene.counts <- do.call("cbind",the.gene.counts)
 		gene.length <- the.exon.lengths[[1]] # Based on the sum of their exon lengths
+		names(gene.length) <- rownames(gene.data)
 		
 		# In case there are small differences between annotation data and external file, due to e.g. slightly different Ensembl versions
 		gene.data <- gene.data[rownames(gene.counts),]
@@ -1008,6 +1013,7 @@ metaseqr <- function(
 
 		gene.data <- gene.data[rownames(gene.counts),]
 		gene.length <- gene.data$end - gene.data$start # Based on total gene lengths
+		names(gene.length) <- rownames(gene.data)
 	}
 
 	# Transform GC-content and biotype
@@ -1022,14 +1028,24 @@ metaseqr <- function(
 	the.zeros <- which(apply(gene.counts,1,filter.low,0))
 	if (length(the.zeros)>0)
 	{
+		# Store the filtered, maybe we do some stats
+		gene.counts.zero <- gene.counts[the.zeros,]
+		gene.data.zero <- gene.data[the.zeros,]
+		attr(gene.data.zero,"gene.length") <- gene.length[the.zeros]
+		the.zero.names <- rownames(gene.data)[the.zeros]
+		# Then remove
 		gene.counts <- gene.counts[-the.zeros,]
 		gene.data <- gene.data[-the.zeros,]
 		attr(gene.data,"gene.length") <- gene.length[-the.zeros]
-		# Store the filtered, maybe we do some stats
-		gene.data.zero <- gene.data[the.zeros,]
-		attr(gene.data.zero,"gene.length") <- gene.length[the.zeros]
 	}
+	else
+		gene.counts.zero <- gene.data.zero <- the.zero.names <- NULL
 
+	# Store un-normalized gene counts for export purposes
+	gene.counts.unnorm <- gene.counts
+	
+	# Here, should be added a pre and post normalization filtering option
+	
 	disp("Normalizing with: ",normalization)
 	switch(normalization,
 		edaseq = {
@@ -1091,45 +1107,53 @@ metaseqr <- function(
 	)
 	#gene.filter.result$expression <- Reduce("union",the.dead.genes)
 	the.dead <- unique(unlist(c(gene.filter.result,exon.filter.result)))
-	if (length(the.dead>0)) # All method specific object are row-index subsettable
+	if (count.type=="exon") # Some genes filtered by zero, were present in exon filters, not yet applied
+		the.dead <- setdiff(the.dead,the.zero.names)
+	
+	if (length(the.dead)>0) # All method specific object are row-index subsettable
 	{
+		# Store the filtered for later export or some stats
+		gene.counts.dead <- temp.matrix[the.dead,]
+		gene.counts.unnorm <- gene.counts.unnorm[the.dead,]
+		gene.data.dead <- gene.data[the.dead,]
+		attr(gene.data.dead,"gene.length") <- attr(gene.data,"gene.length")[the.dead]
+		# Now filter
+		the.dead.ind <- match(the.dead,rownames(temp.matrix))
 		switch(class(norm.genes),
 			CountDataSet = {
-				norm.genes.expr <- norm.genes[-the.dead,]
+				norm.genes.expr <- norm.genes[-the.dead.ind,]
 			},
 			DGEList = { # edgeR bug???
-				norm.genes.expr <- norm.genes[-the.dead,]
-				norm.genes.expr$AveLogCPM <- norm.genes.expr$AveLogCPM[-the.dead]
+				norm.genes.expr <- norm.genes[-the.dead.ind,]
+				norm.genes.expr$AveLogCPM <- norm.genes.expr$AveLogCPM[-the.dead.ind]
 			},
 			matrix = { # Has been normalized with EDASeq or NOISeq
-				norm.genes.expr <- norm.genes[-the.dead,]
+				norm.genes.expr <- norm.genes[-the.dead.ind,]
 			},
 			list = { # Has been normalized with NBPSeq, main.method="nbpseq"
 				norm.genes.expr <- norm.genes
-				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead,])
-				norm.genes.expr$rel.frequencies <- norm.genes.expr$rel.frequencies[-the.dead,]
-				norm.genes.expr$tags <- as.matrix(norm.genes.expr$tags[-the.dead,])
+				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
+				norm.genes.expr$rel.frequencies <- norm.genes.expr$rel.frequencies[-the.dead.ind,]
+				norm.genes.expr$tags <- as.matrix(norm.genes.expr$tags[-the.dead.ind,])
 			},
 			nbp = {
 				norm.genes.expr <- norm.genes
-				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead,])
-				norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead,])
+				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
+				norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead.ind,])
 				norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$pseudo.counts))*rep(1,dim(norm.genes.expr$counts)[2])
 			}
 		)
 		gene.counts.expr <- gene.counts[rownames(norm.genes.expr),]
-		gene.data.expr <- gene.data[-the.dead,]
-		attr(gene.data.expr,"gene.length") <- attr(gene.data,"gene.length")[-the.dead]
-		# Store the filtered, maybe we do some stats
-		gene.data.dead <- gene.data[the.dead,]
-		attr(gene.data.dead,"gene.length") <- attr(gene.data,"gene.length")[the.dead]
+		gene.data.expr <- gene.data[-the.dead.ind,]
+		attr(gene.data.expr,"gene.length") <- attr(gene.data,"gene.length")[-the.dead.ind]
+		
 	}
 	else
 	{
 		norm.genes.expr <- norm.genes
 		gene.counts.expr <- gene.counts
 		gene.data.expr <- gene.data
-		gene.data.dead <- NULL
+		gene.counts.dead <- gene.data.dead <- gene.counts.unnorm <- NULL
 	}
 	
 	# Store the final filtered, maybe we do some stats
@@ -1198,6 +1222,8 @@ metaseqr <- function(
 			}
 		}
 	}
+	else
+		adj.cp.list <- NULL
 
 	# Calculate meta-statistics, if more than one statistical algorithm has been used
 	if (length(statistics)>1)
@@ -1239,6 +1265,8 @@ metaseqr <- function(
 		sum.p.list <- cp.list
 	if ("adj.meta.p.value" %in% export.what) # Useless for one statistics but just for safety
 		adj.sum.p.list <- wapply(multic,sum.p.list,function(x,a) return(p.adjust(x,a)),adjust.method)
+	else
+		adj.sum.p.list <- NULL
 	
 	# At this point, all method-specific objects must become a matrices for exporting and plotting
 	switch(class(norm.genes.expr),
@@ -1268,242 +1296,53 @@ metaseqr <- function(
 		}
 		# We don't need the matrix case
 	)
-	
+
+	##############################################################################################################################
+	# BEGIN EXPORT SECTION
+	##############################################################################################################################
+
 	disp("Building output files...")
-	counter <- 1
+	
+	disp("  Adding non-filtered data...")
 	if (out.list) out <- make.export.list(contrast) else out <- NULL
 	if (report) html <- make.export.list(contrast) else html <- NULL
 	if ("normalized" %in% export.values)
 		norm.list <- make.transformation(norm.genes.expr,export.scale,log.offset)
+	else
+		norm.list <- NULL
 	if ("raw" %in% export.values)
 		raw.list <- make.transformation(gene.counts.expr,export.scale,log.offset)
+	else
+		raw.list <- NULL
+	counter <- 1
 	for (cnt in contrast)
 	{
-		disp("  Contrast: ",cnt)
-
-		export <- data.frame(row.names=rownames(gene.data.expr))
-		if (report) export.html <- as.matrix(export)
-		the.names <- character(0)
-		if ("annotation" %in% export.what)
-		{
-			disp("    binding annotation...")
-			export <- cbind(export,gene.data.expr)
-			if (report) export.html <- cbind(export.html,make.html.cells(gene.data.expr,type="text"))
-			the.names <- c(the.names,colnames(gene.data.expr))
-		}
-		if ("p.value" %in% export.what)
-		{
-			disp("    binding p-values...")
-			export <- cbind(export,cp.list[[cnt]])
-			if (report) export.html <- cbind(export.html,make.html.cells(cp.list[[cnt]]))
-			the.names <- c(the.names,paste("p-value_",colnames(cp.list[[cnt]]),sep=""))
-		}
-		if ("adj.p.value" %in% export.what)
-		{
-			disp("    binding FDRs...")
-			#if (statistics=="noiseq" && length(strsplit(cnt,"_vs_")[[1]])>2) # DESeq has run instead, FDR can be calculated
-			#	export <- cbind(export,wapply(multic,p.list[cnt],wp.adjust,adjust.method))
-			#else if (statistics=="noiseq" && length(strsplit(cnt,"_vs_")[[1]])==2) # NOISeq does not return the classical p-value
-			#	export <- cbind(export,rep(NA,nrow(export)))
-			#else
-			#	export <- cbind(export,wapply(multic,p.list[cnt],wp.adjust,adjust.method))
-			export <- cbind(export,adj.cp.list[[cnt]])
-			#if (report) export.html <- cbind(export.html,make.html.cells(export[,ncol(export)]))
-			if (report) export.html <- cbind(export.html,make.html.cells(adj.cp.list[[cnt]]))
-			the.names <- c(the.names,paste("FDR_",colnames(adj.cp.list[[cnt]]),sep=""))
-		}
-		if ("meta.p.value" %in% export.what && length(statistics)>1) # Otherwise it does not exist
-		{
-			disp("    binding meta p-values...")
-			export <- cbind(export,sum.p.list[[cnt]])
-			if (report) export.html <- cbind(export.html,make.html.cells(sum.p.list[[cnt]]))
-			the.names <- c(the.names,paste("meta_p-value_",cnt,sep=""))
-		}
-		if ("adj.meta.p.value" %in% export.what && length(statistics)>1)
-		{
-			disp("    binding adjusted meta p-values...")
-			export <- cbind(export,adj.sum.p.list[[cnt]])
-			if (report) export.html <- cbind(export.html,make.html.cells(adj.sum.p.list[[cnt]]))
-			the.names <- c(the.names,paste("meta_FDR_",cnt,sep=""))
-		}
-		if ("fold.change" %in% export.what)
-		{
-			if ("normalized" %in% export.values)
-			{
-				tmp <- make.fold.change(cnt,sample.list,norm.genes.expr,log.offset)
-				if ("natural" %in% export.scale)
-				{
-					disp("    binding natural normalized fold changes...")
-					export <- cbind(export,tmp)
-					if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-					the.names <- c(the.names,paste("natural_normalized_fold_change_",colnames(tmp),sep=""))
-				}
-				if ("log2" %in% export.scale)
-				{
-					disp("    binding log2 normalized fold changes...")
-					export <- cbind(export,log2(tmp))
-					if (report) export.html <- cbind(export.html,make.html.cells(log2(tmp)))
-					the.names <- c(the.names,paste("log2_normalized_fold_change_",colnames(tmp),sep=""))
-				}
-			}
-			if ("raw" %in% export.values)
-			{
-				tmp <- make.fold.change(cnt,sample.list,gene.counts.expr,log.offset)
-				if ("natural" %in% export.scale)
-				{
-					disp("    binding natural raw fold changes...")
-					export <- cbind(export,tmp)
-					if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-					the.names <- c(the.names,paste("natural_raw_fold_change_",colnames(tmp),sep=""))
-				}
-				if ("log2" %in% export.scale)
-				{
-					disp("    binding log2 raw fold changes...")
-					export <- cbind(export,log2(tmp))
-					if (report) export.html <- cbind(export.html,make.html.cells(log2(tmp)))
-					the.names <- c(the.names,paste("log2_raw_fold_change_",colnames(tmp),sep=""))
-				}
-			}
-		}
-		if ("stats" %in% export.what)
-		{
-			conds <- strsplit(cnt,"_vs_")[[1]]
-			for (cond in conds)
-			{
-				if ("normalized" %in% export.values)
-				{
-					if ("mean" %in% export.stats)
-					{
-						disp("    binding normalized mean counts...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"mean",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_mean_counts_",cond,sep=""))
-					}
-					if ("median" %in% export.stats)
-					{
-						disp("    binding normalized median counts...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"median",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_median_counts_",cond,sep=""))
-					}
-					if ("sd" %in% export.stats)
-					{
-						disp("    binding normalized count sds...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"sd",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_sd_counts_",cond,sep=""))
-					}
-					if ("mad" %in% export.stats)
-					{
-						disp("    binding normalized count MADs...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"mad",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_mad_counts_",cond,sep=""))
-					}
-					if ("cv" %in% export.stats)
-					{
-						disp("    binding normalized count CVs...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"cv",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_cv_counts_",cond,sep=""))
-					}
-					if ("rcv" %in% export.stats)
-					{
-						disp("    binding normalized counts RCVs...")
-						tmp <- make.stat(sample.list[[cond]],norm.list,"rcv",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_normalized_rcv_counts_",cond,sep=""))
-					}
-				}
-				if ("raw" %in% export.values)
-				{
-					if ("mean" %in% export.stats)
-					{
-						disp("    binding raw mean counts...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"mean",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_mean_counts_",cond,sep=""))
-					}
-					if ("median" %in% export.stats)
-					{
-						disp("    binding raw median counts...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"median",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_median_counts_",cond,sep=""))
-					}
-					if ("sd" %in% export.stats)
-					{
-						disp("    binding raw counts sds...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"sd",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_sd_counts_",cond,sep=""))
-					}
-					if ("mad" %in% export.stats)
-					{
-						disp("    binding raw counts MADs...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"mad",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_mad_counts_",cond,sep=""))
-					}
-					if ("cv" %in% export.stats)
-					{
-						disp("    binding raw counts CVs...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"cv",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_cv_counts_",cond,sep=""))
-					}
-					if ("rcv" %in% export.stats)
-					{
-						disp("    binding raw counts RCVs...")
-						tmp <- make.stat(sample.list[[cond]],raw.list,"rcv",export.scale)
-						export <- cbind(export,tmp)
-						if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-						the.names <- c(the.names,paste(colnames(tmp),"_raw_rcv_counts_",cond,sep=""))
-					}
-				}
-			}
-		}
-		if ("counts" %in% export.what)
-		{
-			conds <- strsplit(cnt,"_vs_")[[1]]
-			for (cond in conds)
-			{
-				if ("normalized" %in% export.values)
-				{					
-					disp("    binding all normalized counts for ",cond,"...")
-					tmp <- make.matrix(sample.list[[cond]],norm.list,export.scale)
-					export <- cbind(export,tmp)
-					if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-					part.1 <- rep(paste(export.scale,"_normalized_counts_",sep=""),each=length(sample.list[[cond]]))
-					part.2 <- paste(part.1,colnames(tmp),sep="")
-					the.names <- c(the.names,part.2)
-				}
-				if ("raw" %in% export.values)
-				{
-					disp("    binding all raw counts for ",cond,"...")
-					tmp <- make.matrix(sample.list[[cond]],raw.list,export.scale)
-					export <- cbind(export,tmp)
-					if (report) export.html <- cbind(export.html,make.html.cells(tmp))
-					part.1 <- rep(paste(export.scale,"_raw_counts_",sep=""),each=length(sample.list[[cond]]))
-					part.2 <- paste(part.1,colnames(tmp),sep="")
-					the.names <- c(the.names,part.2)
-				}
-			}
-		}
-		names(export) <- the.names
+		disp("    Contrast: ",cnt)
+		the.export <- build.export(
+			gene.data=gene.data.expr,
+			raw.gene.counts=gene.counts.expr,
+			norm.gene.counts=norm.genes.expr,
+			sample.list=sample.list,
+			cnt=cnt,
+			statistics=statistics,
+			raw.list=raw.list,
+			norm.list=norm.list,
+			p.mat=cp.list[[cnt]],
+			adj.p.mat=adj.cp.list[[cnt]],
+			sum.p=sum.p.list[[cnt]],
+			adj.sum.p=adj.sum.p.list[[cnt]],
+			export.what=export.what,
+			export.scale=export.scale,
+			export.values=export.values,
+			export.stats=export.stats,
+			log.offset=log.offset,
+			report=report
+		)
 
 		# Adjust the export based on what statistics have been done and a possible p-value cutoff
+		export <- the.export$text.table
+		if (report)
+			export.html <- the.export$html.table
 		if (!is.na(pcut))
 		{
 			if (length(statistics)>1)
@@ -1541,15 +1380,10 @@ metaseqr <- function(
 		}
 		else pp <- sum.p.list[[cnt]]
 		export <- export[order(pp),]
-		if (report) export.html <- export.html[order(pp),]
-		# Final safety trigger
-		na.ind <- grep("NA",rownames(export))
-		if (length(na.ind)>0)
-		{
-			export <- export[-na.ind,]
-			export.html <- export.html[-na.ind,]
-		}
-		res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_out_",cnt,".txt.gz",sep=""))
+		if (report)
+			export.html <- export.html[order(pp),]
+
+		res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_sig_out_",cnt,".txt.gz",sep=""))
 		disp("    Writing output...")
 		gzfh <- gzfile(res.file,"w")
 		write.table(export,gzfh,quote=FALSE,row.names=FALSE,sep="\t")
@@ -1558,7 +1392,7 @@ metaseqr <- function(
 			out[[cnt]] <- export
 		if (report)
 		{
-			the.html.header <- make.html.header(the.names)
+			the.html.header <- make.html.header(the.export$headers)
 			the.html.rows <- make.html.rows(export.html)
 			the.html.body <- make.html.body(the.html.rows)
 			the.html.table <- make.html.table(the.html.body,the.html.header,id=paste("table_",counter,sep=""))
@@ -1567,6 +1401,58 @@ metaseqr <- function(
 		}
 	}
 
+	if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
+	{
+		disp("  Adding filtered data...")
+		gene.counts.filtered <- rbind(gene.counts.dead,gene.counts.zero)
+		gene.counts.unnorm.filtered <- rbind(gene.counts.unnorm,gene.counts.zero)
+		if ("normalized" %in% export.values)
+			norm.list.filtered <- make.transformation(gene.counts.filtered,export.scale,log.offset)
+		else
+			norm.list.filtered <- NULL
+		if ("raw" %in% export.values)
+			raw.list.filtered <- make.transformation(gene.counts.unnorm.filtered,export.scale,log.offset)
+		else
+			raw.list.filtered <- NULL
+		for (cnt in contrast)
+		{
+			disp("    Contrast: ",cnt)
+			the.export.filtered <- build.export(
+				gene.data=gene.data.filtered,
+				raw.gene.counts=gene.counts.unnorm.filtered,
+				norm.gene.counts=gene.counts.filtered,
+				sample.list=sample.list,
+				cnt=cnt,
+				statistics=statistics,
+				raw.list=raw.list.filtered,
+				norm.list=norm.list.filtered,
+				export.what=export.what,
+				export.scale=export.scale,
+				export.values=export.values,
+				export.stats=export.stats,
+				log.offset=log.offset,
+				report=report
+			)
+		}
+
+		# Now we should be having the.export and the.export.filtered. We do not generate html output for filtered or total results
+		# just a compressed text file. We thus have to append the.export$text.table and the.export.filtered$html.table before writing
+		# the final output...
+		export.all <- rbind(the.export$text.table,the.export.filtered$text.table)
+		# ...and order them somehow... alphabetically according to row names, as the annotation might not have been bundled...
+		export.all <- export.all[order(rownames(export.all)),]
+
+		res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_all_out_",cnt,".txt.gz",sep=""))
+		disp("    Writing output...")
+		gzfh <- gzfile(res.file,"w")
+		write.table(export.all,gzfh,quote=FALSE,row.names=FALSE,sep="\t")
+		close(gzfh)
+	}
+
+	##############################################################################################################################
+	# END EXPORT SECTION
+	##############################################################################################################################
+
 	if (!is.null(qc.plots))
 	{
 		disp("Creating quality control graphs...")
@@ -1574,10 +1460,11 @@ metaseqr <- function(
 			raw=c("mds","biodetection","countsbio","saturation","readnoise"),
 			norm=c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp"),
 			stat=c("deheatmap","volcano","biodist"),
-			other=c("filtered","venn")
+			other=c("filtered"),
+			venn=c("venn")
 		)
-		fig.raw <- fig.unorm <- fig.norm <- fig.stat <- fig.other <- vector("list",length(fig.format))
-		names(fig.raw) <- names(fig.unorm) <- names(fig.norm) <- names(fig.stat) <- names(fig.other) <- fig.format
+		fig.raw <- fig.unorm <- fig.norm <- fig.stat <- fig.other <- fig.venn <- vector("list",length(fig.format))
+		names(fig.raw) <- names(fig.unorm) <- names(fig.norm) <- names(fig.stat) <- names(fig.other) <- names(fig.venn) <- fig.format
 		for (fig in fig.format)
 		{
 			disp("Plotting in ",fig," format...")
@@ -1589,6 +1476,9 @@ metaseqr <- function(
 			if (!is.null(gene.data.filtered))
 				fig.other[[fig]] <- diagplot.metaseqr(gene.data.filtered,sample.list,annotation=total.gene.data,diagplot.type=intersect(qc.plots,plots$other),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # other plots
 			else fig.other[[fig]] <- NULL
+			if ("venn" %in% qc.plots)
+				fig.venn[[fig]] <- diagplot.metaseqr(norm.genes.expr,sample.list,annotation=gene.data.expr,contrast.list=contrast.list,p.list=cp.list,thresholds=list(p=pcut,f=1),
+					diagplot.type=intersect(qc.plots,plots$venn),output=fig,path=PROJECT.PATH$statistics) # venn plots
 		}
 	}
 
@@ -1616,6 +1506,7 @@ metaseqr <- function(
 			fig.norm <- fig.norm[["png"]]
 			fig.stat <- fig.stat[["png"]]
 			fig.other <- fig.other[["png"]]
+			fig.venn <- fig.venn[["png"]]
 		}
 
 		if (tolower(report.template)=="default")
@@ -1624,10 +1515,11 @@ metaseqr <- function(
 				report.template=list(
 					html=file.path(TEMPLATE,"metaseqr_report.html"),
 					css=file.path(TEMPLATE,"styles.css"),
-					logo=file.path(TEMPLATE,"logo.png")
+					logo=file.path(TEMPLATE,"logo.png"),
+					loader=file.path(TEMPLATE,"loader.gif")
 				)
 			else
-				report.template=list(html=NULL,css=NULL,logo=NULL)
+				report.template=list(html=NULL,css=NULL,logo=NULL,loader=NULL)
 		}
 
 		if (!is.null(report.template$html))
@@ -1671,6 +1563,17 @@ metaseqr <- function(
 		}
 		else
 			warning(paste("The report logo image was not provided!"),
+				call.=FALSE)
+		if (!is.null(report.template$loader))
+		{
+			if (file.exists(report.template$loader))
+				file.copy(from=report.template$loader,to=PROJECT.PATH$main)
+			else
+				warning(paste("The report logo image",report.template$loader,"was not found!"),
+					call.=FALSE)
+		}
+		else
+			warning(paste("The report loader image was not provided!"),
 				call.=FALSE)
 		
 		if (has.template)

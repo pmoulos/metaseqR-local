@@ -7,17 +7,21 @@ RNA-Seq data analysis and meta-analysis with metaseqr
 ==================================================
 
 During the past few years, a lot of R/Bioconductor packages have been developped for the analysis of RNA-Seq data, introducing several
-approaches. For example, packages using the negative binomial distribution to model the null hypotheses (_DESeq_, _edgeR_) or packages
-using Bayesian statistics (_baySeq_, _NBPSeq_). In addition, packages specialized to RNA-Seq data normalization have also been developed
-(_EDASeq_). The package _metaseqr_ tries to provide an interface to several algorithms, similar to the recent _TCC_ package. However,
-it is much simpler to use than _TCC_, incoporates more algorithms for normalization and statistical analysis and builds a full report
-with several interactive and non-interactive diagnostic plots so that the users can easily explore the results and have whatever they
-need for this part of their research in one place. Most importantly, metaseqr provides an interface for RNA-Seq data meta-analysis by
-providing the ability to use different algorithms for the statistical testing part and combining the p-values using popular published
-methods (e.g. Fisher's method, Whitlock's method) and two package-specific methods (intersection, union of statistically significant
-results). In the future, more algorithms will be incorporated in the package, with more diagnostic plots and more examples. This initial
-vignette contains just this introductory text and reference to some examples in the package documentation, which we believe that at
-this point contains sufficient explanation to run the metaseqr pipeline.
+approaches. For example, packages using the negative binomial distribution to model the null hypotheses (_DESeq_, _edgeR_, _NBPSeq_)
+or packages using Bayesian statistics (_baySeq_, _EBSeq_). In addition, packages specialized to RNA-Seq data normalization have 
+also been developed (_EDASeq_). The package _metaseqr_ tries to provide an interface to several algorithms, similar to the recent 
+_TCC_ package. However, it is much simpler to use than _TCC_, incoporates more algorithms for normalization and statistical 
+analysis and builds a full report with several interactive and non-interactive diagnostic plots so that the users can easily explore 
+the results and have whatever they need for this part of their research in one place. The metaseqr report is one of its most strong points
+as it provides an automatically generated summary, based on the pipeline inputs and the results, which can be used directly as a draft
+in methods paragraph in scientific publications. It also provides a lot of diagnostic figures and each figure is accompanied by a small
+explanatory text, and a list of references accroding to the algorithms used in the pipeline, which can also be used in a scientific
+article. All the report components are grouped in a comprehensive way, with a table of contents. Most importantly, metaseqr provides an interface 
+for RNA-Seq data meta-analysis by providing the ability to use different algorithms for the statistical testing part and combining the 
+p-values using popular published methods (e.g. Fisher's method, Whitlock's method) and two package-specific methods (intersection, union 
+of statistically significant results). In the future, more algorithms will be incorporated in the package, with more diagnostic plots and more
+examples. This initial vignette contains just this introductory text and reference to some examples in the package documentation, which 
+we believe that at this point contains sufficient explanation to run the metaseqr pipeline.
 
 ## 1 Getting started
 
@@ -222,9 +226,9 @@ cause memory problems, so unless you have more than 64Gb of RAM available, consi
 data("hg18.exon.data",package="metaseqr")
 metaseqr(
 	counts=hg18.exon.counts,
-	sample.list=list(CON=c("CON_BR1","CON_BR2"),DOX=c("DOX_BR1","DOX_BR2")),
-	contrast=c("CON_vs_DOX"),
-	libsize.list=list(CON_BR1=17041268,CON_BR2=23579904,DOX_BR1=16018639,DOX_BR2=26294259),
+	sample.list=sample.list.hg19,
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",
 	org="hg18",
@@ -255,7 +259,7 @@ metaseqr(
 			median=TRUE,
 			mean=FALSE
 		),
-		biotype=get.defaults("biotype.filter","hg18")
+		biotype=get.defaults("biotype.filter","hg19")
 	)
 )
 ```
@@ -278,6 +282,12 @@ processing, up to statistical selection.
 Most of the diagnostic plots, work with simple matrices as inputs, so they can be easily used outside the main pipeline, as long as all
 the necessary arguments are given. It should be noted that a report can be generated only when running the whole metaseqr pipeline and in
 the current version there is no support for generating custom reports.
+
+A very detailed documentation on how to run metaseqr and explanation for all its parameters can be obtained by
+
+```{r eval=FALSE}
+help(metaseqr)
+```
 
 ## 4 R session information
 
