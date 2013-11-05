@@ -1,5 +1,5 @@
-- Provide the option of pre and post normalization filtering
 - Add EBSeq in statistics
+- Provide total runtime (also in report)
 - Write evaluation functions for filters
 - Write evaluation functions for normalization and statistical list arguments
 - Study about efficiency of statistical algorithms and use it to make weights for the Whitlock method (e.g. Soneson and Delorenzi, 2013)

@@ -261,13 +261,6 @@ build.export <- function(gene.data,raw.gene.counts,norm.gene.counts,
 	}
 	names(export) <- the.names
 
-	# Final safety trigger
-	na.ind <- grep("NA",rownames(export))
-	if (length(na.ind)>0)
-	{
-		export <- export[-na.ind,]
-		if (report) export.html <- export.html[-na.ind,]
-	}
 	if (!report)
 		export.html <- NULL
 

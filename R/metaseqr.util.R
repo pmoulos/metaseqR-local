@@ -19,11 +19,11 @@
 #' # Not yet implenented
 read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 	if (!require(GenomicRanges))
-		stop("The Bioconductor package GenomicRanges is required to proceed!")
+		stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
 	if (file.type=="bed" && !require(rtracklayer))
-		stop("The Bioconductor package rtracklayer is required to process BED files!")
+		stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
 	if (file.type %in% c("sam","bam") && !require(Rsamtools))
-		stop("The Bioconductor package Rsamtools is required to process BAM files!")
+		stopwrap("The Bioconductor package Rsamtools is required to process BAM files!")
 
 	# Convert annotation to GRanges
 	disp("Converting annotation to GenomicRanges object...")
@@ -73,14 +73,13 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 				counts[,n] <- countOverlaps(annotation.gr,bed)
 			}
 			else
-				warning(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""),
-					call.=FALSE)
+				warnwrap(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""))
 			gc(verbose=FALSE)
 		}
 	}
 	else if (file.type %in% c("sam","bam")) {
 		if (suppressWarnings(!require(Repitools))) # Gives some warnings about reloaded functions
-			stop("Bioconductor package Repitools is required to proceed with reading BAM files!")
+			stopwrap("Bioconductor package Repitools is required to proceed with reading BAM files!")
 		if (file.type=="sam") {
 			for (n in sample.names) {
 				dest <- file.path(dirname(sample.files[n]),n)
@@ -101,8 +100,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 				counts[,n] <- countOverlaps(annotation.gr,bam)
 			}
 			else
-				warning(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""),
-					call.=FALSE)
+				warnwrap(paste("No reads left after annotation chromosome presence check for sample ",n,sep=""))
 			gc(verbose=FALSE)
 		}
 	}
@@ -138,7 +136,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 #'}
 read.targets <- function(input,path=NULL) {
 	if (missing(input) || !file.exists(input))
-		stop("The targets file should be a valid existing text file!")
+		stopwrap("The targets file should be a valid existing text file!")
 	tab <- read.delim(input)
 	samples <- as.character(tab[,1])
 	conditions <- unique(as.character(tab[,3]))
@@ -149,9 +147,9 @@ read.targets <- function(input,path=NULL) {
 			rawfiles <- file.path(path,basename(rawfiles))
 	}
 	if (length(samples) != length(unique(samples)))
-		stop("Sample names must be unique for each sample!")
+		stopwrap("Sample names must be unique for each sample!")
 	if (length(rawfiles) != length(unique(rawfiles)))
-		stop("File names must be unique for each sample!")
+		stopwrap("File names must be unique for each sample!")
 	sample.list <- vector("list",length(conditions))
 	names(sample.list) <- conditions
 	for (n in conditions)
@@ -190,7 +188,7 @@ read.targets <- function(input,path=NULL) {
 #'}
 annotations.update <- function() {
 	if(!require(biomaRt))
-		stop("Bioconductor package biomaRt is required to update annotations!")
+		stopwrap("Bioconductor package biomaRt is required to update annotations!")
 	VERBOSE <<- TRUE
 	supported.types <- c("gene","exon")
 	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danRer7")
@@ -218,7 +216,7 @@ annotations.update <- function() {
 		disp("Finished!\n")
 	}
 	else
-		stop("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
+		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
 }
 
 #' Fixed annotation reader
@@ -267,7 +265,7 @@ read.annotation <- function(org,type) {
 #'}
 get.defaults <- function(what,method=NULL) {
 	if (what %in% c("normalization","statistics") && is.null(method))
-		stop("The method argument must be provided when what is \"normalization\" or \"statistics\"!")
+		stopwrap("The method argument must be provided when what is \"normalization\" or \"statistics\"!")
 	switch(what,
 		normalization = {
 			switch(method,
@@ -987,8 +985,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					#quantile=0.75
-					quantile=0.5
+					quantile=0.25
 				),
 				expression=list(
 					median=TRUE,
@@ -1019,8 +1016,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					#quantile=0.75
-					quantile=0.5
+					quantile=0.25
 				),
 				expression=list(
 					median=TRUE,
@@ -1051,8 +1047,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					#quantile=0.75
-					quantile=0.5
+					quantile=0.25
 				),
 				expression=list(
 					median=TRUE,
@@ -1083,7 +1078,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.9
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1114,7 +1109,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.9
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1145,7 +1140,7 @@ get.preset.opts <- function(preset,org) {
 				),
 				avg.reads=list(
 					average.per.bp=100,
-					quantile=0.9
+					quantile=0.5
 				),
 				expression=list(
 					median=TRUE,
@@ -1555,12 +1550,12 @@ make.contrast.list <- function(contrast,sample.list) {
 #'}
 make.sample.list <- function(input) {
 	if (missing(input) || !file.exists(input))
-		stop("File to make sample list from should be a valid existing text file!")
+		stopwrap("File to make sample list from should be a valid existing text file!")
 	tab <- read.delim(input)
 	samples <- as.character(tab[,1])
 	conditions <- unique(as.character(tab[,2]))
 	if (length(samples) != length(unique(samples)))
-		stop("Sample names must be unique for each sample!")
+		stopwrap("Sample names must be unique for each sample!")
 	sample.list <- vector("list",length(conditions))
 	names(sample.list) <- conditions
 	for (n in conditions)
@@ -1679,6 +1674,10 @@ make.report.messages <- function(lang) {
 	switch(lang,
 		en = {
 			messages <- list(
+				whenfilter=list(
+					prenorm="Before normalization",
+					postnorm="After normalization"
+				),
 				norm=list(
 					edaseq="EDASeq",
 					deseq="DESeq",
@@ -2201,12 +2200,38 @@ disp <- function(...) {
 		cat("\n",...,sep="")
 		flush.console()
 	}
+	if (exists("LOGGER")) {
+		levalias <- c("one","two","three","four","five")
+		switch(levalias[level(LOGGER)],
+			one = { debug(LOGGER,paste0(...)) },
+			two = { info(LOGGER,gsub("\\n","",paste0(...))) },
+			three = { warn(LOGGER,gsub("\\n","",paste0(...))) },
+			four = { error(LOGGER,gsub("\\n","",paste0(...))) },
+			five = { fatal(LOGGER,gsub("\\n","",paste0(...))) }
+		)
+	}
+}
+
+stopwrap <- function(...,t="fatal") {
+	if (exists("LOGGER")) {
+		if (t=="fatal")
+			fatal(LOGGER,gsub("\\n","",paste0(...)))
+		else
+			error(LOGGER,gsub("\\n","",paste0(...)))
+	}
+	stopwrap(paste0(...))
+}
+
+warnwrap <- function(...) {
+	if (exists("LOGGER"))
+		warn(LOGGER,gsub("\\n","",paste0(...)))
+	warning(paste0(...),call.=FALSE)
 }
 
 ## An alternative to compressed text files. It proved that it requires a lot of space.
 #update.annotation <- function() {
 #	if (!require(RSQLite))
-#		stop("R package RSQLite is required to update annotations!")
+#		stopwrap("R package RSQLite is required to update annotations!")
 #	supported.types <- c("gene","exon")
 #	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danRer7")
 #	if (exists("ANNOTATION")) {
@@ -2236,7 +2261,7 @@ disp <- function(...) {
 #		disp("Finished!\n")
 #	}
 #	else
-#		stop("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
+#		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
 #}
 #' Fixed annotation reader
 #'
@@ -2252,7 +2277,7 @@ disp <- function(...) {
 #'}
 #read.annotation <- function(org,type) {
 #	if (!require(RSQLite))
-#		stop("R package RSQLite is required to read stored annotations!")
+#		stopwrap("R package RSQLite is required to read stored annotations!")
 #	if (exists("ANNOTATION")) {
 #		db <- dbConnect(SQLite(),dbname=file.path(ANNOTATION,"annotation.sqlite"))
 #		if (type=="gene") {
@@ -2269,5 +2294,5 @@ disp <- function(...) {
 #		return(ann)
 #	}
 #	else
-#		stop("metaseqr environmental variables are not properly set up! Annotations cannot be accessed...")
+#		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be accessed...")
 #}

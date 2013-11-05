@@ -64,17 +64,17 @@ diagplot.metaseqr <- function(
 ) {
 	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
 	if (!is.matrix(object) && !is.data.frame(object))
-		stop("object argument must be a matrix or data frame!")
+		stopwrap("object argument must be a matrix or data frame!")
 	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","readnoise","biodist","gcbias","lengthbias","filtered")))
-		stop("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\", \"filtered\" or \"venn\"!")
+		stopwrap("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\", \"filtered\" or \"venn\"!")
 	if (any(diagplot.type %in% c("deheatmap","volcano","biodist","venn"))) {
 		if (is.null(contrast.list))
-			stop("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
+			stopwrap("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
 		if (is.null(p.list))
-			stop("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\"!")
+			stopwrap("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\"!")
 		if (is.na(thresholds$p) || is.null(thresholds$p) || thresholds$p==1) {
-			warning(paste("The p-value threshold when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\" must allow the normal plotting of DEG diagnostic plots!",
-				"Setting to 0.05..."),call.=FALSE)
+			warnwrap(paste("The p-value threshold when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\" must allow the normal plotting of DEG diagnostic plots!",
+				"Setting to 0.05..."))
 			thresholds$p <- 0.05
 		}
 	}
@@ -370,7 +370,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 	if (is.null(path)) path <- getwd()
 	check.text.args("which.plot",which.plot,c("meanvar","meandiff","gcbias","lengthbias"),multiarg=TRUE)
 	if (is.null(covar) && which.plot %in% c("gcbias","lengthbias"))
-		stop("\"covar\" argument is required when \"which.plot\" is \"gcbias\" or \"lengthbias\"!")
+		stopwrap("\"covar\" argument is required when \"which.plot\" is \"gcbias\" or \"lengthbias\"!")
 	if (is.norm)
 		status <- "normalized"
 	else
@@ -384,7 +384,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 			names(fil) <- names(sample.list)
 			for (n in names(sample.list)) {
 				if (length(sample.list[[n]])==1) {
-					warning("Cannot create a mean-difference plot with one sample per condition! Skipping...",call.=FALSE)
+					warnwrap("Cannot create a mean-difference plot with one sample per condition! Skipping...")
 					next
 				}
 				pair.matrix <- combn(1:length(sample.list[[n]]),2)
@@ -405,7 +405,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 			names(fil) <- names(sample.list)
 			for (n in names(sample.list)) {	
 				if (length(sample.list[[n]])==1) {
-					warning("Cannot create a mean-variance plot with one sample per condition! Skipping...",call.=FALSE)
+					warnwrap("Cannot create a mean-variance plot with one sample per condition! Skipping...")
 					next
 				}
 				pair.matrix <- combn(1:length(sample.list[[n]]),2)
@@ -501,14 +501,14 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 	which.plot <- tolower(which.plot[1])
 	check.text.args("which.plot",which.plot,c("biodetection","countsbio","saturation","readnoise","rnacomp","biodist"),multiarg=FALSE)
 	if (missing(covars))
-		stop("\"covars\" argument is required with NOISeq specific plots!")
+		stopwrap("\"covars\" argument is required with NOISeq specific plots!")
 	else {
 		covars$biotype <- as.character(covars$biotype)
 		names(covars$length) <- names(covars$gc) <- rownames(covars$chromosome) <- names(covars$biotype) <- rownames(x)
 	}
 	if (which.plot=="biodist") {
 		if (is.null(biodist.opts$p))
-			stop("A p-value must be provided for the \"biodist\" plot!")
+			stopwrap("A p-value must be provided for the \"biodist\" plot!")
 		if (is.null(biodist.opts$pcut) || is.na(biodist.opts$pcut)) biodist.opts$pcut=0.05
 	}
 	if (is.norm)
@@ -949,7 +949,7 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 							#pointFormat="<b>name: </b>{point.name}<br><b>fold change: </b>{point.x}<br><b>significance: </b>{point.y}"
 							pointFormat=point.format
 						),
-						turboThreshold=10000
+						turboThreshold=50000
 					)
 				),
 				series=list(
@@ -1178,14 +1178,14 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #'}
 diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),output="x11",path=NULL,...) {
 	if (is.na(pcut) || is.null(pcut) || pcut==1)
-		warning("Illegal pcut argument! Using the default (0.05)",call.=FALSE)
+		warnwrap("Illegal pcut argument! Using the default (0.05)")
 	algs <- colnames(pmat)
 	if (is.null(algs))
-		stop("The p-value matrices must have the colnames attribute (names of statistical algorithms)!")
+		stopwrap("The p-value matrices must have the colnames attribute (names of statistical algorithms)!")
 	nalg <- length(algs)
 	if(nalg>5) {
-		warning(paste("Cannot create a Venn diagram for more than 5 result sets!",nalg,
-			"found, only the first 5 will be used..."),call.=FALSE)
+		warnwrap(paste("Cannot create a Venn diagram for more than 5 result sets!",nalg,
+			"found, only the first 5 will be used..."))
 		algs <- algs[1:5]
 		nalg <- 5
 	}
@@ -1657,9 +1657,9 @@ make.venn.colorscheme <- function(n) {
 #'}
 graphics.open <- function(o,f,...) {
 	if(!check.graphics.type(o))
-		stop("Invalid graphics output type!")
+		stopwrap("Invalid graphics output type!")
 	if(check.graphics.file(o) && is.null(f))
-		stop("Please specify an output file name for your plot")
+		stopwrap("Please specify an output file name for your plot")
 	
 	switch(o,
 		x11 = { x11(...) },
@@ -1753,15 +1753,15 @@ nat2log <- function(x,base=2,off=1) {
 #' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
 cddat <- function (input) {
 	if (inherits(input,"eSet") == FALSE)
-		stop("ERROR: The input data must be an eSet object.\n")
+		stopwrap("ERROR: The input data must be an eSet object.\n")
 	if (!is.null(assayData(input)$exprs)) {
 		if (ncol( assayData(input)$exprs) < 2)
-			stop("ERROR: The input object should have at least two samples.\n")
+			stopwrap("ERROR: The input object should have at least two samples.\n")
 		datos <- assayData(input)$exprs
 	}
 	else {
 		if (ncol( assayData(input)$counts) < 2)
-			stop("ERROR: The input object should have at least two samples.\n")
+			stopwrap("ERROR: The input object should have at least two samples.\n")
 		datos <- assayData(input)$counts
 	}
 	datos <- datos[which(rowSums(datos) > 0),]

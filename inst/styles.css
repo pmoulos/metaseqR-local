@@ -266,6 +266,14 @@ a:hover
 	top:0;
 }
 
+#summary_log_container
+{
+	font-family: "Courier New", Courier, monospace;
+	font-size: 0.9em;
+	height: 400px;
+	overflow-y: scroll;
+}
+
 p.MsoNormal {
 	mso-style-parent: "";
 	margin-bottom: .0001pt;

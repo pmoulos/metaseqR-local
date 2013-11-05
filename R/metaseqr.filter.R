@@ -50,7 +50,7 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 								else
 									return(FALSE)
 							else
-								if (length(which(x$count!=0)) >= ceiling(length(x)/f$frac))
+								if (length(which(x$count!=0)) >= ceiling(length(x$count)/f$frac))
 									return(TRUE)
 								else
 									return(FALSE)
@@ -98,49 +98,55 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 		disp("Applying gene filter ",gf,"...")
 		switch(gf,
 			length = { # This is real gene length independently of exons
-				gene.filter.result$length <- rownames(gene.data)[which(gene.data$end - gene.data$start < gene.filters$length$length)]
+				if (!is.null(gene.filters$length)) {
+					gene.filter.result$length <- rownames(gene.data)[which(gene.data$end - gene.data$start < gene.filters$length$length)]
+				}
 			},
 			avg.reads = {
-				avg.mat <- sweep(gene.counts,1,attr(gene.data,"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
-				q.t <- max(apply(avg.mat,2,quantile,gene.filters$avg.reads$quantile))
-				gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,1,filter.low,q.t))]
+				if (!is.null(gene.filters$avg.reads)) {
+					avg.mat <- sweep(gene.counts,1,attr(gene.data,"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
+					q.t <- max(apply(avg.mat,2,quantile,gene.filters$avg.reads$quantile))
+					gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,1,filter.low,q.t))]
+				}
 			},
 			expression = {
-				if (gene.filters$expression$median)
-					the.dead.median <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,median(gene.counts)))]
-				else
-					the.dead.median <- NULL
-				if (gene.filters$expression$mean)
-					the.dead.mean <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,mean(gene.counts)))]
-				else
-					the.dead.mean <- NULL
-				if (!is.na(gene.filters$expression$quantile))
-					the.dead.quantile <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,quantile(gene.counts,gene.filters$expression$quantile)))]
-				else
-					the.dead.quantile <- NULL
-				if (!is.na(gene.filters$expression$known)) {
-					bio.cut <- match(gene.filters$expression$known,gene.data$gene_name) # Think about the case of embedded
-					bio.cut <- bio.cut[-which(is.na(bio.cut))]
-					bio.cut.counts <- as.vector(gene.counts[bio.cut,])
-					the.bio.cut <- quantile(bio.cut.counts,0.9)
-					the.dead.known <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,the.bio.cut))]
+				if (!is.null(gene.filters$expression)) {
+					if (gene.filters$expression$median)
+						the.dead.median <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,median(gene.counts)))]
+					else
+						the.dead.median <- NULL
+					if (gene.filters$expression$mean)
+						the.dead.mean <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,mean(gene.counts)))]
+					else
+						the.dead.mean <- NULL
+					if (!is.na(gene.filters$expression$quantile))
+						the.dead.quantile <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,quantile(gene.counts,gene.filters$expression$quantile)))]
+					else
+						the.dead.quantile <- NULL
+					if (!is.na(gene.filters$expression$known)) {
+						bio.cut <- match(gene.filters$expression$known,gene.data$gene_name) # Think about the case of embedded
+						bio.cut <- bio.cut[-which(is.na(bio.cut))]
+						bio.cut.counts <- as.vector(gene.counts[bio.cut,])
+						the.bio.cut <- quantile(bio.cut.counts,0.9)
+						the.dead.known <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,the.bio.cut))]
+					}
+					else
+						the.dead.known <- NULL
+					if (!is.na(gene.filters$expression$custom)) {
+						# For future use
+						the.dead.custom <- NULL
+					}
+					else
+						the.dead.custom <- NULL
+					# Derive one common expression filter
+					gene.filter.result$expression$median <- the.dead.median
+					gene.filter.result$expression$mean <- the.dead.mean
+					gene.filter.result$expression$quantile <- the.dead.quantile
+					gene.filter.result$expression$known <- the.dead.known
+					gene.filter.result$expression$custom <- the.dead.custom
+					#the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,the.dead.known,the.dead.custom)
+					#gene.filter.result$expression <- Reduce("union",the.dead)
 				}
-				else
-					the.dead.known <- NULL
-				if (!is.na(gene.filters$expression$custom)) {
-					# For future use
-					the.dead.custom <- NULL
-				}
-				else
-					the.dead.custom <- NULL
-				# Derive one common expression filter
-				gene.filter.result$expression$median <- the.dead.median
-				gene.filter.result$expression$mean <- the.dead.mean
-				gene.filter.result$expression$quantile <- the.dead.quantile
-				gene.filter.result$expression$known <- the.dead.known
-				gene.filter.result$expression$custom <- the.dead.custom
-				#the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,the.dead.known,the.dead.custom)
-				#gene.filter.result$expression <- Reduce("union",the.dead)
 			},
 			biotype = {
 				if (!is.null(gene.filters$biotype)) {

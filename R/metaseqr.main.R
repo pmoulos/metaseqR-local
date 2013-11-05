@@ -85,6 +85,11 @@
 #' See section "Exon filters" below for details.
 #' @param gene.filters a named list whose names are the names of the supported gene filters and its members the filter parameters.
 #' See section "Gene filters" below for details.
+#' @param when.apply.filter a character string determining when to apply the exon and/or gene filters, relative to normalization. It
+#' can be \code{"prenorm"} to apply apply the filters and exclude genes from further processing before normalization, or \code{"postnorm"}
+#' to apply the filters after normalization (default). In the case of \code{when.apply.filter="prenorm"}, a first normalization round
+#' is applied to a copy of the gene counts matrix in order to derive the proper normalized values that will constitute the several
+#' expression-based filtering cutoffs.
 #' @param normalization the normalization algorithm to be applied on the count data. It can be one of \code{"edaseq"} (default) for 
 #' EDASeq normalization, \code{"deseq"} for the normalization algorithm (individual options specified by the \code{norm.args} argument) 
 #' in the DESq package, \code{"edger"} for the normalization algorithms present in the edgeR package (specified by the \code{norm.args} 
@@ -159,6 +164,8 @@
 #' @param report a logical value controlling whether to produce a summary report or not. Defaults to \code{TRUE}.
 #' @param report.template an HTML template to use for the report. Do not change this unless you know what you are doing.
 #' @param verbose print informative messages during execution? Defaults to \code{TRUE}.
+#' @param run.log write a log file of the \code{metaseqr} run using package log4r. Defaults to \code{TRUE}. The filename will be
+#' auto-generated.
 #' @param ... further arguments that may be passed to plotting functions, related to \code{\link{par}}.
 #' @return If \code{out.list} is \code{TRUE}, a named list whose length is the same as the number of requested contrasts. Each list
 #' member is named according to the corresponding contrast and contains a data frame of differentially expressed genes for that contrast.
@@ -288,7 +295,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
 #'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
@@ -302,7 +309,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
 #'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
@@ -316,7 +323,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
 #'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.75),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
@@ -330,7 +337,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
 #'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
@@ -344,7 +351,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
 #'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
@@ -358,7 +365,7 @@
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
 #'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.9),
+#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
 #'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
 #'	            	biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
@@ -481,7 +488,7 @@ metaseqr <- function(
 	gc.col=NA,
 	name.col=NA,
 	bt.col=NA,
-	annotation=c("download","embedded","fixed"), # It can also be a file at some point, for speed in the final deployment
+	annotation=c("download","embedded","fixed"),
 	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),
 	count.type=c("gene","exon"),
 	exon.filters=list(
@@ -497,7 +504,7 @@ metaseqr <- function(
 		),
 		avg.reads=list(
 			average.per.bp=100,
-			quantile=0.75
+			quantile=0.25
 		),
 		expression=list(
 			median=TRUE,
@@ -508,6 +515,7 @@ metaseqr <- function(
 		),
 		biotype=get.defaults("biotype.filter",org[1])
 	),
+	when.apply.filter=c("postnorm","prenorm"),
 	normalization=c("edaseq","deseq","edger","noiseq","nbpseq","none"),
 	norm.args=NULL,
 	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
@@ -533,6 +541,7 @@ metaseqr <- function(
 	report=TRUE,
 	report.template="default",
 	verbose=TRUE,
+	run.log=TRUE,
 	...
 )
 
@@ -570,11 +579,32 @@ metaseqr <- function(
 	else
 		PROJECT.PATH <<- make.project.path(export.where,counts)
 	VERBOSE <<- verbose
+	# Check logger, here
+	if (run.log && !require(log4r))
+		stop("R package log4r is required to create an log file!")
+	if (run.log)
+		LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,"metaseqr_run.log"),level=log4r:::INFO,logformat="%d %c %m")
+
+	# Check if sample names match in file/df and list, otherwise meaningless to proceed
+	if (!from.raw)
+	{
+		if (!is.data.frame(counts) && file.exists(counts))
+		{
+			aline <- read.delim(counts,nrows=5) # Read the 1st line
+			aline <- colnames(aline)
+		}
+		else
+			aline <- colnames(counts)			
+		samples <- unlist(sample.list,use.names=FALSE)
+		if (length(which(!is.na(match(samples,aline)))) != length(samples))
+			stopwrap("The sample names provided in the counts file do not match with those of the sample.list!")
+	}
 
 	file.type <- tolower(file.type[1])
 	annotation <- tolower(annotation[1])
 	org <- tolower(org[1])
 	count.type <- tolower(count.type[1])
+	when.apply.filter <- tolower(when.apply.filter[1])
 	normalization <- tolower(normalization[1])
 	adjust.method <- adjust.method[1]
 	meta.p <- tolower(meta.p[1])
@@ -601,6 +631,7 @@ metaseqr <- function(
 	check.text.args("annotation",annotation,c("embedded","download","fixed"),multiarg=FALSE)
 	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
+	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","nbpseq","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
 	check.text.args("meta.p",meta.p,c("fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
@@ -631,20 +662,17 @@ metaseqr <- function(
 	if (annotation=="embedded")
 	{
 		if (is.na(gc.col) && count.type=="gene")
-			stop("The column that contains the gene GC content (\"gc.col\") argument is required when \"annotation\" is \"embedded\"!")
+			stopwrap("The column that contains the gene GC content (\"gc.col\") argument is required when \"annotation\" is \"embedded\"!")
 		if (is.na(name.col) && !is.na(gene.filters$expression$known))
 		{
-			warning("The column that contains the HUGO gene symbols (\"bt.col\") is missing with embedded annotation! Gene name expression filter will not be available...",
-				call.=FALSE)
+			warnwrap("The column that contains the HUGO gene symbols (\"bt.col\") is missing with embedded annotation! Gene name expression filter will not be available...")
 			gene.filters$expression$known=NA
 			if ("volcano" %in% qc.plots)
-				warning("The column that contains the HUGO gene symbols (\"bt.col\") is missing with embedded annotation! Interactive volcano plots will not contain gene names...",
-					call.=FALSE)
+				warnwrap("The column that contains the HUGO gene symbols (\"bt.col\") is missing with embedded annotation! Interactive volcano plots will not contain gene names...")
 		}
 		if (is.na(bt.col) && count.type=="gene")
 		{
-			warning("The column that contains the gene biotypes (\"bt.col\") is missing with embedded annotation! Biotype filters and certain plots will not be available...",
-				call.=FALSE)
+			warnwrap("The column that contains the gene biotypes (\"bt.col\") is missing with embedded annotation! Biotype filters and certain plots will not be available...")
 			gene.filters$biotype=NULL
 			to.remove <- match(c("biodetection","countsbio","saturation","biodist","filtered"),qc.plots)
 			no.match <- which(is.na(to.remove))
@@ -657,13 +685,12 @@ metaseqr <- function(
 	else if (annotation=="download" || count.type=="exon") # Requires package biomaRt
 	{
 		if (!require(biomaRt))
-			stop("Bioconductor package biomaRt is required when annotation is \"download\" or type argument is \"exon\"!")
+			stopwrap("Bioconductor package biomaRt is required when annotation is \"download\" or type argument is \"exon\"!")
 	}
 	# Check if drawing a Venn diagram is possible
 	if ("venn" %in% qc.plots && length(statistics)==1)
 	{
-		warning("The creation of a Venn diagram is possible only when more than one statistical algorithms are used (meta-analysis)! Removing from figures list...",
-			call.=FALSE)
+		warnwrap("The creation of a Venn diagram is possible only when more than one statistical algorithms are used (meta-analysis)! Removing from figures list...")
 		to.remove <- match("venn",qc.plots)
 		no.match <- which(is.na(to.remove))
 		if (length(no.match)>0)
@@ -710,7 +737,7 @@ metaseqr <- function(
 		report.messages <- make.report.messages("en")
 		if (!is.null(qc.plots) && !("png" %in% fig.format))
 		{
-			warning("png format is required in order to build a report! Adding to figure output formats...",call.=FALSE)
+			warnwrap("png format is required in order to build a report! Adding to figure output formats...")
 			fig.format <- c(fig.format,"png")
 		}
 	}
@@ -771,6 +798,7 @@ metaseqr <- function(
 	}
 	else
 		disp("Gene filters: none applied")
+	disp("Filter application: ",when.apply.filter)
 	disp("Normalization algorithm: ",normalization)
 	if (!is.null(norm.args))
 	{
@@ -816,8 +844,7 @@ metaseqr <- function(
 	disp("Output data: ",paste(export.what,collapse=", "))
 	disp("Output scale(s): ",paste(export.scale,collapse=", "))
 	disp("Output values: ",paste(export.values,collapse=", "))
-	disp("Output statistics: ",paste(export.stats,collapse=", "))
-	disp("")
+	disp("Output statistics: ",paste(export.stats,collapse=", "),"\n")
 	##############################################################################################################################
 
 	if (count.type=="exon")
@@ -1023,6 +1050,10 @@ metaseqr <- function(
 	names(gene.length) <- rownames(gene.counts)
 	attr(gene.data,"gene.length") <- gene.length
 
+	##############################################################################################################################
+	# BEGIN FILTERING SECTION
+	##############################################################################################################################
+
 	# GC bias is NOT alleviated if we do not remove the zeros!!!
 	disp("Removing genes with zero counts in all samples...")
 	the.zeros <- which(apply(gene.counts,1,filter.low,0))
@@ -1043,117 +1074,205 @@ metaseqr <- function(
 
 	# Store un-normalized gene counts for export purposes
 	gene.counts.unnorm <- gene.counts
-	
-	# Here, should be added a pre and post normalization filtering option
-	
-	disp("Normalizing with: ",normalization)
-	switch(normalization,
-		edaseq = {
-			norm.genes <- normalize.edaseq(gene.counts,sample.list,norm.args,gene.data,output="matrix")
-		},
-		deseq = {
-			norm.genes <- normalize.deseq(gene.counts,sample.list,norm.args,output="native")
-		},
-		edger = {
-			norm.genes <- normalize.edger(gene.counts,sample.list,norm.args,output="native")
-		},
-		noiseq = {
-			norm.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="matrix")
-		},
-		nbpseq = {
-			norm.genes <- normalize.nbpseq(gene.counts,sample.list,norm.args,libsize.list,output="native")
-		},
-		none = { # In case some external normalization is applied (e.g. equal read counts from all samples)
-			norm.genes <- gene.counts
-		}
-	)
-	
-	switch(class(norm.genes),
-		CountDataSet = { # Has been normalized with DESeq
-			temp.matrix <- round(counts(norm.genes,normalized=TRUE))
-		},
-		DGEList = { # Has been normalized with edgeR
-			if (norm.args$main.method=="classic")
-				temp.matrix <- round(norm.genes$pseudo.counts)
-			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
-				scl <- norm.genes$samples$lib.size * norm.genes$samples$norm.factors
-				temp.matrix <- round(t(t(norm.genes$counts)/scl)*mean(scl))
-			}
-		},
-		matrix = { # Has been normalized with EDASeq or NOISeq or nothing
-			temp.matrix <- norm.genes
-		},
-		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
-			temp.matrix <- as.matrix(round(sweep(norm.genes$counts,2,norm.genes$norm.factors,"*")))
-		},
-		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
-			 temp.matrix <- as.matrix(round(norm.genes$pseudo.counts))
-		}
-	)
 
-	# Implement gene filters after normalization
-	if (!is.null(gene.filters))
-		gene.filter.result <- filter.genes(temp.matrix,gene.data,gene.filters)
-	else
-		gene.filter.result <- NULL
-
-	# Unify the filters and filter
-	the.dead.genes <- list(
-		gene.filter.result$expression$median,
-		gene.filter.result$expression$mean,
-		gene.filter.result$expression$quantile,
-		gene.filter.result$expression$known,
-		gene.filter.result$expression$custom
-	)
-	#gene.filter.result$expression <- Reduce("union",the.dead.genes)
-	the.dead <- unique(unlist(c(gene.filter.result,exon.filter.result)))
-	if (count.type=="exon") # Some genes filtered by zero, were present in exon filters, not yet applied
-		the.dead <- setdiff(the.dead,the.zero.names)
-	
-	if (length(the.dead)>0) # All method specific object are row-index subsettable
+	# Apply filtering prior to normalization if desired
+	if (when.apply.filter=="prenorm")
 	{
-		# Store the filtered for later export or some stats
-		gene.counts.dead <- temp.matrix[the.dead,]
-		gene.counts.unnorm <- gene.counts.unnorm[the.dead,]
-		gene.data.dead <- gene.data[the.dead,]
-		attr(gene.data.dead,"gene.length") <- attr(gene.data,"gene.length")[the.dead]
-		# Now filter
-		the.dead.ind <- match(the.dead,rownames(temp.matrix))
-		switch(class(norm.genes),
-			CountDataSet = {
-				norm.genes.expr <- norm.genes[-the.dead.ind,]
+		# However, a first round of normalization has to be performed in order to get proper expression filters
+		disp("Prefiltering normalization with: ",normalization)
+		switch(normalization,
+			edaseq = {
+				temp.genes <- normalize.edaseq(gene.counts,sample.list,norm.args,gene.data,output="matrix")
 			},
-			DGEList = { # edgeR bug???
-				norm.genes.expr <- norm.genes[-the.dead.ind,]
-				norm.genes.expr$AveLogCPM <- norm.genes.expr$AveLogCPM[-the.dead.ind]
+			deseq = {
+				temp.genes <- normalize.deseq(gene.counts,sample.list,norm.args,output="matrix")
 			},
-			matrix = { # Has been normalized with EDASeq or NOISeq
-				norm.genes.expr <- norm.genes[-the.dead.ind,]
+			edger = {
+				temp.genes <- normalize.edger(gene.counts,sample.list,norm.args,output="matrix")
 			},
-			list = { # Has been normalized with NBPSeq, main.method="nbpseq"
-				norm.genes.expr <- norm.genes
-				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
-				norm.genes.expr$rel.frequencies <- norm.genes.expr$rel.frequencies[-the.dead.ind,]
-				norm.genes.expr$tags <- as.matrix(norm.genes.expr$tags[-the.dead.ind,])
+			noiseq = {
+				temp.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="matrix")
 			},
-			nbp = {
-				norm.genes.expr <- norm.genes
-				norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
-				norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead.ind,])
-				norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$pseudo.counts))*rep(1,dim(norm.genes.expr$counts)[2])
+			nbpseq = {
+				temp.genes <- normalize.nbpseq(gene.counts,sample.list,norm.args,libsize.list,output="matrix")
+			},
+			none = { # In case some external normalization is applied (e.g. equal read counts from all samples)
+				temp.genes <- gene.counts
 			}
 		)
-		gene.counts.expr <- gene.counts[rownames(norm.genes.expr),]
-		gene.data.expr <- gene.data[-the.dead.ind,]
-		attr(gene.data.expr,"gene.length") <- attr(gene.data,"gene.length")[-the.dead.ind]
 		
-	}
-	else
-	{
+		# Now filter
+		if (!is.null(gene.filters))
+			gene.filter.result <- filter.genes(temp.genes,gene.data,gene.filters)
+		else
+			gene.filter.result <- NULL
+
+		# Unify the filters and filter
+		the.dead.genes <- list(
+			gene.filter.result$expression$median,
+			gene.filter.result$expression$mean,
+			gene.filter.result$expression$quantile,
+			gene.filter.result$expression$known,
+			gene.filter.result$expression$custom
+		)
+		the.dead <- unique(unlist(c(gene.filter.result,exon.filter.result)))
+		if (count.type=="exon") # Some genes filtered by zero, were present in exon filters, not yet applied
+			the.dead <- setdiff(the.dead,the.zero.names)
+		
+		if (length(the.dead)>0) # All method specific object are row-index subsettable
+		{
+			# Store the filtered for later export or some stats
+			gene.counts.dead <- gene.counts[the.dead,]
+			gene.counts.unnorm <- gene.counts.unnorm[the.dead,]
+			gene.data.dead <- gene.data[the.dead,]
+			attr(gene.data.dead,"gene.length") <- attr(gene.data,"gene.length")[the.dead]
+			# Now filter
+			the.dead.ind <- match(the.dead,rownames(gene.counts))
+			gene.counts.expr <- gene.counts[-the.dead.ind,]
+			gene.data.expr <- gene.data[-the.dead.ind,]
+			attr(gene.data.expr,"gene.length") <- attr(gene.data,"gene.length")[-the.dead.ind]
+		}
+		else
+		{
+			gene.counts.expr <- gene.counts
+			gene.data.expr <- gene.data
+			gene.counts.dead <- gene.data.dead <- gene.counts.unnorm <- NULL
+		}
+
+		disp("Normalizing with: ",normalization)
+		switch(normalization,
+			edaseq = {
+				norm.genes <- normalize.edaseq(gene.counts.expr,sample.list,norm.args,gene.data.expr,output="matrix")
+			},
+			deseq = {
+				norm.genes <- normalize.deseq(gene.counts.expr,sample.list,norm.args,output="native")
+			},
+			edger = {
+				norm.genes <- normalize.edger(gene.counts.expr,sample.list,norm.args,output="native")
+			},
+			noiseq = {
+				norm.genes <- normalize.noiseq(gene.counts.expr,sample.list,norm.args,gene.data.expr,log.offset,output="matrix")
+			},
+			nbpseq = {
+				norm.genes <- normalize.nbpseq(gene.counts.expr,sample.list,norm.args,libsize.list,output="native")
+			},
+			none = { # In case some external normalization is applied (e.g. equal read counts from all samples)
+				norm.genes <- gene.counts.expr
+			}
+		)
 		norm.genes.expr <- norm.genes
-		gene.counts.expr <- gene.counts
-		gene.data.expr <- gene.data
-		gene.counts.dead <- gene.data.dead <- gene.counts.unnorm <- NULL
+	}
+	else if (when.apply.filter=="postnorm") # Apply filtering prior to normalization if desired (default)
+	{
+		disp("Normalizing with: ",normalization)
+		switch(normalization,
+			edaseq = {
+				norm.genes <- normalize.edaseq(gene.counts,sample.list,norm.args,gene.data,output="matrix")
+			},
+			deseq = {
+				norm.genes <- normalize.deseq(gene.counts,sample.list,norm.args,output="native")
+			},
+			edger = {
+				norm.genes <- normalize.edger(gene.counts,sample.list,norm.args,output="native")
+			},
+			noiseq = {
+				norm.genes <- normalize.noiseq(gene.counts,sample.list,norm.args,gene.data,log.offset,output="matrix")
+			},
+			nbpseq = {
+				norm.genes <- normalize.nbpseq(gene.counts,sample.list,norm.args,libsize.list,output="native")
+			},
+			none = { # In case some external normalization is applied (e.g. equal read counts from all samples)
+				norm.genes <- gene.counts
+			}
+		)
+	
+		switch(class(norm.genes),
+			CountDataSet = { # Has been normalized with DESeq
+				temp.matrix <- round(counts(norm.genes,normalized=TRUE))
+			},
+			DGEList = { # Has been normalized with edgeR
+				if (norm.args$main.method=="classic")
+					temp.matrix <- round(norm.genes$pseudo.counts)
+				else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+					scl <- norm.genes$samples$lib.size * norm.genes$samples$norm.factors
+					temp.matrix <- round(t(t(norm.genes$counts)/scl)*mean(scl))
+				}
+			},
+			matrix = { # Has been normalized with EDASeq or NOISeq or nothing
+				temp.matrix <- norm.genes
+			},
+			list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+				temp.matrix <- as.matrix(round(sweep(norm.genes$counts,2,norm.genes$norm.factors,"*")))
+			},
+			nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+				 temp.matrix <- as.matrix(round(norm.genes$pseudo.counts))
+			}
+		)
+
+		# Implement gene filters after normalization
+		if (!is.null(gene.filters))
+			gene.filter.result <- filter.genes(temp.matrix,gene.data,gene.filters)
+		else
+			gene.filter.result <- NULL
+
+		# Unify the filters and filter
+		the.dead.genes <- list(
+			gene.filter.result$expression$median,
+			gene.filter.result$expression$mean,
+			gene.filter.result$expression$quantile,
+			gene.filter.result$expression$known,
+			gene.filter.result$expression$custom
+		)
+		#gene.filter.result$expression <- Reduce("union",the.dead.genes)
+		the.dead <- unique(unlist(c(gene.filter.result,exon.filter.result)))
+		if (count.type=="exon") # Some genes filtered by zero, were present in exon filters, not yet applied
+			the.dead <- setdiff(the.dead,the.zero.names)
+		
+		if (length(the.dead)>0) # All method specific object are row-index subsettable
+		{
+			# Store the filtered for later export or some stats
+			gene.counts.dead <- temp.matrix[the.dead,]
+			gene.counts.unnorm <- gene.counts.unnorm[the.dead,]
+			gene.data.dead <- gene.data[the.dead,]
+			attr(gene.data.dead,"gene.length") <- attr(gene.data,"gene.length")[the.dead]
+			# Now filter
+			the.dead.ind <- match(the.dead,rownames(temp.matrix))
+			switch(class(norm.genes),
+				CountDataSet = {
+					norm.genes.expr <- norm.genes[-the.dead.ind,]
+				},
+				DGEList = { # edgeR bug???
+					norm.genes.expr <- norm.genes[-the.dead.ind,]
+					norm.genes.expr$AveLogCPM <- norm.genes.expr$AveLogCPM[-the.dead.ind]
+				},
+				matrix = { # Has been normalized with EDASeq or NOISeq
+					norm.genes.expr <- norm.genes[-the.dead.ind,]
+				},
+				list = { # Has been normalized with NBPSeq, main.method="nbpseq"
+					norm.genes.expr <- norm.genes
+					norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
+					norm.genes.expr$rel.frequencies <- norm.genes.expr$rel.frequencies[-the.dead.ind,]
+					norm.genes.expr$tags <- as.matrix(norm.genes.expr$tags[-the.dead.ind,])
+				},
+				nbp = {
+					norm.genes.expr <- norm.genes
+					norm.genes.expr$counts <- as.matrix(norm.genes.expr$counts[-the.dead.ind,])
+					norm.genes.expr$pseudo.counts <- as.matrix(norm.genes.expr$pseudo.counts[-the.dead.ind,])
+					norm.genes.expr$pseudo.lib.sizes <- colSums(as.matrix(norm.genes.expr$pseudo.counts))*rep(1,dim(norm.genes.expr$counts)[2])
+				}
+			)
+			gene.counts.expr <- gene.counts[rownames(norm.genes.expr),]
+			gene.data.expr <- gene.data[-the.dead.ind,]
+			attr(gene.data.expr,"gene.length") <- attr(gene.data,"gene.length")[-the.dead.ind]
+			
+		}
+		else
+		{
+			norm.genes.expr <- norm.genes
+			gene.counts.expr <- gene.counts
+			gene.data.expr <- gene.data
+			gene.counts.dead <- gene.data.dead <- gene.counts.unnorm <- NULL
+		}
 	}
 	
 	# Store the final filtered, maybe we do some stats
@@ -1166,9 +1285,13 @@ metaseqr <- function(
 			attr(gene.data.filtered,"gene.length") <- attr(gene.data.dead,"gene.length")
 	}
 
+	##############################################################################################################################
+	# END FILTERING SECTION
+	##############################################################################################################################
+
 	# There is a small case that no genes are left after filtering...
 	if(any(dim(norm.genes.expr)==0))
-		stop("No genes left after gene and/or exon filtering! Try again with no filtering or less strict filter rules...")
+		stopwrap("No genes left after gene and/or exon filtering! Try again with no filtering or less strict filter rules...")
 
 	# Run the statistical test, norm.genes is always a method-specific object, handled in the metaseqr.stat.R stat.* functions
 	cp.list <- vector("list",length(contrast))
@@ -1383,6 +1506,14 @@ metaseqr <- function(
 		if (report)
 			export.html <- export.html[order(pp),]
 
+		# Final safety trigger
+		na.ind <- grep("NA",rownames(export))
+		if (length(na.ind)>0)
+		{
+			export <- export[-na.ind,]
+			if (report) export.html <- export.html[-na.ind,]
+		}
+
 		res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_sig_out_",cnt,".txt.gz",sep=""))
 		disp("    Writing output...")
 		gzfh <- gzfile(res.file,"w")
@@ -1470,7 +1601,10 @@ metaseqr <- function(
 			disp("Plotting in ",fig," format...")
 			fig.raw[[fig]] <- diagplot.metaseqr(gene.counts,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$raw),is.norm=FALSE,output=fig,path=PROJECT.PATH$qc) # raw plots
 			fig.unorm[[fig]] <- diagplot.metaseqr(gene.counts,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$norm),is.norm=FALSE,output=fig,path=PROJECT.PATH$normalization) # un-normalized plots
-			fig.norm[[fig]] <- diagplot.metaseqr(norm.genes,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$norm),is.norm=TRUE,output=fig,path=PROJECT.PATH$normalization) # normalized plots
+			if (when.apply.filter=="prenorm") # The annotation dimensions change...
+				fig.norm[[fig]] <- diagplot.metaseqr(norm.genes,sample.list,annotation=gene.data.expr,diagplot.type=intersect(qc.plots,plots$norm),is.norm=TRUE,output=fig,path=PROJECT.PATH$normalization) # normalized plots
+			else if (when.apply.filter=="postnorm")
+				fig.norm[[fig]] <- diagplot.metaseqr(norm.genes,sample.list,annotation=gene.data,diagplot.type=intersect(qc.plots,plots$norm),is.norm=TRUE,output=fig,path=PROJECT.PATH$normalization) # normalized plots
 			fig.stat[[fig]] <- diagplot.metaseqr(norm.genes.expr,sample.list,annotation=gene.data.expr,contrast.list=contrast.list,p.list=sum.p.list,thresholds=list(p=pcut,f=1),
 				diagplot.type=intersect(qc.plots,plots$stat),is.norm=TRUE,output=fig,path=PROJECT.PATH$statistics) # statistical plots
 			if (!is.null(gene.data.filtered))
@@ -1531,15 +1665,13 @@ metaseqr <- function(
 			}
 			else
 			{
-				warning(paste("The template file",report.template$html,"was not found! The HTML report will NOT be generated."),
-					call.=FALSE)
+				warnwrap(paste("The template file",report.template$html,"was not found! The HTML report will NOT be generated."))
 				has.template <- FALSE
 			}
 		}
 		else
 		{
-			warning(paste("The report option was enabled but no template file is provided! The HTML report will NOT be generated."),
-				call.=FALSE)
+			warnwrap(paste("The report option was enabled but no template file is provided! The HTML report will NOT be generated."))
 			has.template <- FALSE
 		}
 		if (!is.null(report.template$css))
@@ -1547,34 +1679,28 @@ metaseqr <- function(
 			if (file.exists(report.template$css))
 				file.copy(from=report.template$css,to=PROJECT.PATH$main)
 			else
-				warning(paste("The stylesheet file",report.template$css,"was not found! The HTML report will NOT be styled."),
-					call.=FALSE)
+				warnwrap(paste("The stylesheet file",report.template$css,"was not found! The HTML report will NOT be styled."))
 		}
 		else
-			warning(paste("The report stylesheet file was not provided! The HTML report will NOT be styled."),
-				call.=FALSE)
+			warnwrap(paste("The report stylesheet file was not provided! The HTML report will NOT be styled."))
 		if (!is.null(report.template$logo))
 		{
 			if (file.exists(report.template$logo))
 				file.copy(from=report.template$logo,to=PROJECT.PATH$main)
 			else
-				warning(paste("The report logo image",report.template$logo,"was not found!"),
-					call.=FALSE)
+				warnwrap(paste("The report logo image",report.template$logo,"was not found!"))
 		}
 		else
-			warning(paste("The report logo image was not provided!"),
-				call.=FALSE)
+			warnwrap(paste("The report logo image was not provided!"))
 		if (!is.null(report.template$loader))
 		{
 			if (file.exists(report.template$loader))
 				file.copy(from=report.template$loader,to=PROJECT.PATH$main)
 			else
-				warning(paste("The report logo image",report.template$loader,"was not found!"),
-					call.=FALSE)
+				warnwrap(paste("The report logo image",report.template$loader,"was not found!"))
 		}
 		else
-			warning(paste("The report loader image was not provided!"),
-				call.=FALSE)
+			warnwrap(paste("The report loader image was not provided!"))
 		
 		if (has.template)
 		{

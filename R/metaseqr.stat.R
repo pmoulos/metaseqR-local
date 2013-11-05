@@ -369,10 +369,8 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			p[[con.name]] <- 1 - res@results[[1]]$prob # Beware! This is not the classical p-value!
 		}
 		else {
-			warning(
-				paste("NOISeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name),
-				call.=FALSE
-			)
+			warnwrap(
+				paste("NOISeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name))
 			M <- assayData(ns.obj)$exprs
 			cds <- newCountDataSet(round(M),data.frame(condition=unlist(con),row.names=names(unlist(con))))
 			sizeFactors(cds) <- rep(1,ncol(cds))
@@ -592,10 +590,8 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			#}
 		}
 		else {
-			warning(
-				paste("NBPSeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name),
-				call.=FALSE
-			)
+			warnwrap(
+				paste("NBPSeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name))
 			cds <- newCountDataSet(nb.data$counts,data.frame(condition=unlist(con),row.names=names(unlist(con))))
 			sizeFactors(cds) <- rep(1,ncol(cds))
 			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")

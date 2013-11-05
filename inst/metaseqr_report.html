@@ -16,6 +16,7 @@
 	function preloader() {
 		document.getElementById("loading").style.display="none";
 		document.getElementById("report").style.display="block";
+		//document.getElementById("contents").style.display="inline";
 	}//preloader
 	window.onload = preloader;
 // ]]>
@@ -63,9 +64,12 @@
 								cat("<h5>Summary</h5>")
 								cat("<div><ul class=\"tocul\">")
 								#cat("<ul class=\"tocul\"><li class=\"tocli\"><a href=\"#summary\">Summary</a><ul>")
+								cat("<li class=\"tocli\"><a href=\"#summary_summary\">Input options</a></li>")
 								cat("<li class=\"tocli\"><a href=\"#summary_input\">Input options</a></li>")
 								cat("<li class=\"tocli\"><a href=\"#summary_analysis_filtered\">Filtered genes</a></li>")
 								cat("<li class=\"tocli\"><a href=\"#summary_analysis_nde\">DE genes</a></li>")
+								if (run.log)
+									cat("<li class=\"tocli\"><a href=\"#summary_analysis_log\">Run log</a></li>")
 								#cat("</ul></li></ul>")
 								cat("</ul></div>")
 								if (exists("fig.raw") || exists("fig.unorm") || exists("fig.norm") || exists("fig.other")) {
@@ -178,20 +182,20 @@
 									if (count.type=="exon") {
 										if (!is.null(exon.filters)) {
 											cat("The exon read counts were filtered for artifacts that could affect the subsequent normalization and statistical ")
-											cat("testing procedures as follows:")
+											cat("testing procedures as follows: ")
 											msg.exon.filters.min.active.exons <- NULL
 											if (!is.null(exon.filters$min.active.exons)) {
 												msg.exon.filters.min.active.exons <- paste(
-													"if an annotated gene had up to ",exon.filters$min.active.exons$exons.per.gene," read presence was required in at ",
+													"if an annotated gene had up to ",exon.filters$min.active.exons$exons.per.gene," exons, read presence was required in at ",
 													"least ",exon.filters$min.active.exons$min.exons," of the exons, else if an annotated gene had more than ",
-													exon.filters$min.active.exons$exons.per.gene,", then read presence was required in at least ",exon.filters$min.active.exons,
+													exon.filters$min.active.exons$exons.per.gene," exons, then read presence was required in at least ",exon.filters$min.active.exons$frac,
 													"x&lceil;E&rceil; exons, where &lceil;<sup>.</sup>&rceil; is the <em>ceiling</em> mathematical function. The application ",
 													"of this filter resulted in the exclusion of ",length(exon.filter.result$min.active.exons)," genes from further analysis. ",
 													sep=""
 												)
 											}
 											cat(msg.exon.filters.min.active.exons,sep=", ")
-											cat("The total number of genes excluded due to the application of exon filters was ",sum(as.numeric(sapply(exon.filter.result,length))),". ")
+											cat("The total number of genes excluded due to the application of exon filters was ",sum(as.numeric(sapply(exon.filter.result,length))),". ",sep="")
 										}
 										cat("The final read counts for each gene model were calculated as the sums of their exon reads, creating a gene counts ")
 										cat("table where each row corresponded to an Ensembl gene model and each column corresponded to an RNA-Seq sample. ")
@@ -208,7 +212,7 @@
 										counter <- 0
 										msg.gene.filters.length <- msg.gene.filters.expression.median <- msg.gene.filters.expression.mean <-
 										msg.gene.filters.expression.quantile <- msg.gene.filters.expression.known <- msg.gene.filters.expression.custom <-
-										msg.gene.filters.biotype <- NULL
+										msg.gene.filters.biotype <- msg.gene.filters.avg.reads <- NULL
 										if (!is.null(gene.filters$length)) {
 											counter <- counter + 1
 											msg.gene.filters.length <- paste(
@@ -372,6 +376,7 @@
 										}
 									} else cat("none applied","</br>")
 									%>
+									<strong>Filter application:</strong> <%=report.messages$whenfilter[[when.apply.filter]]%></br>
 									<strong>Normalization algorithm:</strong> <%=report.messages$norm[[normalization]]%></br>
 									<strong>Normalization arguments:</strong>
 									<%=
@@ -443,7 +448,7 @@
 											<ul>
 												<%=
 												for (n in names(gene.filter.result)) {
-													cat("<li>",n,": ",length(gene.filter.result[[n]]),"</li>")
+													cat("<li>",n,": ",length(unlist(gene.filter.result[[n]])),"</li>")
 												}
 												%>
 											</ul>
@@ -474,6 +479,15 @@
 										%>
 									</ul>
 								</div>
+								<%
+								if (run.log) {
+									cat("<h4 id=\"summary_analysis_log\" class=\"subtitle\">Run log</h4>")
+									cat("<div id=\"summary_log_container\">")
+									log.string <- paste(readLines(file.path(PROJECT.PATH$main,"metaseqr_run.log")),collapse="---EOL---")
+									cat(gsub("---EOL---","</br>",log.string))
+									cat("</div>")
+								}
+								%>
 							</div> <!-- End summary container -->
 							<h3 id="figures" class="title">Figures </h3>
 							<div id="figures_container">  <!-- Start figures container -->								
