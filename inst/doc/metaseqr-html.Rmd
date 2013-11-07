@@ -74,13 +74,15 @@ sample.list.mm9
 libsize.list.mm9
 ```
 
-Now, running
+Following is a full example with the informative messages that are printed in the command window:
 
 ```{r echo=TRUE, eval=FALSE, tidy=FALSE}
+library(metaseqr)
+data("mm9.gene.data",package="metaseqr")
 result <- metaseqr(
 	counts=mm9.gene.counts,
 	sample.list=sample.list.mm9,
-	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60"),
+	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
 	annotation="fixed",
 	org="mm9",
@@ -119,10 +121,12 @@ result <- metaseqr(
 will result in the following output in the command window:
 
 ```{r echo=FALSE, eval=TRUE, message=FALSE}
+library(metaseqr)
+data("mm9.gene.data",package="metaseqr")
 result <- metaseqr(
 	counts=mm9.gene.counts,
 	sample.list=sample.list.mm9,
-	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60","e15.5_vs_P0.5_vs_P60"),
+	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
 	annotation="fixed",
 	org="mm9",
@@ -161,18 +165,19 @@ result <- metaseqr(
 To get a glimpse on the results, running:
 
 ```{r echo=TRUE, eval=FALSE}
-head(result$data[["e15.5_vs_P0.5"]])
+head(result$data[["e14.5_vs_adult_8_week"]])
 ```
 
 will produce
 
 ```{r echo=FALSE, eval=TRUE}
-head(result$data[["e15.5_vs_P0.5"]])
+head(result$data[["e14.5_vs_adult_8_week"]])
 ```
 
 Check the HTML report file created at "~/metaseqr_test".
 
-Now, the same example but with more than one statistical selection algorithms and a different normalization:
+Now, the same example but with more than one statistical selection algorithms, a different normalization, an analysis preset and
+filtering applied prior to normalization:
 
 ```{r eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE}
 library(metaseqr)
@@ -180,7 +185,35 @@ data("mm9.gene.data",package="metaseqr")
 result <- metaseqr(
 	counts=mm9.gene.counts,
 	sample.list=sample.list.mm9,
-	contrast=c("e15.5_vs_P0.5","P0.5_vs_P60","e15.5_vs_P0.5_vs_P60"),
+	contrast=c("e14.5_vs_adult_8_weeks"),
+	libsize.list=libsize.list.mm9,
+	annotation="fixed",
+	org="mm9",
+	count.type="gene",
+	when.apply.filter="prenorm",
+	normalization="edaseq",
+	statistics=c("deseq","edger"),
+	meta.p="fisher",
+	qc.plots=c(
+		"mds","biodetection","countsbio","saturation","readnoise","filtered","correl",
+		"pairwise","boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp",
+		"deheatmap","volcano","biodist","venn"
+	),
+	fig.format=c("png","pdf"),
+	preset="medium.normal",
+	out.list=TRUE
+)
+```
+
+A similar example with no filtering applied and no Venn diagram generation (not evaluated here):
+
+```{r eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE}
+library(metaseqr)
+data("mm9.gene.data",package="metaseqr")
+result <- metaseqr(
+	counts=mm9.gene.counts,
+	sample.list=sample.list.mm9,
+	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
 	annotation="fixed",
 	org="mm9",
@@ -188,31 +221,8 @@ result <- metaseqr(
 	normalization="edaseq",
 	statistics=c("deseq","edger"),
 	meta.p="fisher",
-	pcut=0.05,
 	fig.format=c("png","pdf"),
-	export.what=c("annotation","p.value","meta.p.value","adj.meta.p.value","fold.change"),
-	export.scale=c("natural","log2"),
-	export.values="normalized",
-	export.stats=c("mean","sd","cv"),
-	export.where="~/metaseqr_test_2",
-	restrict.cores=0.8,
-	gene.filters=list(
-		length=list(
-			length=500
-		),
-		avg.reads=list(
-			average.per.bp=100,
-			quantile=0.25
-		),
-		expression=list(
-			median=TRUE,
-			mean=FALSE,
-			quantile=NA,
-			known=NA,
-			custom=NA
-		),
-		biotype=get.defaults("biotype.filter","mm9")
-	),
+	preset="medium.normal",
 	out.list=TRUE
 )
 ```
@@ -221,24 +231,24 @@ An additional example with human exon data (if you have a multiple core system, 
 option and generally how many cores you are using with scripts purely written in R. The analysis with exon read data can very easily
 cause memory problems, so unless you have more than 64Gb of RAM available, consider setting restrict.cores to something like 0.2):
 
-```{r eval=FALSE, tidy=FALSE}
+```{r eval=FALSE, echo=TRUE, tidy=FALSE}
 # A full example pipeline with exon counts
-data("hg18.exon.data",package="metaseqr")
+data("hg19.exon.data",package="metaseqr")
 metaseqr(
-	counts=hg18.exon.counts,
+	counts=hg19.exon.counts,
 	sample.list=sample.list.hg19,
 	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",
-	org="hg18",
+	org="hg19",
 	count.type="exon",
 	normalization="edaseq",
 	statistics="deseq",
 	pcut=0.05,
 	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","rnacomp",
-		"boxplot","gcbias","lengthbias","meandiff","meanvar",
+		"mds","biodetection","countsbio","saturation","rnacomp","pairwise",
+		"boxplot","gcbias","lengthbias","meandiff","meanvar","correl",
 		"deheatmap","volcano","biodist","filtered"
 	),
 	fig.format=c("png","pdf"),
@@ -261,6 +271,27 @@ metaseqr(
 		),
 		biotype=get.defaults("biotype.filter","hg19")
 	)
+)
+```
+
+or in a more simplified version
+
+```{r eval=FALSE, echo=TRUE, tidy=FALSE}
+# A full example pipeline with exon counts
+data("hg19.exon.data",package="metaseqr")
+metaseqr(
+	counts=hg19.exon.counts,
+	sample.list=sample.list.hg19,
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	libsize.list=libsize.list.hg19,
+	id.col=4,
+	annotation="fixed",
+	org="hg19",
+	count.type="exon",
+	normalization="edaseq",
+	statistics="deseq",
+	preset="medium.normal",
+	restrict.cores=0.8
 )
 ```
 

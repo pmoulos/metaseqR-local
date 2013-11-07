@@ -43,6 +43,8 @@ build.export <- function(gene.data,raw.gene.counts,norm.gene.counts,
 {	
 	if (is.null(colnames(p.mat)))
 		colnames(p.mat) <- statistics
+	if (is.null(adj.p.mat))
+		adj.p.mat=matrix(NA,nrow(gene.data),length(statistics))
 	if (is.null(colnames(adj.p.mat)))
 		colnames(adj.p.mat) <- statistics
 

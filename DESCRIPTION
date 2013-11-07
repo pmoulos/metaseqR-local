@@ -6,26 +6,33 @@ Author: Panagiotis Moulos <moulos@fleming.gr>
 Maintainer: Panagiotis Moulos <moulos@fleming.gr>
 Depends:
     R (>= 2.13.0),
-    Biobase
-Suggests:
-    limma,
-    edgeR,
-    baySeq,
-    NOISeq,
-    MADAM,
-    survcomp,
-    gplots,
+    Biobase,
+    BiocGenerics,
     rjson,
-    qvalue,
-    multicore,
-    Rsamtools,
-    brew,
-    vsn,
+    biomaRt,
+    utils,
+    knitr,
     EDASeq,
     DESeq,
-    utils,
-    biomaRt,
-    knitr
+    edgeR,
+    limma,
+    NOISeq,
+    baySeq,
+    MADAM,
+    survcomp,
+    log4r,
+    brew,
+    gplots,
+    corrplot
+Suggests:
+    GenomicRanges,
+    Rsamtools,
+    rtracklayer,
+    Repitools,
+    qvalue,
+    vsn,
+    multicore,
+    VennDiagram
 Description: Provides an interface to several normalization and
     statistical testing packages for RNA-Seq gene expression data.
     Additionally, it creates several diagnostic plots, performs
@@ -40,11 +47,11 @@ VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
 Version: 1.00
-Date: 2013-10-18
+Date: 2013-11-07
 Collate:
-    'bam2metaseqr.R'
     'metaseqr.argcheck.R'
     'metaseqr-data.R'
+    'metaseqr.export.R'
     'metaseqr.filter.R'
     'metaseqr.main.R'
     'metaseqr.norm.R'

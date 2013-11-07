@@ -85,6 +85,12 @@
 										cat("<li class=\"tocli\"><a href=\"#figures_countsbio\">Biotype counts</a></li>")
 									if (!is.null(fig.raw$saturation))
 										cat("<li class=\"tocli\"><a href=\"#figures_saturation\">Biotype saturation</a></li>")
+									if (!is.null(fig.raw$readnoise))
+										cat("<li class=\"tocli\"><a href=\"#figures_readnoise\">Reads noise</a></li>")
+									if (!is.null(fig.raw$correl))
+										cat("<li class=\"tocli\"><a href=\"#figures_correl\">Correlation plots</a></li>")
+									if (!is.null(fig.raw$pairwise))
+										cat("<li class=\"tocli\"><a href=\"#figures_pairwise\">Pairwise scatterplots</a></li>")
 									if (!is.null(fig.raw$rnacomp))
 										cat("<li class=\"tocli\"><a href=\"#figures_rnacomp\">RNA composition</a></li>")
 									if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot))
@@ -330,7 +336,7 @@
 									} else cat("not available","</br>")
 									%>
 									<strong>Annotation:</strong> <%=annotation%></br>
-									<strong>Organism:</strong> <%=org%></br>
+									<strong>Organism:</strong> <%=report.messages$org[[org]]%></br>
 									<strong>Count type:</strong> <%=count.type%></br>
 									<strong>Exon filters:</strong>
 									<%=
@@ -427,6 +433,7 @@
 									<strong>Output scale(s): </strong> <%=paste(unlist(report.messages$export[export.scale],use.names=FALSE),collapse=", ")%></br>
 									<strong>Output values: </strong> <%=paste(unlist(report.messages$export[export.values],use.names=FALSE),collapse=", ")%></br>
 									<strong>Output statistics: </strong><%=paste(unlist(report.messages$export[export.stats],use.names=FALSE),collapse=", ")%></br>
+									<strong>Total run time: </strong><%=exec.time%></br>
 								</div>
 								<h4 id="summary_analysis_filtered" class="subtitle">Filtered genes </h4>
 								<div id="summary_filtered_container">
@@ -539,6 +546,28 @@
 									cat("<div id=\"figures_readnoise\">")
 									cat("<div>",report.messages$explain$readnoise,"</br></br></div>")
 									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$readnoise),"\" alt=\"Read noise\"></div>")
+									cat("</div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.raw$correl)) {
+									cat("<h4 class=\"subtitle\">Correlation plots</h4>")
+									cat("<div id=\"figures_correl\">")
+									cat("<div>",report.messages$explain$correl,"</br></br></div>")
+									cat("<table class=\"innerTable\"><tr>")
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Correlation heatmap </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$heatmap),"\" alt=\"Correlation heatmap\"></td>")
+									cat("<td class=\"innerCell\"><span class=\"subtitle\">Data correlogram </span></br>")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$correlogram),"\" alt=\"Correlogram\"></td>")
+									cat("</tr></table></div>")
+								}
+								%>
+								<%
+								if (!is.null(fig.raw$pairwise)) {
+									cat("<h4 class=\"subtitle\">Pairwise scatterplots</h4>")
+									cat("<div id=\"figures_pairwise\">")
+									cat("<div>",report.messages$explain$pairwise,"</br></br></div>")
+									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$pairwise),"\" alt=\"Pairwise scatterplots\"></div>")
 									cat("</div>")
 								}
 								%>

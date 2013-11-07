@@ -4,8 +4,8 @@
 #' Package: \tab metaseqr\cr
 #' Type: \tab Package\cr
 #' Version: \tab 1.00\cr
-#' Date: \tab 2013-10-18\cr
-#' Depends: \tab R (>= 2.13.0), Biobase\cr
+#' Date: \tab 2013-11-07\cr
+#' Depends: \tab R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot\cr
 #' Encoding: \tab UTF-8\cr
 #' License: \tab GPL (>= 3)\cr
 #' LazyLoad: \tab yes\cr

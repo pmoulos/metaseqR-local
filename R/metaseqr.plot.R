@@ -25,10 +25,11 @@
 #' additional package, something that is checked while running the main metaseqr function. The supported plots are \code{"mds"}, 
 #' \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"boxplot"}, \code{"gcbias"}, \code{"lengthbias"},
 #' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"},
-#' \code{"venn"}. For a brief description of these plots please see the main \code{\link{metaseqr}} help page.
+#' \code{"venn"}, \code{"correl"}, \code{"pairwise"}. For a brief description of these plots please see the main \code{\link{metaseqr}}
+#' help page.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"",
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
 #' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of 
 #' interactive volcano plots only when reporting the output, through the highcharts javascript library.
 #' @param path the path to create output files.
@@ -58,8 +59,8 @@
 #'}
 diagplot.metaseqr <- function(
 	object,sample.list,annotation=NULL,contrast.list=NULL,p.list=NULL,thresholds=list(p=0.05,f=1),
-	diagplot.type=c("mds","biodetection","countsbio","saturation","readnoise","rnacomp","boxplot","gcbias","lengthbias",
-		"meandiff","meanvar","deheatmap","volcano","biodist","filtered","venn"),
+	diagplot.type=c("mds","biodetection","countsbio","saturation","readnoise","rnacomp","correl","pairs","boxplot","gcbias",
+		"lengthbias","meandiff","meanvar","deheatmap","volcano","biodist","filtered","venn"),
 	is.norm=FALSE,output="x11",path=NULL,...
 ) {
 	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
@@ -90,7 +91,7 @@ diagplot.metaseqr <- function(
 			biotype=annotation$biotype
 		)
 
-	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise")
+	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise","correl","pairwise")
 	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp")
 	stat.plots <- c("deheatmap","volcano","biodist")
 	other.plots <- c("filtered")
@@ -117,6 +118,13 @@ diagplot.metaseqr <- function(
 				},
 				readnoise = {
 					files$readnoise <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+				},
+				correl = {
+					files$correl$heatmap <- diagplot.cor(object,type="heatmap",output=output,path=path,...)
+					files$correl$correlogram <- diagplot.cor(object,type="correlogram",output=output,path=path,...)
+				},
+				pairwise = {
+					files$pairwise <- diagplot.pairs(object,output=output,path=path)
 				}
 			)
 		}
@@ -334,6 +342,143 @@ diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11
 	return(fil)
 }
 
+#' Massive X-Y, M-D correlation plots
+#'
+#' This function uses the read counts matrix to create pairwise correlation plots. The upper diagonal of the final image contains
+#' simple scatterplots of each sample against each other (log2 scale) while the lower diagonal contains mean-difference plots for
+#' the same samples (log2 scale). This type of diagnostic plot may not be interpretable for more than 10 samples.
+#'
+#' @param x the read counts matrix or data frame.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @return The filename of the pairwise comparisons plot produced if it's a file.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' diagplot.pairs(data.matrix)
+#'}
+diagplot.pairs <- function(x,output="x11",path=NULL,...) {	
+	x <- as.matrix(x)
+	x <- nat2log(x)
+	n <- ncol(x)
+	if (!is.null(colnames(x)))
+		nams <- colnames(x)
+	else
+		nams <- paste("Sample_",1:ncol(x),sep="")
+
+	if (!is.null(path))
+		fil <- file.path(path,paste("correlation_pairs",output,sep="."))
+	else
+		fil <- paste("correlation_pairs",output,sep=".")
+	if (output %in% c("pdf","ps","x11"))
+		graphics.open(output,fil,width=12,height=12)
+	else {
+		if (ncol(x)<=5)
+			graphics.open(output,fil,width=800,height=800,res=100)
+		else
+			graphics.open(output,fil,width=1024,height=1024,res=150)
+	}
+		
+	# Setup the grid
+	par(mfrow=c(n,n),mar=c(1,1,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0),cex.axis=0.6,cex.lab=0.6)
+
+	# Plot
+	for (i in 1:n)
+	{
+		for (j in 1:n)
+		{
+			if (i==j)
+			{
+				plot(0:10,0:10,type="n",xaxt="n",yaxt="n",xlab="",ylab="") # Diagonal
+				text(c(3,5,3),c(9.5,5,1),c("X-Y plots",nams[i],"M-D plots"),cex=c(0.8,1,0.8))
+				arrows(6,9.5,9.5,9.5,angle=20,length=0.1,lwd=0.8,cex=0.8)
+				arrows(0.2,3.2,0.2,0.2,angle=20,length=0.1,lwd=0.8,cex=0.8)
+			}
+			else if (i<j) # XY plot
+			{
+				plot(x[,i],x[,j],pch=20,col="blue",cex=0.4,xlab=nams[i],ylab=nams[j],...)
+				lines(lowess(x[,i],x[,j]),col="red")
+				cc <- paste("cor:",formatC(cor(x[,i],x[,j]),digits=3))
+				text(3,max(x[,j]-1),labels=cc,cex=0.7,)
+				#grid()
+			}
+			else if (i>j) # MD plot
+			{
+				plot((x[,i]+x[,j])/2,x[,j]-x[,i],pch=20,col="blue",cex=0.4,...)
+				lines(lowess((x[,i]+x[,j])/2,x[,j]-x[,i]),col="red")
+				#grid()
+			}
+		}
+	}
+
+	graphics.close(output)
+	return(fil)
+}
+
+#' Summarized correlation plots
+#'
+#' This function uses the read counts matrix to create heatmap or correlogram correlation plots.
+#'
+#' @param x the read counts matrix or data frame.
+#' @param type create heatmap of correlogram plots.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @return The filename of the pairwise comparisons plot produced if it's a file.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' require(DESeq)
+#' data.matrix <- counts(makeExampleCountDataSet())
+#' diagplot.cor(data.matrix,type="heatmap")
+#' diagplot.cor(data.matrix,type="correlogram")
+#'}
+diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=NULL,...)
+{
+	x <- as.matrix(mat)
+	type <- tolower(type[1])
+	check.text.args("type",type,c("heatmap","correlogram"))
+	if (!require(corrplot) && type=="correlogram")
+		stop("R package corrplot is required!")
+	cor.mat <- cor(mat)
+	if (!is.null(colnames(mat)))
+		colnames(cor.mat) <- colnames(mat)
+	if (!is.null(path))
+		fil <- file.path(path,paste("correlation_",type,".",output,sep=""))
+	else
+		fil <- paste("correlation_",type,".",output,sep="")
+	if (output %in% c("pdf","ps","x11"))
+		graphics.open(output,fil,width=7,height=7)
+	else
+		graphics.open(output,fil,width=640,height=640,res=100)
+	if (type=="correlogram")
+		corrplot(cor.mat,method="ellipse",order="hclust",...)
+	else if (type=="heatmap") {
+		n <- dim(cor.mat)[1]
+		labs <- matrix(NA,n,n)
+		for (i in 1:n)
+			for (j in 1:n)
+				labs[i,j] <- sprintf("%.2f",cor.mat[i,j])
+		if (n <= 5)
+			notecex <- 1.2
+		else if (n > 5 & n < 10)
+			notecex <- 0.9
+		else
+			notecex <- 0.7
+		heatmap.2(cor.mat,col=colorRampPalette(c("yellow","grey","blue")),revC=TRUE,trace="none",symm=TRUE,Colv=TRUE,
+			cellnote=labs,keysize=1,density.info="density",notecex=notecex,cexCol=0.9,cexRow=0.9,font.lab=2)
+	}
+	graphics.close(output)
+	return(fil)
+}
+
 #' Diagnostic plots based on the EDASeq package
 #'
 #' A wrapper around the plotting functions availale in the EDASeq normalization Bioconductor package. For analytical explanation of
@@ -452,7 +597,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #' chromosome name and co-ordinates), factors (a factor with the experimental condition names replicated by the number of samples in
 #' each experimental condition) and biotype (each gene's biotype as depicted in Ensembl-like annotations).
 #' @param which.plot the NOISeq package plot to generate. It can be one or more of \code{"biodetection"}, \code{"countsbio"}, 
-#' \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise} or \code{"biodist"}. Please refer to the documentation of the EDASeq 
+#' \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise"} or \code{"biodist"}. Please refer to the documentation of the EDASeq 
 #' package for details on the use of these plots. The \code{which.plot="saturation"} case is modified to be more informative by 
 #' producing two kinds of plots. See \code{\link{diagplot.noiseq.saturation}}.
 #' @param biodist.opts a list with the following members: p (a vector of p-values, e.g. the p-values of a contrast), pcut (a unique
@@ -1041,9 +1186,9 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 	y <- nat2log(x,2,1)
 	fil <- file.path(path,paste("de_heatmap_",conn,".",output,sep=""))
 	if (output %in% c("pdf","ps","x11"))
-		graphics.open(output,fil,width=12,height=12)
+		graphics.open(output,fil,width=10,height=10)
 	else
-		graphics.open(output,fil,width=1024,height=1024)
+		graphics.open(output,fil,width=800,height=800)
 	heatmap.2(y,trace="none",col=bluered(16),labRow="",cexCol=0.9,keysize=1,font.lab=2,main=paste("DEG heatmap",con),cex.main=0.9)
 	graphics.close(output)
 	return(fil)

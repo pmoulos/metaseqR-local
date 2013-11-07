@@ -140,7 +140,10 @@
 #' from the same groups cluster together after statistical testing. The \code{"volcano"} option draws a volcano plot for each contrast and
 #' if a report is requested, an interactive volcano plot is presented in the HTML report. The \code{"venn"} option will draw an up to
 #' 5-way Venn diagram depicting the common and specific to each statistical algorithm genes and for each contrast, when meta-analysis
-#' is performed. Set \code{qc.plots=NULL} if you don't want any diagnostic plots created.
+#' is performed. The \code{"correl"} option creates two correlation graphs: the first one is a correlation heatmap (a correlation matrix
+#' which depicts all the pairwise correlations between each pair of samples in the counts matrix is drawn as a clustered heatmap)
+#' and the second one is a correlogram plot, which summarizes the correlation matrix in the form of ellipses (for an explanation please
+#' see the vignette/documentation of the R package corrplot. Set \code{qc.plots=NULL} if you don't want any diagnostic plots created.
 #' @param fig.format the format of the output diagnostic plots. It can be one or more of \code{"x11"} (for direct display), \code{"png"},
 #' \code{"jpg"}, \code{"tiff"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
 #' @param out.list a logical controlling whether to export a list with the results in the running environment.
@@ -526,7 +529,7 @@ metaseqr <- function(
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
 	preset=NULL, # An analysis strictness preset
 	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","readnoise","filtered", # Raw count data
+		"mds","biodetection","countsbio","saturation","readnoise","filtered","correl","pairwise", # Raw count data
 		"boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp", # Pre and post normalization
 		"deheatmap","volcano","biodist" # Post statistical testing
 	),
@@ -643,8 +646,8 @@ metaseqr <- function(
 	if (!is.null(preset)) check.text.args("preset",preset,c("all.basic","all.normal","all.full","medium.basic","medium.normal","medium.full",
 		"strict.basic","strict.normal","strict.full"),multiarg=FALSE)
 	if (!is.null(qc.plots))
-		check.text.args("qc.plots",qc.plots,c("mds","biodetection","countsbio","saturation","readnoise","boxplot","gcbias","lengthbias",
-			"meandiff","meanvar","rnacomp","deheatmap","volcano","biodist","filtered","venn"),multiarg=TRUE)
+		check.text.args("qc.plots",qc.plots,c("mds","biodetection","countsbio","saturation","readnoise","correl","pairwise","boxplot",
+			"gcbias","lengthbias","meandiff","meanvar","rnacomp","deheatmap","volcano","biodist","filtered","venn"),multiarg=TRUE)
 	if (!is.na(restrict.cores)) check.num.args("restrict.cores",restrict.cores,"numeric",c(0,1),"botheq")
 	if (!is.na(pcut)) check.num.args("pcut",pcut,"numeric",c(0,1),"botheq")
 	if (!is.na(gc.col)) check.num.args("gc.col",gc.col,"numeric",0,"gt")
@@ -743,6 +746,7 @@ metaseqr <- function(
 	}
 
 	# Display initialization report
+	TB <- Sys.time()
 	disp(strftime(Sys.time()),": Data processing started...\n")
 	##############################################################################################################################
 	disp("Read counts file: ",counts.name)
@@ -1584,11 +1588,15 @@ metaseqr <- function(
 	# END EXPORT SECTION
 	##############################################################################################################################
 
+	##############################################################################################################################
+	# BEGIN PLOTTING SECTION
+	##############################################################################################################################
+	
 	if (!is.null(qc.plots))
 	{
 		disp("Creating quality control graphs...")
 		plots <- list(
-			raw=c("mds","biodetection","countsbio","saturation","readnoise"),
+			raw=c("mds","biodetection","countsbio","saturation","readnoise","correl","pairwise"),
 			norm=c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp"),
 			stat=c("deheatmap","volcano","biodist"),
 			other=c("filtered"),
@@ -1616,6 +1624,14 @@ metaseqr <- function(
 		}
 	}
 
+	##############################################################################################################################
+	# END PLOTTING SECTION
+	##############################################################################################################################
+
+	##############################################################################################################################
+	# BEGIN REPORTING SECTION
+	##############################################################################################################################
+	
 	if (report)
 	{
 		disp("Creating HTML report...")
@@ -1704,6 +1720,7 @@ metaseqr <- function(
 		
 		if (has.template)
 		{
+			exec.time <- elap2human(TB)
 			TEMP <<- environment()
 			brew(
 				file=report.template$html,
@@ -1713,8 +1730,14 @@ metaseqr <- function(
 			)
 		}
 	}
+
+	##############################################################################################################################
+	# END REPORTING SECTION
+	##############################################################################################################################
 	
-	disp("\n",strftime(Sys.time()),": Data processing finished!\n\n")
+	disp("\n",strftime(Sys.time()),": Data processing finished!\n")
+	exec.time <- elap2human(TB)
+	disp("\n","Total processing time: ",exec.time,"\n\n")
 	
 	if (out.list) return(list(data=out,html=html))
 } # End metaseqr

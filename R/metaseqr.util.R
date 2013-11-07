@@ -120,7 +120,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 #' @return A named list with three members. The first member is a named list whose names are the conditions of the experiments and its
 #' members are the samples belonging to each condition. The second member is like the first, but this time the members are named vectors
 #' whose names are the sample names and the vector elements are full path to BAM/BED files. The third member is the guessed type of
-#' the input files (BAM or BED). It will be used if not given in the main \code{link\{read2count}} function.
+#' the input files (BAM or BED). It will be used if not given in the main \code{\link{read2count}} function.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -930,7 +930,7 @@ get.strict.biofilter <- function(org) {
 #' intended mostly for internal use.
 #'
 #' @param preset preset can be one of \code{"all.basic"}, \code{"all.normal"}, \code{"all.full"}, \code{"medium.basic"}, \code{"medium.normal"},
-#' @param org one of the supported organisms. See \code\link{metaseqr}} main help page.
+#' @param org one of the supported organisms. See \code{\link{metaseqr}} main help page.
 #' \code{"medium.full"}, \code{"strict.basic"}, \code{"strict.normal"} or \code{"strict.full"}, each of which control the strictness of
 #' the analysis and the amount of data to be exported. For an explanation of the presets, see the main \code{\link{metaseqr}} help page.
 #' @return A named list with names \code{exon.filters}, \code{gene.filters}, \code{pcut}, \code{export.what}, \code{export.scale},
@@ -1674,6 +1674,15 @@ make.report.messages <- function(lang) {
 	switch(lang,
 		en = {
 			messages <- list(
+				org=list(
+					hg18="Human (<em>Homo sapiens</em>), genome version alias hg18",
+					hg19="Human (<em>Homo sapiens</em>), genome version alias hg19",
+					mm9="Mouse (<em>Mus musculus</em>), genome version alias mm9",
+					mm10="Mouse (<em>Mus musculus</em>), genome version alias mm10",
+					rno5="Rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
+					dm3="Fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
+					danRer7="Zebrafish (<em>Danio rerio</em>), genome version alias danRer7"
+				),
 				whenfilter=list(
 					prenorm="Before normalization",
 					postnorm="After normalization"
@@ -1823,6 +1832,35 @@ make.report.messages <- function(lang) {
 						"relatively small percentage of total features is detected, indicating that the level of background noise is relatively",
 						"high. Less steep RNA composition curves, indicate less noise. When a sample's curve deviate from the rest, it",
 						"could indicate lower or higher quality, depending on the curves of the rest of the samples.",
+						collapse=" "
+					),
+					correl=paste(
+						"The sample correlation plots depict the accordance among the RNA-Seq samples, as this is manifested through the",
+						"read counts table used with the metaseqr pipeline, with two representations that both use the correlation matrix",
+						"(a matrix which depicts all the pairwise correlations between each pair of samples) of the read counts matrix. The",
+						"first one is a correlation clustered heatmap which depicts the correlations among samples as color-scaled image",
+						"and the hierarchical clustering tree depicts the grouping of the samples according to their correlation. Samples",
+						"from the same group that are not clustered together comprises and indication that there might be a quality problem",
+						"with the dataset. The second is a 'correlogram' plot, where again the samples are hierarchically clustered and",
+						"grouped but this time correlations are presented as ellipses inside each cell. Each cell represents a pairwise",
+						"comparison and each correlation coefficient is represented by an ellipse whose 'diameter', direction and color",
+						"depict the accordance for that pair of samples. Highly correlated samples are depicted as ellipses with narrow",
+						"diameter while while poorly correlated samples are depicted as ellipses with wide diameters. Also, highly correlated",
+						"samples are depicted as ellipses with a left-to-right upwards direction while poorly correlated samples are",
+						"depicted as ellipses with a right-to-left upwards direction",collapse=" "
+					),
+					pairwise=paste(
+						"The pairwise comparison plots are split in three parts: the upper diagonal consists of simple scatterplots",
+						"for all pairwise sample comparisons, together with their pearson correlation coefficient. It is a simple measure",
+						"of between sample correlation using all the available data points instead of only the correlation matrix. The",
+						"lower diagonal, consist of mean-difference plots for all pairwise sample comparisons. A mean-difference plot (or",
+						"a Bland–Altman plots) is a method of data plotting used in analyzing the agreement between two different assays/variables.",
+						"In this graphical method the differences (or alternatively the ratios) between the two variables are plotted",
+						"against the averages of the two. Such a plot is useful, for example, to analyze data with strong correlation between",
+						"x and y axes, when the (x,y) dots on the plot are close to the diagonal x=y. In this case, the value of the",
+						"transformed variable X is about the same as x and y and the variable Y shows the difference between x and y.",
+						"In both represantations, irregular shapes of the red smoother lines are an indication of poor correlation between",
+						"samples or of other systematic bias sources, which is usually corrected through data normalization.",
 						collapse=" "
 					),
 					rnacomp=paste(
@@ -2226,6 +2264,20 @@ warnwrap <- function(...) {
 	if (exists("LOGGER"))
 		warn(LOGGER,gsub("\\n","",paste0(...)))
 	warning(paste0(...),call.=FALSE)
+}
+
+elap2human <- function(start.time) {
+	start.time <- as.POSIXct(start.time)
+	dt <- difftime(Sys.time(),start.time,units="secs")
+	ndt <- as.numeric(dt)
+	if (ndt<60)
+		format(.POSIXct(dt,tz="GMT"),"%S seconds")
+	else if (ndt>=60 && ndt<3600)
+		format(.POSIXct(dt,tz="GMT"),"%M minutes %S seconds")
+	else if (ndt>=3600 && ndt<86400)
+		format(.POSIXct(dt,tz="GMT"),"%H hours %M minutes %S seconds")
+	else if (ndt>=86400)
+		format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
 }
 
 ## An alternative to compressed text files. It proved that it requires a lot of space.
