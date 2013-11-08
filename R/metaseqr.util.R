@@ -1358,7 +1358,8 @@ make.html.table <- function(b,h=NULL,id=NULL) {
 #' but can also be used independently.
 #'
 #' @param data.matrix the raw or normalized counts matrix. Each column represents one input sample.
-#' @param export.scale a character vector containing one of the supported data transformations \code{("natural", "log2","log10","vst")}.
+#' @param export.scale a character vector containing one of the supported data transformations (\code{"natural"}, \code{"log2"},
+#' \code{"log10"},\code{"vst"}).
 #' See also the main help page of metaseqr.
 #' @param log.offset a number to be added to each element of data.matrix in order to avoid Infinity on log type data transformations.
 #' @return A named list whose names are the elements in export.scale. Each list member is the respective transformed data matrix.
@@ -1404,8 +1405,8 @@ make.transformation <- function(data.matrix,export.scale,log.offset=1) {
 #' main help page of \code{\link{metaseqr}}.
 #' @param data.list a list containing natural or transformed data, typically an output from
 #' \code{\link{make.transformation}}.
-#' @param stat the statistics to calculate. Can be one or more of \code{"mean", "median", "sd", "mad", "cv", "rcv"}. See also the main help
-#' page of metaseqr.
+#' @param stat the statistics to calculate. Can be one or more of \code{"mean"}, \code{"median"}, \code{"sd"}, \code{"mad"}, \code{"cv"},
+#' \code{"rcv"}. See also the main help page of \code{\link{metaseqr}}.
 #' @param export.scale the output transformations used as input also to \code{\link{make.transformation}}.
 #' @return A matrix of statistics calculated based on the input sample names. The different data transformnations are appended columnwise.
 #' @export
@@ -1499,7 +1500,8 @@ make.matrix <- function(samples,data.list,export.scale="natural") {
 #' supplied directly with the contrasts vector which is one of the main \code{\link{metaseqr}} arguments.
 #'
 #' @param contrast a vector of contrasts in the form "ConditionA_vs_ConditionB" or
-#' "ConditionA_vs_ConditionB_vs_ConditionC_vs_...".
+#' "ConditionA_
+#' vs_ConditionB_vs_ConditionC_vs_...".
 #' In case of Control vs Treatment designs, the Control condition should ALWAYS be the first.
 #' @param sample.list the list of samples in the experiment. See also the main help page of \code{\link{metaseqr}}.
 #' @return A named list whose names are the contrasts and its members are named vectors, where the names are the sample names and the
@@ -2093,6 +2095,50 @@ make.highcharts.points <- function(x,y,a) {
 	return(stru)
 }
 
+#' Create simulated counts
+#'
+#' This function creates simulated RNA-Seq gene expression datasets using the \code{simulateReadCounts} function from the Bioconductor
+#' package TCC and it adds simulated annoation elements. For further information please consult the TCC package documentation.
+#'
+#' @param ... parameters to the \code{simulateReadCounts} function.
+#' @return A list with the following members: \code{simdata} holding the simulated dataset complying with metaseqr requirements, and
+#' \code{simparam} holding the simulation parameters (see TCC documentation).
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' dd <- make.sim.data(Ngene=10000,PDEG=0.2,DEG.assign=c(0.9,0.1),DEG.foldchange=c(5,5),replicates=c(3,3))
+#' head(dd$simdata)
+#}
+make.sim.data <- function(...) {
+	if (!require(TCC))
+		stopwrap("Bioconductor package TCC is required to create simulated data!")
+	#tcc <- simulateReadCounts(Ngene=Ngene,PDEG=PDEG,DEG.assign=DEG.assign,
+	#	DEG.foldchange=DEG.foldchange,replicates=replicates)
+	tcc <- simulateReadCounts(...)
+	n <- nrow(tcc$count)
+	# Now we have to simulate annotation
+	chromosome <- paste("chr",1+round(20*runif(n)),sep="")
+	start <- 1 + round(1e+6*runif(n))
+	end <- start + 250 + round(1e+6*runif(n))
+	gene_id <- gene_name <- rownames(tcc$count)
+	gc_content <- runif(n)
+	strand <- sample(c("+","-"),n,replace=TRUE)
+	biotype <- sample(paste("biotype",1:10),n,replace=TRUE)
+	sim.data <- data.frame(
+		chromosome=chromosome,
+		start=start,
+		end=end,
+		gene_id=gene_id,
+		gc_content=gc_content,
+		strand=strand,
+		gene_name=gene_name,
+		biotype=biotype
+	)
+	sim.data <- cbind(sim.data,tcc$count)
+	return(list(simdata=sim.data,simparam=tcc$simulation))
+}
+
 #' Create a class vector
 #'
 #' Creates a class vector from a sample list. Internal to the \code{stat.*} functions. Mostly internal use.
@@ -2257,7 +2303,7 @@ stopwrap <- function(...,t="fatal") {
 		else
 			error(LOGGER,gsub("\\n","",paste0(...)))
 	}
-	stopwrap(paste0(...))
+	stop(paste0(...))
 }
 
 warnwrap <- function(...) {

@@ -18,7 +18,7 @@ roxy.package(
 		AuthorsR="c(person(given=\"Panagiotis\", family=\"Moulos\", email=\"moulos@fleming.gr\", role=c(\"aut\", \"cre\")))",
 		Maintainer="Panagiotis Moulos <moulos@fleming.gr>",
 		Depends="R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot", 
-		Suggests="GenomicRanges, Rsamtools, rtracklayer, Repitools, qvalue, vsn, multicore, VennDiagram",
+		Suggests="GenomicRanges, Rsamtools, rtracklayer, Repitools, qvalue, vsn, multicore, VennDiagram, TCC",
 		Description="Provides an interface to several normalization and statistical testing packages for RNA-Seq gene expression data. Additionally, it creates several diagnostic plots, performs meta-analysis by combinining the results of several statistical tests and reports the results in an interactive way.",
 		License="GPL (>= 3)",
 		Encoding="UTF-8",
@@ -34,7 +34,7 @@ roxy.package(
 		"html",
 		"doc",
 		"log",
-		#"check",
+		"check",
 		"package"
 	),
 	ChangeLog=list(

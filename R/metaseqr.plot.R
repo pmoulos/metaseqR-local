@@ -424,7 +424,7 @@ diagplot.pairs <- function(x,output="x11",path=NULL,...) {
 #'
 #' This function uses the read counts matrix to create heatmap or correlogram correlation plots.
 #'
-#' @param x the read counts matrix or data frame.
+#' @param mat the read counts matrix or data frame.
 #' @param type create heatmap of correlogram plots.
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
 #' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
@@ -1303,10 +1303,9 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' algorithm genes, for each contrast. Mostly for internal use because of its main argument which is difficult to construct, but can be
 #' used independently if the user grasps the logic.
 #'
-#' @param p.list a named list with p-value matrices. The names of the list correspond to contrasts (see the main \code{\link{metaseqr}}
-#' documentation. Each member of the list is a matrix of p-values corresponding to the application of each statistical algorithm. The
-#' p-value matrices must have the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the
-#' specific column.
+#' @param pmat a matrix with p-values corresponding to the application of each statistical algorithm. The p-value matrix must have
+#' the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the specific column (e.g. if
+#' \code{"statistics"=c("deseq","edger","nbpseq")} then \code{colnames(pmat) <- c("deseq","edger","nbpseq")}.
 #' @param pcut a p-value cutoff for statistical significance. Defaults to \code{0.05}.
 #' @param nam a name to be appended to the output graphics file (if \code{"output"} is not \code{"x11"}).
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
@@ -1481,7 +1480,7 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 #' This function creates a list of pairwise comparisons to be performed in order to create an up to 5-way Venn diagram using the R
 #' package VennDiagram. Internal use mostly.
 #'
-#' @param sets a vector with the names of the sets (up to length 5, if larger, it will be truncated with a warning).
+#' @param algs a vector with the names of the sets (up to length 5, if larger, it will be truncated with a warning).
 #' @return A list with as many pairs as the comparisons to be made for the construction of the Venn diagram. The pairs are encoded
 #' with the uppercase letters A through E, each one corresponding to order of the input sets.
 #' @export
@@ -1896,6 +1895,11 @@ nat2log <- function(x,base=2,off=1) {
 #' Old functions from NOISeq
 #'
 #' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
+#'
+#' @param input input to cddat.
+#' @return a list with data to plot.
+#' @note Adopted from an older version of NOISeq package (author: Sonia Tarazona).
+#' @author Panagiotis Moulos
 cddat <- function (input) {
 	if (inherits(input,"eSet") == FALSE)
 		stopwrap("ERROR: The input data must be an eSet object.\n")
@@ -1938,6 +1942,12 @@ cddat <- function (input) {
 #' Old functions from NOISeq
 #'
 #' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
+#' @param dat the returned list from \code{\link{cddat}}.
+#' @param samples the samples to plot.
+#' @param ... further arguments passed to e.g. \code{\link{par}}.
+#' @return Nothing, it created the old RNA composition plot.
+#' @note Adopted from an older version of NOISeq package (author: Sonia Tarazona)
+#' @author Panagiotis Moulos
 cdplot <- function (dat,samples=NULL,...) {
 	dat = dat$data2plot
 	if (is.null(samples)) samples <- 1:(ncol(dat)-1)

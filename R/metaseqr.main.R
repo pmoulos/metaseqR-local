@@ -34,8 +34,8 @@
 #' gene accessions and thus be less comprehensible. Generally, it's best to set the \code{annotation} parameter to \code{"download"}
 #' or \code{"fixed"} to ensure the most comprehensible results. Finally, counts can be a data frame satisfying the above conditions. 
 #' It is a data frame by default when \code{read2count} is used.
-#' @param sample.list a list containing condition names and the samples under each condition. It should have the format \code{sample.list <-
-#' list(ConditionA=c("Sample_A1", "Sample_A2", "Sample_A3"), ConditionB=c("Sample_B1", "Sample_B2"), ConditionC=c("Sample_C1", "Sample_C2"))}.
+#' @param sample.list a list containing condition names and the samples under each condition. It should have the format \code{sample.list <-}
+#' \code{list(ConditionA=c("Sample_A1",} \code{"Sample_A2", "Sample_A3"),} \code{ConditionB=c("Sample_B1", "Sample_B2"),} \code{ConditionC=c("Sample_C1", "Sample_C2"))}.
 #' The names of the samples in list members MUST match the column names containing the read counts in the counts file. If they do not
 #' match, the pipeline will either crash or at best, ignore several of your samples. Alternative, \code{sample.list} can be a small
 #' tab-delimited file structured as follows: the first line of the external tab delimited file should contain column names (names are
@@ -54,12 +54,12 @@
 #' for SAM files or \code{"bam"} for BAM files.
 #' @param contrast a character vector of contrasts to be tested in the statistical testing step(s) of the metaseqr pipeline. Each 
 #' element of the should STRICTLY have the format "ConditionA_vs_ConditionB_vs_...". A valid example based on the \code{sample.list}
-#' above is \code{contrast <- c("ConditionA_vs_ConditionB", "ConditionA_vs_ConditionC", "ConditionA_vs_ConditionB_vs_ConditionC")}. The 
-#' first  element of pairwise contrasts (e.g. "ConditionA" above) MUST be the control condition or any reference that ConditionB is 
+#' above is \code{contrast <- c("ConditionA_vs_ConditionB",} \code{"ConditionA_vs_ConditionC",} \code{"ConditionA_vs_ConditionB_vs_ConditionC")}.
+#' The first  element of pairwise contrasts (e.g. "ConditionA" above) MUST be the control condition or any reference that ConditionB is 
 #' checked  against. metaseqr uses this convention to properly calculate fold changes. If it's NULL, a contrast between the first two  
 #' members of the \code{sample.list} will be auto-generated.
 #' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and members
-#' are the library sizes (the sequencing depth) for each sample. For example \code{libsize.list <- list(Sample_A1=32456913, Sample_A2=4346818)}.
+#' are the library sizes (the sequencing depth) for each sample. For example \code{libsize.list <- list(Sample_A1=32456913,} \code{Sample_A2=4346818)}.
 #' @param id.col an integer denoting the column number in the file (or data frame) provided with the counts argument, where the unique
 #' gene or exon accessions are. Default to \code{4} which is the standard feature name column in a BED file.
 #' @param gc.col an integer denoting the column number in the file (or data frame) provided with the \code{counts} argument, where 
@@ -266,7 +266,7 @@
 #'   \item \code{exon.filters=NULL}
 #'   \item \code{gene.filters=NULL}
 #'   \item \code{pcut=1}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean")}
@@ -277,7 +277,7 @@
 #'   \item \code{exon.filters=NULL}
 #'   \item \code{gene.filters=NULL}
 #'   \item \code{pcut=1}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean","sd","cv")}
@@ -288,7 +288,7 @@
 #'   \item \code{exon.filters=NULL}
 #'   \item \code{gene.filters=NULL}
 #'   \item \code{pcut=1}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2","log10","vst")}
 #'   \item \code{export.values=c("raw","normalized")}
 #'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
@@ -297,12 +297,12 @@
 #'   and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
-#'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=500),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.25),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean")}
@@ -311,12 +311,12 @@
 #'   and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
-#'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=500),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.25),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean","sd","cv")}
@@ -325,12 +325,12 @@
 #'  and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=5,min.exons=2,frac=1/5))}
-#'   \item \code{gene.filters=list(length=list(length=500),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.25),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=500),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.25),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.05}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2","log10","vst")}
 #'   \item \code{export.values=c("raw","normalized")}
 #'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
@@ -339,12 +339,12 @@
 #'   and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
-#'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=750),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.5),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean")}
@@ -353,12 +353,12 @@
 #'   and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
-#'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=750),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.5),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2")}
 #'   \item \code{export.values=c("normalized")}
 #'   \item \code{export.stats=c("mean","sd","cv")}
@@ -367,12 +367,12 @@
 #'  and statistics elements. In this case, the above described arguments become:
 #'  \itemize{
 #'   \item \code{exon.filters=list(min.active.exons=list(exons.per.gene=4,min.exons=2,frac=1/4))}
-#'   \item \code{gene.filters=list(length=list(length=750),
-#'              	avg.reads=list(average.per.bp=100,quantile=0.5),
-#'	            	expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),
-#'	            	biotype=get.defaults("biotype.filter",org[1]))}
+#'   \item \code{gene.filters=list(length=list(length=750),}
+#'              	\code{avg.reads=list(average.per.bp=100,quantile=0.5),}
+#'	            	\code{expression=list(median=TRUE,mean=FALSE,quantile=NA,known=NA,custom=NA),}
+#'	            	\code{biotype=get.defaults("biotype.filter",org[1]))}
 #'   \item \code{pcut=0.01}
-#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")}
+#'   \item \code{export.what=c("annotation","p.value","adj.p.value","meta.p.value",} \code{"adj.meta.p.value","fold.change","stats","counts")}
 #'   \item \code{export.scale=c("natural","log2","log10","vst")}
 #'   \item \code{export.values=c("raw","normalized")}
 #'   \item \code{export.stats=c("mean","median","sd","mad","cv","rcv")}
@@ -414,8 +414,9 @@
 #'  normalization="edaseq",
 #'  statistics="deseq",
 #'  pcut=0.05,
-#'  qc.plots=c("mds", "biodetection", "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", "lengthbias", "meandiff",
-#'    "readnoise","meanvar", "readnoise", "deheatmap", "volcano", "biodist", "filtered"),
+#'  qc.plots=c("mds", "biodetection", "countsbio", "saturation", "rnacomp", "boxplot", "gcbias", 
+#'    "lengthbias", "meandiff", "readnoise","meanvar", "readnoise", "deheatmap", "volcano",
+#'    "biodist", "filtered"),
 #'  fig.format=c("png","pdf"),
 #'  export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
 #'  export.scale=c("natural","log2","log10","vst"),
@@ -571,6 +572,8 @@ metaseqr <- function(
 			stop("The type of the input files could not be recognized! Please specify (BAM or BED)...")
 		from.raw <- TRUE
 	}
+
+	print("I readh here")
 
 	# Initialize environmental variables
 	if (!exists("HOME"))
@@ -1311,7 +1314,7 @@ metaseqr <- function(
 		disp("Running statistical tests with: ",alg)	
 		switch(alg,
 			deseq = {
-				p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,norm.args)
+				p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args)
 			},
 			edger = {
 				p.list <- stat.edger(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]])

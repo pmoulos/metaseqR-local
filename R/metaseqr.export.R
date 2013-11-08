@@ -7,7 +7,8 @@
 #' @param raw.gene.counts a matrix of un-normalized gene counts.
 #' @param norm.gene.counts a matrix of normalized gene counts.
 #' @param sample.list see the documentation of \code{\link{metaseqr}}.
-#' @param the statistical contrast for which the export builder is currently running.
+#' @param cnt the statistical contrast for which the export builder is currently running.
+#' @param statistics the statistical tests used (see the documentation of \code{\link{metaseqr}}).
 #' @param raw.list a list of transformed un-normalized counts, see the documentation of \code{\link{make.transformation}}.
 #' @param norm.list a list of transformed normalized counts, see the documentation of \code{\link{make.transformation}}.
 #' @param p.mat a matrix of p-values, see the documentation of \code{\link{metaseqr}}.

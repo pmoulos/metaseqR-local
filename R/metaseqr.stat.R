@@ -8,10 +8,10 @@
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of DESeq statistical algorithm parameters. See the result of \code{get.defaults("statistics", "deseq")}
+#' @param stat.args a list of DESeq statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"deseq")}
 #' for an example and how you can modify it. It is not required when the input object is already a CountDataSet from DESeq normalization
 #' as the dispersions are already estimated.
-#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
+#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edger")} for
 #' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
 #' @return A named list of p-values, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
@@ -56,7 +56,17 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			cds <- newCountDataSet(object,the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only")
+			cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode)
+		},
+		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+			cds <- newCountDataSet(as.matrix(round(sweep(object$counts,2,object$norm.factors,"*"))),the.design$condition)
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode)
+		},
+		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+			cds <- newCountDataSet(as.matrix(round(object$pseudo.counts)),the.design$condition)
+			sizeFactors(cds) <- rep(1,ncol(cds))
+			cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode)
 		}
 	)
 	for (con.name in names(contrast.list)) {
@@ -87,7 +97,7 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "edger")}
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"edger")}
 #' for an example and how you can modify it.
 #' @return A named list of p-values, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
@@ -130,6 +140,32 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			dge <- DGEList(object,group=classes)
+			if (stat.args$main.method=="classic") {
+				dge <- estimateCommonDisp(dge)
+				dge <- estimateTagwiseDisp(dge)
+			}
+			else if (stat.args$main.method=="glm") {
+				design <- model.matrix(~0+classes,data=dge$samples)
+				dge <- estimateGLMCommonDisp(dge,design=design)
+				dge <- estimateGLMTrendedDisp(dge,design=design)
+				dge <- estimateGLMTagwiseDisp(dge,design=design)
+			}
+		},
+		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+			dge <- DGEList(counts=as.matrix(round(sweep(object$counts,2,object$norm.factors,"*"))),group=classes)
+			if (stat.args$main.method=="classic") {
+				dge <- estimateCommonDisp(dge)
+				dge <- estimateTagwiseDisp(dge)
+			}
+			else if (stat.args$main.method=="glm") {
+				design <- model.matrix(~0+classes,data=dge$samples)
+				dge <- estimateGLMCommonDisp(dge,design=design)
+				dge <- estimateGLMTrendedDisp(dge,design=design)
+				dge <- estimateGLMTagwiseDisp(dge,design=design)
+			}
+		},
+		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+			dge <- DGEList(counts=as.matrix(round(object$pseudo.counts)),group=classes)
 			if (stat.args$main.method=="classic") {
 				dge <- estimateCommonDisp(dge)
 				dge <- estimateTagwiseDisp(dge)
@@ -188,7 +224,7 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "limma")}
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"limma")}
 #' for an example and how you can modify it.
 #' @return A named list of p-values, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
@@ -221,6 +257,12 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			dge <- DGEList(object,group=classes)
+		},
+		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+			dge <- DGEList(counts=as.matrix(round(sweep(object$counts,2,object$norm.factors,"*"))),group=classes)
+		},
+		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+			dge <- DGEList(counts=as.matrix(round(object$pseudo.counts)),group=classes)
 		}
 	)
 	for (con.name in names(contrast.list))
@@ -255,10 +297,10 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "noiseq")}
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"noiseq")}
 #' for an example and how you can modify it.
-#' @param norm.args a list of NOISeq normalization parameters. See the result of \code{get.defaults("normalization", "noiseq")} for
-#' an example and how you can modify it.
+#' @param norm.args a list of NOISeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"noiseq")}
+#' for an example and how you can modify it.
 #' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation} which contains the GC content
 #' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
 #' @param log.offset a number to be added to each element of data matrix in order to avoid Infinity on log type data transformations.
@@ -350,6 +392,26 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 				factors=data.frame(class=classes),
 				biotype=biotype
 			)
+		},
+		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
+			ns.obj <- NOISeq::readData(
+				data=as.matrix(round(sweep(object$counts,2,object$norm.factors,"*"))),
+				length=gene.length,
+				gc=gc.content,
+				chromosome=gene.data[,1:3],
+				factors=data.frame(class=classes),
+				biotype=biotype
+			)
+		},
+		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
+			ns.obj <- NOISeq::readData(
+				data=as.matrix(round(object$pseudo.counts)),
+				length=gene.length,
+				gc=gc.content,
+				chromosome=gene.data[,1:3],
+				factors=data.frame(class=classes),
+				biotype=biotype
+			)
 		}
 	)
 	for (con.name in names(contrast.list)) {
@@ -394,10 +456,10 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics", "bayseq")}
+#' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"bayseq")}
 #' for an example and how you can modify it.
 #' @param norm.args a list of normalization parameters required only if normalization has been performed with edgeR. See the result
-#' of \code{get.defaults("normalization","edger")} for an example and how you can modify it.
+#' of \code{get.defaults("normalization",} \code{"edger")} for an example and how you can modify it.
 #' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, they will be estimated from baySeq.
 #' @return A named list of the value 1-likelihood that a gene is differentially expressed, whose names are the names of the contrasts.
@@ -433,6 +495,12 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			bayes.data <- object
+		},
+		list = {
+			bayes.data <- as.matrix(round(sweep(object$counts,2,object$norm.factors,"*")))
+		},
+		nbp = {
+			bayes.data <- as.matrix(round(object$pseudo.counts))
 		}
 	)
 	CD <- new("countData",data=bayes.data,replicates=classes)
@@ -472,10 +540,10 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
-#' @param stat.args a list of NBPSeq statistical algorithm parameters. See the result of \code{get.defaults("statistics", "nbpseq")}
+#' @param stat.args a list of NBPSeq statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"nbpseq")}
 #' for an example and how you can modify it. It is not required when the input object is already a list from NBPSeq normalization
 #' as the dispersions are already estimated.
-#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization", "edger")} for
+#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edger")} for
 #' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
 #' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples \code{in sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
@@ -504,19 +572,19 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
 	if (!is.list(contrast.list))
 		contrast.list <- make.contrast.list(contrast.list,sample.list)
-	if (is.null(libsize.list)) {
-		libsize.list <- vector("list",length(classes))
-		names(libsize.list) <- unlist(sample.list,use.names=FALSE)
-		for (n in names(libsize.list))
-			libsize.list[[n]] <- sum(gene.counts[,n])
-	}
-	lib.sizes <- unlist(libsize.list)
 	classes <- as.class.vector(sample.list)
 	p <- vector("list",length(contrast.list))
 	names(p) <- names(contrast.list)
 	switch(class(object),
 		CountDataSet = { # Has been normalized with DESeq
 			counts <- round(counts(object,normalized=TRUE))
+			if (is.null(libsize.list)) {
+				libsize.list <- vector("list",length(classes))
+				names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+				for (n in names(libsize.list))
+					libsize.list[[n]] <- sum(counts[,n])
+			}
+			lib.sizes <- unlist(libsize.list)
 		},
 		DGEList = { # Has been normalized with edgeR
 			if (norm.args$main.method=="classic") {
@@ -526,16 +594,46 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 				scl <- object$samples$lib.size * object$samples$norm.factors
 				counts <- round(t(t(object$counts)/scl)*mean(scl))
 			}
+			if (is.null(libsize.list)) {
+				libsize.list <- vector("list",length(classes))
+				names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+				for (n in names(libsize.list))
+					libsize.list[[n]] <- sum(counts[,n])
+			}
+			lib.sizes <- unlist(libsize.list)
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			counts <- object
+			if (is.null(libsize.list)) {
+				libsize.list <- vector("list",length(classes))
+				names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+				for (n in names(libsize.list))
+					libsize.list[[n]] <- sum(counts[,n])
+			}
+			lib.sizes <- unlist(libsize.list)
 		},
 		list = { # Has been normalized with NBPSeq
+			object$counts <- as.matrix(object$counts)
 			nb.data <- object
+			if (is.null(libsize.list)) {
+				libsize.list <- vector("list",length(classes))
+				names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+				for (n in names(libsize.list))
+					libsize.list[[n]] <- sum(nb.data$counts[,n])
+			}
+			lib.sizes <- unlist(libsize.list)
 		},
 		nbp = { # Same...
+			object$pseudo.counts <- as.matrix(object$pseudo.counts)
 			nb.data <- object
-		}	
+			if (is.null(libsize.list)) {
+				libsize.list <- vector("list",length(classes))
+				names(libsize.list) <- unlist(sample.list,use.names=FALSE)
+				for (n in names(libsize.list))
+					libsize.list[[n]] <- sum(nb.data$counts[,n])
+			}
+			lib.sizes <- unlist(libsize.list)
+		}
 	)
 	if (class(object)!="list" && class(object)!="nbp") { # To avoid repeating the following chunk in the above
 		#if (stat.args$main.method=="nbpseq") {
