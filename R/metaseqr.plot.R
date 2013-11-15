@@ -186,8 +186,14 @@ diagplot.metaseqr <- function(
 			switch(p,
 				venn = {
 					for (cnt in names(contrast.list)) {
-						disp("  Contrast: ",cnt)		
-						files$venn[[cnt]] <- diagplot.venn(p.list[[cnt]],pcut=thresholds$p,nam=cnt,output=output,path=path)
+						disp("  Contrast: ",cnt)
+						if (!is.null(annotation)) {
+							alt.names <- as.character(annotation$gene_name)
+							names(alt.names) <- rownames(annotation)
+						}
+						else
+							alt.names <- NULL
+						files$venn[[cnt]] <- diagplot.venn(p.list[[cnt]],pcut=thresholds$p,nam=cnt,output=output,path=path,alt.names=alt.names)
 					}
 				}
 			)
@@ -1311,6 +1317,8 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
 #' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
+#' @param alt.names an optional named vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique gene names
+#' which are the rownames of \code{pmat}. The names of the vector must be the rownames of \code{pmat}.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If output=\code{"x11"}, no 
 #' output filenames are produced.
@@ -1320,7 +1328,7 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' \dontrun{
 #' # Not yet available...
 #'}
-diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),output="x11",path=NULL,...) {
+diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),output="x11",path=NULL,alt.names=NULL,...) {
 	if (is.na(pcut) || is.null(pcut) || pcut==1)
 		warnwrap("Illegal pcut argument! Using the default (0.05)")
 	algs <- colnames(pmat)
@@ -1368,11 +1376,11 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 				area1=counts$area1,
 				area2=counts$area2,
 				cross.area=counts$cross.area,
-				category=algs,
+				category=paste(algs," (",aliases,")",sep=""),
 				lty="blank",
 				fill=color.scheme$fill,
 				cex=1.5,
-				cat.cex=1.5,
+				cat.cex=1.3,
 				#cat.pos=c(0,0),
 				cat.col=color.scheme$font,
 				#cat.dist=0.07,
@@ -1389,11 +1397,11 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 				n13=counts$n13,
 				n23=counts$n23,
 				n123=counts$n123,
-				category=algs,
+				category=paste(algs," (",aliases,")",sep=""),
 				lty="blank",
 				fill=color.scheme$fill,
 				cex=1.5,
-				cat.cex=1.5,
+				cat.cex=1.3,
 				#cat.pos=c(0,0,180),
 				cat.col=color.scheme$font,
 				#cat.dist=0.07,
@@ -1417,11 +1425,11 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 				n134=counts$n134,
 				n234=counts$n234,
 				n1234=counts$n1234,
-				category=algs,
+				category=paste(algs," (",aliases,")",sep=""),
 				lty="blank",
 				fill=color.scheme$fill,
 				cex=1.5,
-				cat.cex=1.5,
+				cat.cex=1.3,
 				c(0.1,0.1,0.05,0.05),
 				cat.col=color.scheme$font,
 				cat.fontfamily=rep("Bookman",4)
@@ -1460,11 +1468,11 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 				n1345=counts$n1345,
 				n2345=counts$n2345,
 				n12345=counts$n12345,
-				category=algs,
+				category=paste(algs," (",aliases,")",sep=""),
 				lty="blank",
 				fill=color.scheme$fill,
 				cex=1.5,
-				cat.cex=1.5,
+				cat.cex=1.3,
 				cat.dist=0.1,
 				cat.col=color.scheme$font,
 				cat.fontfamily=rep("Bookman",5)
@@ -1472,7 +1480,30 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 		}
 	)
 	graphics.close(output)
-	return(fil)		
+
+	# Now do something with the results
+	results.ex <- vector("list",length(results))
+	names(results.ex) <- names(results)
+	if (!is.null(alt.names)) {
+		for (n in names(results))
+			results.ex[[n]] <- alt.names[results[[n]]]
+	}
+	else {
+		for (n in names(results))
+			results.ex[[n]] <- results[[n]]
+	}
+	max.len <- max(sapply(results.ex,length))
+	for (n in names(results.ex)) {
+		if (length(results.ex[[n]])<max.len) {
+			dif <- max.len - length(results.ex[[n]])
+			results.ex[[n]] <- c(results.ex[[n]],rep(NA,dif))
+		}
+	}
+	results.ex <- do.call("cbind",results.ex)
+	write.table(results.ex,file=file.path(path,"..","..","lists",paste0("venn_categories_",nam,".txt")),sep="\t",
+		row.names=FALSE,quote=FALSE,na="")
+	
+	return(fil)
 }
 
 #' Helper for Venn diagrams

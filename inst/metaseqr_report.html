@@ -779,8 +779,9 @@
 										cat("<div id=\"venn_",counter,"\"><span class=\"subtitle\">Venn diagram for the contrast ",n,"</span></br>",sep="")
 										s <- gsub(PROJECT.PATH$main,".",fig.venn$venn[n])
 										cat("<img src=\"",s,"\" alt=\"deg heatmap\"></br></br>")
+										cat("Get the genes in each category <a href=\"lists/venn_categories_",n,".txt\" download>here</a>",sep="")
 										counter <- counter + 1
-										cat("</div></br>")
+										cat("</br></div></br>")
 									}
 									cat("</div>")
 								}

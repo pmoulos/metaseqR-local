@@ -573,8 +573,6 @@ metaseqr <- function(
 		from.raw <- TRUE
 	}
 
-	print("I readh here")
-
 	# Initialize environmental variables
 	if (!exists("HOME"))
 		init.envar()

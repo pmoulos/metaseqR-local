@@ -286,9 +286,13 @@ check.contrast.format <- function(cnt,sample.list) {
 #' @author Panagiotis Moulos
 #' @export
 check.libsize <- function(libsize.list,sample.list) {
-	if (length(intersect(names(libsize.list),unlist(sample.list,use.names=FALSE)))!=length(unlist(sample.list,use.names=FALSE))) {
-		warnwrap("Sample names in \"libsize.list\" and \"sample.list\" do not match! Library sized will be estimated from count data...")
-		return(NULL)
+	if (!is.null(libsize.list)) {
+		if (length(intersect(names(libsize.list),unlist(sample.list,use.names=FALSE)))!=length(unlist(sample.list,use.names=FALSE))) {
+			warnwrap("Sample names in \"libsize.list\" and \"sample.list\" do not match! Library sizes will be estimated from count data...")
+			return(NULL)
+		}
+		else return(libsize.list)
 	}
-	else return(libsize.list)
+	else
+		return(NULL)
 }
