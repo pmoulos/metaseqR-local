@@ -1,7 +1,7 @@
 library(roxyPackage)
 library(knitr)
 
-VERSION <- "1.00"
+VERSION <- "0.9.0"
 
 roxy.package(
 	pck.source.dir="/media/HD4/Fleming/dev/metaseqr",
@@ -17,14 +17,15 @@ roxy.package(
 		Author="Panagiotis Moulos <moulos@fleming.gr>",
 		AuthorsR="c(person(given=\"Panagiotis\", family=\"Moulos\", email=\"moulos@fleming.gr\", role=c(\"aut\", \"cre\")))",
 		Maintainer="Panagiotis Moulos <moulos@fleming.gr>",
-		Depends="R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot", 
-		Suggests="GenomicRanges, Rsamtools, rtracklayer, Repitools, qvalue, vsn, multicore, VennDiagram, TCC",
+		Depends="R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot, GenomicRanges, Rsamtools, rtracklayer, Repitools, qvalue, vsn, multicore, VennDiagram", 
+		Suggests="TCC",
 		Description="Provides an interface to several normalization and statistical testing packages for RNA-Seq gene expression data. Additionally, it creates several diagnostic plots, performs meta-analysis by combinining the results of several statistical tests and reports the results in an interactive way.",
 		License="GPL (>= 3)",
 		Encoding="UTF-8",
 		LazyLoad="yes",
 		LazyData="yes",
 		URL="http://www.fleming.gr",
+		biocViews="Bioinformatics, Preprocessing, HighThroughputSequencing, RNAseq, DifferentialExpression",
 		VignetteBuilder="knitr",
 		stringsAsFactors=FALSE
 	),

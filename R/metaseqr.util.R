@@ -1708,7 +1708,10 @@ make.report.messages <- function(lang) {
 					intersection="Intersection of individual results",
 					union="Union of individual results",
 					fisher="Fisher's method (R package MADAM)",
-					perm="Fisher's method with permutations (R package MADAM)",
+					fperm="Fisher's method with permutations (R package MADAM)",
+					dperm="Samples permutation based method",
+					hommel="Hommel multiple testing correction",
+					simes="Simes correction and combination method",
 					whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
 					none="No meta-analysis, p-values from the first supplied statistical algorithm"
 				),
@@ -2017,11 +2020,13 @@ make.report.messages <- function(lang) {
 					),
 					meta=list(
 						fisher="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
-						perm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+						fperm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
 						whitlock=c(
 							"Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
 							"Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
 						),
+						hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
+						simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.",
 						none=NULL
 					),
 					multiple=list(
@@ -2103,13 +2108,13 @@ make.highcharts.points <- function(x,y,a) {
 #' @param ... parameters to the \code{simulateReadCounts} function.
 #' @return A list with the following members: \code{simdata} holding the simulated dataset complying with metaseqr requirements, and
 #' \code{simparam} holding the simulation parameters (see TCC documentation).
-#' @export
 #' @author Panagiotis Moulos
+#' @export
 #' @examples
 #' \dontrun{
 #' dd <- make.sim.data(Ngene=10000,PDEG=0.2,DEG.assign=c(0.9,0.1),DEG.foldchange=c(5,5),replicates=c(3,3))
 #' head(dd$simdata)
-#}
+#'}
 make.sim.data <- function(...) {
 	if (!require(TCC))
 		stopwrap("Bioconductor package TCC is required to create simulated data!")

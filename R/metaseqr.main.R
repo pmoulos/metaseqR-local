@@ -109,14 +109,28 @@
 #' below for details. Leave \code{NULL} for the defaults of \code{statistics}.
 #' @param adjust.method the multiple testing p-value adjustment method. It can be one of \code{\link{p.adjust.methods}} or \code{"qvalue"}
 #' from the qvalue Bioconductor package. Defaults to \code{"BH"} for Benjamini-Hochberg correction.
-#' @param meta.p the meta-analysis method to combine p-values from multiple statistical tests. It can be one of \code{"fisher"} (default),
-#' \code{"perm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or \code{"none"}. For the \code{"fisher"} and \code{"perm"}
+#' @param meta.p the meta-analysis method to combine p-values from multiple statistical tests \strong{(experimental! see also the 
+#' second note below, regarding meta-analysis)}. It can be one of \code{"hommel"} (default), \code{"simes"}, \code{"dperm"}, 
+#' \code{"fperm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or \code{"none"}. For the \code{"fisher"} and \code{"perm"}
 #' methods, see the documentation of the R package MADAM. For the \code{"whitlock"} method, see the documentation of the survcomp 
 #' Bioconductor package. With the \code{"intersection"} option, the final p-value is the product of individual p-values derived from 
 #' each method. However, the product is not used for the statistical cutoff to derive gene lists. In this case, the final gene list is 
 #' derived from the common differentially expressed genes from all applied methods. Similarly, when meta.p is \code{"union"}, the final 
 #' list is derived from the union of individual methods and the final p-values are the sum of individual p-values. The latter can be used
-#' as a very lose statistical threshold to aggregate results from all methods regardless of their False Positive Rate.
+#' as a very lose statistical threshold to aggregate results from all methods regardless of their False Positive Rate. With \code{"hommel"}
+#' option, the p-values are combined using the Hommel FWER control method (see the \code{\link{p.adjust}} function help page) which is
+#' suitable when p-values can be heavily correlated (as in the case of applying multiple tests to the same data). Currently \code{"hommel"}
+#' will not work. With the \code{"simes"}
+#' option, the method proposed by Simes is used instead of Hommel (see note below). Finally, with the \code{"dperm"} option, a weighted
+#' p-value is created using the \code{weight} weighting vector for each statistical test. Then, \code{nperm} permutations are performed
+#' across the samples of the normalized counts matrix and all the chosen statistical tests are re-executed for each permutation. The final
+#' p-value is the number of times that the p-value of the permuted datasets is smaller than the original dataset. Be careful as this
+#' procedure usually requires a lot of time. However, it should be the most accurate. This method will NOT work when there are no
+#' replicated samples across biological conditions.
+#' @param weight a vector of weights with the same length as the \code{statistics} vector containing a weight for each statistical test.
+#' For the time being it is not used.
+#' @param nperm the number of permutations performed to derive the meta p-value when \code{meta.p="fperm"} or \code{meta.p="dperm"}.
+#' It defaults to 10000.
 #' @param pcut a p-value cutoff for exporting differentially genes, default is to export all the non-filtered genes.
 #' @param log.offset an offset to be added to values during logarithmic transformations in order to avoid Infinity (default is \code{1}).
 #' @param preset an analysis strictness preset. \code{preset} can be one of \code{"all.basic"}, \code{"all.normal"}, \code{"all.full"},
@@ -394,6 +408,12 @@
 #' and generally how many cores you are using with scripts purely written in R. The analysis with exon read data can very easily cause 
 #' memory problems, so unless you have more than 64Gb of RAM available, consider setting restrict.cores to something like 0.2 when working 
 #' with exon data.
+#' @note Please note that the \strong{meta-analysis} feature provided by metaseqr is currently experimental and does not satisfy the
+#' strict definition of "meta-analysis", which is the combination of multiple similar datasets under the same statistical methodology.
+#' Instead it is the use of mulitple statistical tests applied to the same data so the results at this point are not guaranteed and
+#' should be interpreted appropriately. We are working on a more solid methodology for combining multiple statistical tests based on
+#' multiple testing correction and Monte Carlo methods. For the Simes method, please consult also "Simes, R. J. (1986). "An improved
+#' Bonferroni procedure for multiple tests of significance". Biometrika 73 (3): 751–754."
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -525,7 +545,9 @@ metaseqr <- function(
 	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
-	meta.p=if (length(statistics)>1) c("fisher","perm","whitlock","intersection","union","none") else "none",
+	meta.p=if (length(statistics)>1) c("fisher","simes","hommel","dperm","fperm","whitlock","intersection","union","none") else "none",
+	weight=rep(1,length(statistics)),
+	nperm=10000,
 	pcut=NA, # A p-value cutoff for exporting DE genes, default is to export all
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
 	preset=NULL, # An analysis strictness preset
@@ -638,7 +660,7 @@ metaseqr <- function(
 	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","nbpseq","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
-	check.text.args("meta.p",meta.p,c("fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
+	check.text.args("meta.p",meta.p,c("hommel","simes","dperm","fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("x11","png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),multiarg=TRUE)
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)
@@ -655,6 +677,7 @@ metaseqr <- function(
 	if (!is.na(name.col)) check.num.args("name.col",name.col,"numeric",0,"gt")
 	if (!is.na(bt.col)) check.num.args("bt.col",bt.col,"numeric",0,"gt")
 	if (!is.na(log.offset)) check.num.args("log.offset",log.offset,"numeric",0,"gt")
+	check.num.args("nperm",nperm,"numeric",10,"gt")
 	if (!is.null(contrast)) check.contrast.format(contrast,sample.list)
 	if ("bayseq" %in% statistics) libsize.list <- check.libsize(libsize.list,sample.list)
 
@@ -1374,14 +1397,29 @@ metaseqr <- function(
 					return(tmp$p.value)
 				})
 			},
-			perm = {
+			fperm = {
 				sum.p.list <- wapply(multic,cp.list,function(x) {
-					tmp <- fisher.method.perm(x,p.corr="none",zero.sub=1e-32)
+					if (multic)
+						tmp <- fisher.method.perm(x,p.corr="none",B=nperm,mc.cores=getOption(cores),zero.sub=1e-32)
+					else
+						tmp <- fisher.method.perm(x,p.corr="none",B=nperm,zero.sub=1e-32)
 					return(tmp$p.value)
 				})
 			},
 			whitlock = {
 				sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,combine.test,method="z.transform")))
+			},
+			hommel = { # Returns a matrix of p-values, not summary
+				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
+				#sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,p.adjust,"hommel")))
+			},
+			simes = {
+				sum.p.list <- wapply(multic,cp.list,function(x) {
+					return(apply(x,1,function(p,m) return(min(m*p)/length(p)),nrow(x)))
+				})
+			},
+			dperm = { # Temporary, like the none option
+				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
 			},
 			none = { # A default value must be there to use with volcanos, we say the one of the first statistic in order of input
 				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
@@ -1485,10 +1523,19 @@ metaseqr <- function(
 					fisher = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
-					perm = {
+					fperm = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
 					whitlock = {
+						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+					},
+					hommel = {
+						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+					},
+					dperm = {
+						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+					},
+					simes = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
 					none = {

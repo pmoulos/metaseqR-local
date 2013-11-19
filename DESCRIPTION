@@ -23,16 +23,17 @@ Depends:
     log4r,
     brew,
     gplots,
-    corrplot
-Suggests:
+    corrplot,
     GenomicRanges,
     Rsamtools,
     rtracklayer,
-    Repitools,
+    Repitools
+Suggests:
     qvalue,
     vsn,
     multicore,
-    VennDiagram
+    VennDiagram,
+    TCC
 Description: Provides an interface to several normalization and
     statistical testing packages for RNA-Seq gene expression data.
     Additionally, it creates several diagnostic plots, performs
@@ -47,7 +48,7 @@ VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
 Version: 1.00
-Date: 2013-11-08
+Date: 2013-11-19
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'
