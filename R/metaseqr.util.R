@@ -173,75 +173,6 @@ read.targets <- function(input,path=NULL) {
 	return(list(samples=sample.list,files=file.list,type=type))
 }
 
-#' Fixed annotation updater
-#'
-#' A function to update the fixed annotations contained to avoid downloading every time if it's not embedded. It has no parameters.
-#'
-#' @return This function does not return anything. It updates the fixed annotation files instead.
-#' @note This function cannot be used by users when the package is installed. For this reason it is not exported. If you want to
-#' maintain a local copy of the package and update annotation at will, you can download the package source.
-# @author Panagiotis Moulos
-#' @examples
-#' \dontrun{
-#' library(metaseqr)
-#' annotations.update()
-#'}
-annotations.update <- function() {
-	if(!require(biomaRt))
-		stopwrap("Bioconductor package biomaRt is required to update annotations!")
-	VERBOSE <<- TRUE
-	supported.types <- c("gene","exon")
-	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danRer7")
-	if (exists("ANNOTATION")) {
-		for (type in supported.types) {
-			for (org in supported.orgs) {
-				disp("Downloading and writing ",type,"s for ",org,"...")
-				tryCatch({
-					tmp <- get.annotation(org,type)
-					var.name <- paste(org,type,sep=".")
-					assign(var.name,tmp)
-					#if (!file.exists(ANNOTATION$ENSEMBL[[toupper(type)]]))
-					#	dir.create(ANNOTATION$ENSEMBL[[toupper(type)]],recursive=TRUE)
-					#gzfh <- gzfile(file.path(ANNOTATION$ENSEMBL[[toupper(type)]],paste(org,".txt.gz",sep="")),"w")
-					#write.table(tmp,gzfh,sep="\t",row.names=FALSE,quote=FALSE)
-					#close(gzfh)},
-					save(list=eval(parse(text="var.name")),file=file.path(ANNOTATION,paste(org,type,"rda",sep=".")),compress=TRUE)},
-					error=function(e) {
-						disp("!!! Probable problem with connection to Biomart...")
-					},
-					finally=""
-				)
-			}
-		}
-		disp("Finished!\n")
-	}
-	else
-		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
-}
-
-#' Fixed annotation reader
-#'
-#' A function to read fixed annotations from the local repository.
-#'
-#' @param org one of the supported organisms.
-#' @param type \code{"gene"} or \code{"exon"}.
-#' @return A data frame with the \code{type} annotation for \code{org}.
-#' @author Panagiotis Moulos
-#' @export
-#' @examples
-#' \dontrun{
-#' ann <- read.annotation("hg19","gene")
-#'}
-read.annotation <- function(org,type) {
-	data(list=paste(org,type,sep="."))
-	ann <- eval(parse(text=paste(org,type,sep=".")))
-	if (type=="gene")
-		rownames(ann) <- ann$gene_id
-	else if (type=="exon")
-		rownames(ann) <- ann$exon_id
-	return(ann)
-}
-
 #' Default parameters for several metaseqr functions
 #'
 #' This function returns a list with the default settings for each filtering, statistical and normalization algorithm included in
@@ -1677,17 +1608,17 @@ make.report.messages <- function(lang) {
 		en = {
 			messages <- list(
 				org=list(
-					hg18="Human (<em>Homo sapiens</em>), genome version alias hg18",
-					hg19="Human (<em>Homo sapiens</em>), genome version alias hg19",
-					mm9="Mouse (<em>Mus musculus</em>), genome version alias mm9",
-					mm10="Mouse (<em>Mus musculus</em>), genome version alias mm10",
-					rno5="Rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
-					dm3="Fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
-					danRer7="Zebrafish (<em>Danio rerio</em>), genome version alias danRer7"
+					hg18="human (<em>Homo sapiens</em>), genome version alias hg18",
+					hg19="human (<em>Homo sapiens</em>), genome version alias hg19",
+					mm9="mouse (<em>Mus musculus</em>), genome version alias mm9",
+					mm10="mouse (<em>Mus musculus</em>), genome version alias mm10",
+					rno5="rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
+					dm3="fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
+					danRer7="zebrafish (<em>Danio rerio</em>), genome version alias danRer7"
 				),
 				whenfilter=list(
-					prenorm="Before normalization",
-					postnorm="After normalization"
+					prenorm="before normalization",
+					postnorm="after normalization"
 				),
 				norm=list(
 					edaseq="EDASeq",
@@ -1705,15 +1636,17 @@ make.report.messages <- function(lang) {
 					nbpseq="NBPSeq"
 				),
 				meta=list(
-					intersection="Intersection of individual results",
-					union="Union of individual results",
+					intersection="intersection of individual results",
+					union="union of individual results",
 					fisher="Fisher's method (R package MADAM)",
 					fperm="Fisher's method with permutations (R package MADAM)",
-					dperm="Samples permutation based method",
-					hommel="Hommel multiple testing correction",
+					dperm.min="samples permutation based method with minimum p-values",
+					dperm.max="samples permutation based method with maximum p-values",
+					dperm.weight="samples permutation based method with weighted p-values",
+					#hommel="Hommel multiple testing correction",
 					simes="Simes correction and combination method",
 					whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
-					none="No meta-analysis, p-values from the first supplied statistical algorithm"
+					none="no meta-analysis, p-values from the first supplied statistical algorithm"
 				),
 				adjust=list(
 					holm="Holm FWER",
@@ -1723,24 +1656,27 @@ make.report.messages <- function(lang) {
 					bh="Benjamini-Hochberg FDR",
 					by="Benjamini-Yekutiely FDR",
 					fdr="Benjamini-Hochberg FDR",
-					none="No multiple test correction",
+					none="no multiple test correction",
 					qvalue="Storey-Tibshirani FDR"
 				),
 				plots=list(
-					mds="Multidimensional scaling",
-					biodetection="Biotype detection",
-					countsbio="Biotype counts",
-					saturation="Sample and biotype saturation",
+					mds="multidimensional scaling",
+					biodetection="biotype detection",
+					countsbio="biotype counts",
+					saturation="sample and biotype saturation",
 					rnacomp="RNA composition",
-					boxplot="Boxplots",
+					boxplot="boxplots",
 					gcbias="GC-content bias",
-					lengthbias="Transcript length bias",
-					meandiff="Mean-difference plot",
-					meanvar="Mean-variance plot",
+					lengthbias="transcript length bias",
+					meandiff="mean-difference plot",
+					meanvar="mean-variance plot",
 					deheatmap="DEG heatmap",
-					volcano="Volcano plot",
+					volcano="volcano plot",
 					biodist="DEG biotype detection",
-					filtered="Filtered biotypes"
+					filtered="filtered biotypes",
+					correl="correlation heatmap and correlogram",
+					pairwise="pairwise scatterplots between samples",
+					venn="Venn diagrams"
 				),
 				export=list(
 					annotation="Annotation",
@@ -1763,15 +1699,15 @@ make.report.messages <- function(lang) {
 					rcv="Robust Coefficient of Variation"
 				),
 				preset=list(
-					all.basic="Use all genes and export all genes and basic annotation and statistics elements",
-					all.normal="Use all genes and export all genes and normal annotation and statistics elements",
-					all.full="Use all genes and export all genes and all available annotation and statistics elements",
-					medium.basic="Apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
-					medium.normal="Apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-					medium.full="Apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
-					strict.basic="Apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
-					strict.normal="Apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-					strict.full="Apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
+					all.basic="use all genes and export all genes and basic annotation and statistics elements",
+					all.normal="use all genes and export all genes and normal annotation and statistics elements",
+					all.full="use all genes and export all genes and all available annotation and statistics elements",
+					medium.basic="apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
+					medium.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+					medium.full="apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
+					strict.basic="apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
+					strict.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+					strict.full="apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
 				),
 				explain=list(
 					mds=paste(
@@ -2025,7 +1961,7 @@ make.report.messages <- function(lang) {
 							"Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
 							"Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
 						),
-						hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
+						#hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
 						simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.",
 						none=NULL
 					),
@@ -2144,11 +2080,46 @@ make.sim.data <- function(...) {
 	return(list(simdata=sim.data,simparam=tcc$simulation))
 }
 
+#' Create counts matrix permutations
+#'
+#' This function creates a permuted read counts matrix based on the \code{contrast} argument (to define new virtual contrasts of the
+#' same number) and on the \code{sample.list} to derive the number of samples for each virtual condition.It is a helper for the
+#' \code{\link{meta.perm}} function.
+#'
+#' @param counts the gene read counts matrix.
+#' @param sample.list the list containing condition names and the samples under each condition.
+#' @param contrast the contrasts vector. See the main \code{\link{metaseqr}} help page.
+#' @param repl the same as the replace argument in \code{\link{sample}} function.
+#' @return A list with three members: the matrix of permuted per sample read counts, the virtual sample list and the virtual contrast
+#' to be used with the \code{stat.*} functions.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+make.permutation <- function(counts,sample.list,contrast,repl=FALSE) {
+	cnts <- strsplit(contrast,"_vs_")[[1]]
+	virtual.contrast <- paste(paste("VirtCond",1:length(cnts),sep=""),collapse="_vs_")
+	virtual.sample.list <- vector("list",length(sample.list))
+	names(virtual.sample.list) <- paste("VirtCond",1:length(sample.list),sep="")
+	resample <- sample(1:ncol(counts),ncol(counts),replace=repl)
+	virtual.counts <- counts[,resample]
+	samples <- paste("VirtSamp",1:ncol(counts),sep="")
+	colnames(virtual.counts) <- samples
+	nsample <- sapply(sample.list,length)
+	virtual.samples <- split(samples,rep(1:length(nsample),nsample))
+	names(virtual.samples) <- names(virtual.sample.list)
+	for (n in names(virtual.sample.list))
+		virtual.sample.list[[n]] <- virtual.samples[[n]]
+	return(list(counts=virtual.counts,sample.list=virtual.sample.list,contrast=virtual.contrast))
+}
+
 #' Create a class vector
 #'
 #' Creates a class vector from a sample list. Internal to the \code{stat.*} functions. Mostly internal use.
 #'
-#' @param sample.list the list containing condition names and the samples under each condition
+#' @param sample.list the list containing condition names and the samples under each condition.
 #' @return A vector of condition names.
 #' @author Panagiotis Moulos
 #' @export
@@ -2331,24 +2302,39 @@ elap2human <- function(start.time) {
 		format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
 }
 
-## An alternative to compressed text files. It proved that it requires a lot of space.
-#update.annotation <- function() {
-#	if (!require(RSQLite))
-#		stopwrap("R package RSQLite is required to update annotations!")
+##' Fixed annotation updater
+##'
+##' A function to update the fixed annotations contained to avoid downloading every time if it's not embedded. It has no parameters.
+##'
+##' @return This function does not return anything. It updates the fixed annotation files instead.
+##' @note This function cannot be used by users when the package is installed. For this reason it is not exported. If you want to
+##' maintain a local copy of the package and update annotation at will, you can download the package source.
+## @author Panagiotis Moulos
+##' @examples
+##' \dontrun{
+##' library(metaseqr)
+##' annotations.update()
+##'}
+#annotations.update <- function() {
+#	if(!require(biomaRt))
+#		stopwrap("Bioconductor package biomaRt is required to update annotations!")
+#	VERBOSE <<- TRUE
 #	supported.types <- c("gene","exon")
 #	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danRer7")
 #	if (exists("ANNOTATION")) {
-#		db <- dbConnect(SQLite(),dbname=file.path(ANNOTATION$HOME,"annotation.sqlite"))
-#		if(dbExistsTable(db,"gene")) dbRemoveTable(db,"gene")
-#		if(dbExistsTable(db,"exon")) dbRemoveTable(db,"exon")
 #		for (type in supported.types) {
 #			for (org in supported.orgs) {
 #				disp("Downloading and writing ",type,"s for ",org,"...")
 #				tryCatch({
 #					tmp <- get.annotation(org,type)
-#					tmp <- cbind(tmp,rep(org,nrow(tmp)),rep("ensembl",nrow(tmp)))
-#					colnames(tmp)[(ncol(tmp)-1):ncol(tmp)] <- c("organism","name")
-#					z <- dbWriteTable(db,name=type,value=tmp,append=TRUE,row.names=FALSE)},
+#					var.name <- paste(org,type,sep=".")
+#					assign(var.name,tmp)
+#					#if (!file.exists(ANNOTATION$ENSEMBL[[toupper(type)]]))
+#					#	dir.create(ANNOTATION$ENSEMBL[[toupper(type)]],recursive=TRUE)
+#					#gzfh <- gzfile(file.path(ANNOTATION$ENSEMBL[[toupper(type)]],paste(org,".txt.gz",sep="")),"w")
+#					#write.table(tmp,gzfh,sep="\t",row.names=FALSE,quote=FALSE)
+#					#close(gzfh)},
+#					save(list=eval(parse(text="var.name")),file=file.path(ANNOTATION,paste(org,type,"rda",sep=".")),compress=TRUE)},
 #					error=function(e) {
 #						disp("!!! Probable problem with connection to Biomart...")
 #					},
@@ -2356,46 +2342,31 @@ elap2human <- function(start.time) {
 #				)
 #			}
 #		}
-#		dbSendQuery(db,"VACUUM")
-#		dbGetQuery(db,"VACUUM")
-#		dbDisconnect(db)
-#		#dbSendQuery(db,"CREATE INDEX \"primary\" ON gene (gene_id ASC)")
-#		#dbSendQuery(db,"CREATE INDEX \"primary\" ON exon (exon_id ASC)")
 #		disp("Finished!\n")
 #	}
 #	else
 #		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be updated...")
 #}
-#' Fixed annotation reader
-#'
-#' A function to read fixed annotations from an SQLite database. It proved that it requieres much more space than compressed files.
-#'
-#' @param org one of the supported organisms.
-#' @param type "gene" or "exon".
-#' @return A data frame with the \code{type} annotation for \code{org}.
-#' @author Panagiotis Moulos
-#' @examples
-#' \dontrun{
-#' ann <- read.annotation("hg19","gene")
-#'}
+
+##' Fixed annotation reader
+##'
+##' A function to read fixed annotations from the local repository.
+##'
+##' @param org one of the supported organisms.
+##' @param type \code{"gene"} or \code{"exon"}.
+##' @return A data frame with the \code{type} annotation for \code{org}.
+##' @author Panagiotis Moulos
+##' @export
+##' @examples
+##' \dontrun{
+##' ann <- read.annotation("hg19","gene")
+##'}
 #read.annotation <- function(org,type) {
-#	if (!require(RSQLite))
-#		stopwrap("R package RSQLite is required to read stored annotations!")
-#	if (exists("ANNOTATION")) {
-#		db <- dbConnect(SQLite(),dbname=file.path(ANNOTATION,"annotation.sqlite"))
-#		if (type=="gene") {
-#			query <- "SELECT chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype FROM gene ORDER BY chromosome, start"
-#			ann <- dbGetQuery(db,query)
-#			rownames(ann) <- ann$gene_id
-#		}
-#		else if (type=="exon") {
-#			query <- "SELECT chromosome, start, end, exon_id, gene_id, strand, gene_name, biotype FROM gene ORDER BY chromosome, start"
-#			ann <- dbGetQuery(db,query)
-#			rownames(ann) <- ann$exon_id
-#		}
-#		dbDisconnect(db)
-#		return(ann)
-#	}
-#	else
-#		stopwrap("metaseqr environmental variables are not properly set up! Annotations cannot be accessed...")
+#	data(list=paste(org,type,sep="."))
+#	ann <- eval(parse(text=paste(org,type,sep=".")))
+#	if (type=="gene")
+#		rownames(ann) <- ann$gene_id
+#	else if (type=="exon")
+#		rownames(ann) <- ann$exon_id
+#	return(ann)
 #}

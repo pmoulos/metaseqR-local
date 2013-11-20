@@ -3,9 +3,9 @@
 #' \tabular{ll}{
 #' Package: \tab metaseqr\cr
 #' Type: \tab Package\cr
-#' Version: \tab 1.00\cr
-#' Date: \tab 2013-11-19\cr
-#' Depends: \tab R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot, GenomicRanges, Rsamtools, rtracklayer, Repitools\cr
+#' Version: \tab 0.9.0\cr
+#' Date: \tab 2013-11-20\cr
+#' Depends: \tab R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, MADAM, survcomp, log4r, brew, gplots, corrplot, GenomicRanges, Rsamtools, rtracklayer, Repitools, qvalue, vsn, multicore, VennDiagram\cr
 #' Encoding: \tab UTF-8\cr
 #' License: \tab GPL (>= 3)\cr
 #' LazyLoad: \tab yes\cr

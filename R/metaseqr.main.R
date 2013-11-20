@@ -22,7 +22,7 @@
 #' @param counts a text tab-delimited file containing gene or exon counts in one of the following formats: i) the first column contains
 #' unique gene or exon identifiers and the rest of the columns contain the read counts for each sample. Thus the first cell of each
 #' row is a gene or exon accession and the rest are integers representing the counts for that accession. In that case, the \code{annotation}
-#' parameter should strictly be \code{"fixed"}, \code{"download"} or an external file in proper format. ii) The first n columns should contain
+#' parameter should strictly be \code{"download"} or an external file in proper format. ii) The first n columns should contain
 #' gene or exon annotation elements like chromosomal locations, gene accessions, exon accessions, GC content etc. In that case, the
 #' \code{annotation} parameter can also be \code{"embedded"}. The ideal embedded annotation contains 8 columns, chromosome, gene or exon start,
 #' gene or exon end, gene or exon accession, GC-content (fraction or percentage), strand, HUGO gene symbol and gene biotype (e.g.
@@ -32,7 +32,7 @@
 #' a GC content covariate but based on gene length which is not what the authors of EDASeq suggest. If biotypes are not present,
 #' a lot of diagnostic plots will not be available. If the HUGO gene symbols are missing, the final annotation will contain only
 #' gene accessions and thus be less comprehensible. Generally, it's best to set the \code{annotation} parameter to \code{"download"}
-#' or \code{"fixed"} to ensure the most comprehensible results. Finally, counts can be a data frame satisfying the above conditions. 
+#' to ensure the most comprehensible results. Finally, counts can be a data frame satisfying the above conditions. 
 #' It is a data frame by default when \code{read2count} is used.
 #' @param sample.list a list containing condition names and the samples under each condition. It should have the format \code{sample.list <-}
 #' \code{list(ConditionA=c("Sample_A1",} \code{"Sample_A2", "Sample_A3"),} \code{ConditionB=c("Sample_B1", "Sample_B2"),} \code{ConditionC=c("Sample_C1", "Sample_C2"))}.
@@ -71,11 +71,9 @@
 #' gene biotypes are given. If not provided, the \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"filtered"}
 #' and \code{"biodist"} plots will not be available.
 #' @param annotation instructs metaseqr where to find the annotation for the given counts file. It can be one of i) \code{"download"} 
-#' (default) for automatic downloading of the annotation for the organism specified by the org parameter (using biomaRt), ii)
-#' \code{"fixed"} to retrieve the same annotation data as with \code{"download"} but from a fixed location inside the package (the 
-#' \code{"download"} option always downloads the latest annotation specified by the org parameter), iii) \code{"embedded"} if the 
-#' annotation elements are embedded in the read counts file or iv) a file specified by the user which should be as similar as possible 
-#' to the \code{"fixed"} or \code{"download"} case, in terms of column structure.
+#' (default) for automatic downloading of the annotation for the organism specified by the org parameter (using biomaRt), ii) \code{"embedded"} 
+#' if the annotation elements are embedded in the read counts file or iv) a file specified by the user which should be as similar as possible 
+#' to the \code{"download"} case, in terms of column structure.
 #' @param org the supported organisms by metaseqr. These can be, for human genomes \code{"hg18"} or \code{"hg19"}, for mouse genomes 
 #' \code{"mm9"}, \code{"mm10"}, for rat genomes \code{"rno5"}, for drosophila genomes \code{"dm3"} and for zebrafish genomes 
 #' \code{"danRer7"}.
@@ -110,25 +108,28 @@
 #' @param adjust.method the multiple testing p-value adjustment method. It can be one of \code{\link{p.adjust.methods}} or \code{"qvalue"}
 #' from the qvalue Bioconductor package. Defaults to \code{"BH"} for Benjamini-Hochberg correction.
 #' @param meta.p the meta-analysis method to combine p-values from multiple statistical tests \strong{(experimental! see also the 
-#' second note below, regarding meta-analysis)}. It can be one of \code{"hommel"} (default), \code{"simes"}, \code{"dperm"}, 
-#' \code{"fperm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or \code{"none"}. For the \code{"fisher"} and \code{"perm"}
-#' methods, see the documentation of the R package MADAM. For the \code{"whitlock"} method, see the documentation of the survcomp 
-#' Bioconductor package. With the \code{"intersection"} option, the final p-value is the product of individual p-values derived from 
-#' each method. However, the product is not used for the statistical cutoff to derive gene lists. In this case, the final gene list is 
-#' derived from the common differentially expressed genes from all applied methods. Similarly, when meta.p is \code{"union"}, the final 
-#' list is derived from the union of individual methods and the final p-values are the sum of individual p-values. The latter can be used
-#' as a very lose statistical threshold to aggregate results from all methods regardless of their False Positive Rate. With \code{"hommel"}
-#' option, the p-values are combined using the Hommel FWER control method (see the \code{\link{p.adjust}} function help page) which is
-#' suitable when p-values can be heavily correlated (as in the case of applying multiple tests to the same data). Currently \code{"hommel"}
-#' will not work. With the \code{"simes"}
-#' option, the method proposed by Simes is used instead of Hommel (see note below). Finally, with the \code{"dperm"} option, a weighted
-#' p-value is created using the \code{weight} weighting vector for each statistical test. Then, \code{nperm} permutations are performed
-#' across the samples of the normalized counts matrix and all the chosen statistical tests are re-executed for each permutation. The final
-#' p-value is the number of times that the p-value of the permuted datasets is smaller than the original dataset. Be careful as this
-#' procedure usually requires a lot of time. However, it should be the most accurate. This method will NOT work when there are no
-#' replicated samples across biological conditions.
+#' second note below, regarding meta-analysis)}. It can be one of \code{"simes"} (default), \code{"dperm.min"}, \code{"dperm.max"},
+#' \code{"dperm.weight"}, \code{"fisher"}, \code{"fperm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or \code{"none"}.
+#' For the \code{"fisher"} and \code{"fperm"} methods, see the documentation of the R package MADAM. For the \code{"whitlock"} method,
+#' see the documentation of the survcomp Bioconductor package. With the \code{"intersection"} option, the final p-value is the product
+#' of individual p-values derived from each method. However, the product is not used for the statistical cutoff to derive gene lists. In
+#' this case, the final gene list is derived from the common differentially expressed genes from all applied methods. Similarly, when
+#' \code{meta.p="union"}, the final list is derived from the union of individual methods and the final p-values are the sum of individual
+#' p-values. The latter can be used as a very lose statistical threshold to aggregate results from all methods regardless of their
+#' False Positive Rate. With the \code{"simes"} option, the method proposed by Simes (Simes, R. J., 1986) is used. Finally, with the
+#' \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"} options, a permutation procedure is initialed, where \code{nperm} permutations
+#' are performed across the samples of the normalized counts matrix, producing \code{nperm} permuted instances of the initital dataset.
+#' Then, all the chosen statistical tests are re-executed for each permutation. The final p-value is the number of times that the p-value of the 
+#' permuted datasets is smaller than the original dataset. The p-value of the original dataset is created based on the choice of one
+#' of \code{dperm.min}, \code{dperm.max} or \code{dperm.weight} options. In case of \code{dperm.min}, the intial p-value vector is
+#' consists of the minimum p-value resulted from the applied statistical tests for each gene. The maximum p-value is used with the
+#' \code{dperm.max} option. With the \code{dperm.weight} option, the \code{weight} weighting vector for each statistical test is used
+#' to weight each p-value according to the power of statistical tests (some might work better for a specific dataset). Be careful as the
+#' permutation procedure usually requires a lot of time. However, it should be the most accurate. This method will NOT work when there 
+#' are no replicated samples across biological conditions. In that case, use \code{meta.p="simes"} instead.
 #' @param weight a vector of weights with the same length as the \code{statistics} vector containing a weight for each statistical test.
-#' For the time being it is not used.
+#' It should sum to 1. \strong{Use with caution with the} \code{dperm.weight} \strong{parameter! Theoretical background is not yet}
+#' \strong{solid and only experience shows improved results!}
 #' @param nperm the number of permutations performed to derive the meta p-value when \code{meta.p="fperm"} or \code{meta.p="dperm"}.
 #' It defaults to 10000.
 #' @param pcut a p-value cutoff for exporting differentially genes, default is to export all the non-filtered genes.
@@ -158,8 +159,9 @@
 #' which depicts all the pairwise correlations between each pair of samples in the counts matrix is drawn as a clustered heatmap)
 #' and the second one is a correlogram plot, which summarizes the correlation matrix in the form of ellipses (for an explanation please
 #' see the vignette/documentation of the R package corrplot. Set \code{qc.plots=NULL} if you don't want any diagnostic plots created.
-#' @param fig.format the format of the output diagnostic plots. It can be one or more of \code{"x11"} (for direct display), \code{"png"},
-#' \code{"jpg"}, \code{"tiff"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
+#' @param fig.format the format of the output diagnostic plots. It can be one or more of \code{"png"}, \code{"jpg"}, \code{"tiff"},
+#' \code{"bmp"}, \code{"pdf"}, \code{"ps"}. The native format \code{"x11"} (for direct display) is not provided as an option as it
+#' may not render the proper display of some diagnostic plots in some devices.
 #' @param out.list a logical controlling whether to export a list with the results in the running environment.
 #' @param export.where  an output directory for the project results (report, lists, diagnostic plots etc.)
 #' @param export.what the content of the final lists. It can be one or more of \code{"annotation"}, to bind the annoation elements 
@@ -223,15 +225,14 @@
 #' which is the same as the previous two but using a specific quantile of the total counts distribution, \code{known}, where in this
 #' case, a set of known not-expressed genes in the system under investigation are used to estimate an expression cutoff. This can be
 #' quite useful, as the genes are filtered based on a "true biological" cutoff instead of a statistical cutoff. The value of this
-#' filter is a character vector of HUGO gene symbols (MUST be contained in the annotation, thus it's better to use \code{annotation=
-#' "fixed"} or \code{annotation="download"}) whose counts are used to build a "null" expression distribution. The 90th quantile of
-#' this distribution is then the expression cutoff. This filter can be combined with any other filter. Be careful with gene names
-#' as they are case sensitive and must match exactly ("Pten" is different from "PTEN"!). iv) \code{biotype} where in this case, genes
-#' with a certain biotype (MUST be contained in the annotation, thus it's better to use \code{annotation="fixed"} or \code{annotation=
-#' "download"}) are excluded from the analysis. This filter is a named list of logical, where names are the biotypes in each genome
-#' and values are \code{TRUE} or \code{FALSE}. If the biotype should be excluded, the value should be \code{TRUE} else \code{FALSE}.
-#' See the result of \code{get.defaults("biotype.filter","hg19")} for an example. Finally, in future versions there will be support
-#' for user-defined filters in the form of a function.
+#' filter is a character vector of HUGO gene symbols (MUST be contained in the annotation, thus it's better to use \code{annotation="download"})
+#' whose counts are used to build a "null" expression distribution. The 90th quantile of this distribution is then the expression cutoff.
+#' This filter can be combined with any other filter. Be careful with gene names as they are case sensitive and must match exactly 
+#' ("Pten" is different from "PTEN"!). iv) \code{biotype} where in this case, genes with a certain biotype (MUST be contained in the annotation,
+#'  thus it's better to use \code{annotation="download"}) are excluded from the analysis. This filter is a named list of logical, where
+#' names are the biotypes in each genome and values are \code{TRUE} or \code{FALSE}. If the biotype should be excluded, the value should be
+#' \code{TRUE} else \code{FALSE}. See the result of \code{get.defaults("biotype.filter","hg19")} for an example. Finally, in future
+#' versions there will be support for user-defined filters in the form of a function.
 #' @section Normalization parameters: The normalization parameters are passed again as a named list where the names of the members
 #' are the normalization parameter names and the values are the normalization parameter values. You should check the documentation
 #' of the packages EDASeq, DESeq, edgeR, NOISeq and NBPSeq for the parameter names and parameter values. There are a few two exceptions
@@ -395,19 +396,21 @@
 #' @note Please note that currently only gene and exon annotation from Ensembl (http://www.ensembl.org) are supported. Thus, the
 #' unique gene or exon ids in the counts files should correspond to valid Ensembl gene or exon accessions for the organism of interest.
 #' If you are not sure about the source of your counts file or do not know how to produce it, it's better to start from the original
-#' BAM files (metaseqr will use the \code{\link{read2count}} function to create a counts file). Keep in mind that in this case the 
-#' performance will be significantly lower and the overall running time significanlty higher as the R functions which are used to 
-#' read BAM files to proper structures (GenomicRanges) and calculate the counts are quite slow. An alternative way is maybe the 
+#' BAM/BED files (metaseqr will use the \code{\link{read2count}} function to create a counts file). Keep in mind that in the case of BED 
+#' files, the performance will be significantly lower and the overall running time significanlty higher as the R functions which are used 
+#' to read BED files to proper structures (GenomicRanges) and calculate the counts are quite slow. An alternative way is maybe the 
 #' easyRNASeq package (Delhomme et al, 2012). The \code{\link{read2count}} function does not use this package but rather makes use 
 #' of standard Bioconductor functions to handle NGS data. If you wish to work outside R, you can work with other popular read counters 
 #' such as the HTSeq read counter (http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html). Please also note that in the current 
 #' version, the members of the \code{gene.filters} and \code{exon.filters} lists are not checked for validity so be careful to supply 
 #' with correct names otherwise the pipeline will crash or at the best case scenario, will ignore the filters. Also note that when you 
-#' are supplying metaseqr wtih an exon counts table, gene annotation is always downloaded or read from a fixed location inside the package. 
+#' are supplying metaseqr wtih an exon counts table, gene annotation is always downloaded so please be sure to have a working internet connection. 
 #' In addition to the above, if you have a multiple core system, be very careful on how you are using the \code{restrict.cores} argument 
 #' and generally how many cores you are using with scripts purely written in R. The analysis with exon read data can very easily cause 
 #' memory problems, so unless you have more than 64Gb of RAM available, consider setting restrict.cores to something like 0.2 when working 
-#' with exon data.
+#' with exon data. Finally, if you do not wish to download the same annotation again and again when performing multiple analyses, it
+#' is best to use the \code{\link{get.annotation}} function to download and store the resulting data frames in local files and then
+#' use these files with the \code{annotation} option.
 #' @note Please note that the \strong{meta-analysis} feature provided by metaseqr is currently experimental and does not satisfy the
 #' strict definition of "meta-analysis", which is the combination of multiple similar datasets under the same statistical methodology.
 #' Instead it is the use of mulitple statistical tests applied to the same data so the results at this point are not guaranteed and
@@ -466,7 +469,7 @@
 #'  sample.list=list(e14.5=c("e14.5_1","e14.5_2"), adult_8_weeks=c("a8w_1","a8w_2")),
 #'  contrast=c("e14.5_vs_adult_8_weeks"),
 #'  libsize.list=libsize.list.mm9,
-#'  annotation="fixed",
+#'  annotation="download",
 #'  org="mm9",
 #'  count.type="gene",
 #'  normalization="edger",
@@ -512,7 +515,7 @@ metaseqr <- function(
 	gc.col=NA,
 	name.col=NA,
 	bt.col=NA,
-	annotation=c("download","embedded","fixed"),
+	annotation=c("download","embedded"),
 	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),
 	count.type=c("gene","exon"),
 	exon.filters=list(
@@ -545,8 +548,8 @@ metaseqr <- function(
 	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
-	meta.p=if (length(statistics)>1) c("fisher","simes","hommel","dperm","fperm","whitlock","intersection","union","none") else "none",
-	weight=rep(1,length(statistics)),
+	meta.p=if (length(statistics)>1) c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none") else "none",
+	weight=rep(1/length(statistics),length(statistics)),
 	nperm=10000,
 	pcut=NA, # A p-value cutoff for exporting DE genes, default is to export all
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
@@ -556,7 +559,7 @@ metaseqr <- function(
 		"boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp", # Pre and post normalization
 		"deheatmap","volcano","biodist" # Post statistical testing
 	),
-	fig.format=c("x11","png","jpg","tiff","bmp","pdf","ps"),
+	fig.format=c("png","jpg","tiff","bmp","pdf","ps"),
 	out.list=FALSE,
 	export.where=NA, # An output directory for the project
 	export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),
@@ -653,15 +656,18 @@ metaseqr <- function(
 		counts.name <- "imported custom data frame"
 	}
 
+	if (meta.p=="dperm.weight" && sum(weight)>1)
+		stopwrap("The weights given for meta-analysis p-value combination should sum to 1!")
+
 	check.text.args("file.type",file.type,c("auto","sam","bam","bed"),multiarg=FALSE)
-	check.text.args("annotation",annotation,c("embedded","download","fixed"),multiarg=FALSE)
+	check.text.args("annotation",annotation,c("embedded","download"),multiarg=FALSE)
 	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
 	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","nbpseq","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
-	check.text.args("meta.p",meta.p,c("hommel","simes","dperm","fisher","perm","whitlock","intersection","union","none"),multiarg=FALSE)
-	check.text.args("fig.format",fig.format,c("x11","png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
+	check.text.args("meta.p",meta.p,c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),multiarg=FALSE)
+	check.text.args("fig.format",fig.format,c("png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),multiarg=TRUE)
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)
 	check.text.args("export.values",export.values,c("raw","normalized"),multiarg=TRUE)
@@ -893,11 +899,11 @@ metaseqr <- function(
 			disp("Downloading exon annotation for ",org,"...")
 			exon.data <- get.annotation(org,count.type)
 		}
-		else if (annotation=="fixed")
-		{
-			disp("Reading stored exon annotation for ",org,"...")
-			exon.data <- read.annotation(org,count.type)
-		}
+		#else if (annotation=="fixed")
+		#{
+		#	disp("Reading stored exon annotation for ",org,"...")
+		#	exon.data <- read.annotation(org,count.type)
+		#}
 		else if (annotation=="embedded") # The following should work if annotation elements are arranged in MeV-like data style
 		{
 			# Embedded annotation can NEVER occur when receiving data from read2count, so there is no danger here
@@ -991,11 +997,11 @@ metaseqr <- function(
 			disp("Downloading gene annotation for ",org,"...")
 			gene.data <- get.annotation(org,count.type)
 		}
-		else if (annotation=="fixed")
-		{
-			disp("Reading stored gene annotation for ",org,"...")
-			gene.data <- read.annotation(org,count.type)
-		}
+		#else if (annotation=="fixed")
+		#{
+		#	disp("Reading stored gene annotation for ",org,"...")
+		#	gene.data <- read.annotation(org,count.type)
+		#}
 		else if (annotation=="embedded") # The following should work if annotation elements are arranged in MeV-like data style
 		{
 			if (!is.data.frame(counts))
@@ -1376,64 +1382,6 @@ metaseqr <- function(
 	else
 		adj.cp.list <- NULL
 
-	# Calculate meta-statistics, if more than one statistical algorithm has been used
-	if (length(statistics)>1)
-	{
-		disp("Performing meta-analysis with ",meta.p)
-		switch(meta.p,
-			intersection = {
-				sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,prod)))
-			},
-			union = {
-				sum.p.list <- wapply(multic,cp.list,function(x) {
-					unp <- apply(x,1,sum)
-					unp[unp>1] <- 1
-					return(unp)
-				})
-			},
-			fisher = {
-				sum.p.list <- wapply(multic,cp.list,function(x) {
-					tmp <- fisher.method(x,p.corr="none",zero.sub=1e-32)
-					return(tmp$p.value)
-				})
-			},
-			fperm = {
-				sum.p.list <- wapply(multic,cp.list,function(x) {
-					if (multic)
-						tmp <- fisher.method.perm(x,p.corr="none",B=nperm,mc.cores=getOption(cores),zero.sub=1e-32)
-					else
-						tmp <- fisher.method.perm(x,p.corr="none",B=nperm,zero.sub=1e-32)
-					return(tmp$p.value)
-				})
-			},
-			whitlock = {
-				sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,combine.test,method="z.transform")))
-			},
-			hommel = { # Returns a matrix of p-values, not summary
-				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
-				#sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,p.adjust,"hommel")))
-			},
-			simes = {
-				sum.p.list <- wapply(multic,cp.list,function(x) {
-					return(apply(x,1,function(p,m) return(min(m*p)/length(p)),nrow(x)))
-				})
-			},
-			dperm = { # Temporary, like the none option
-				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
-			},
-			none = { # A default value must be there to use with volcanos, we say the one of the first statistic in order of input
-				sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
-			}
-		)
-		# ...and the adjusted p-value if requested
-	}
-	else # We assign the p-values from the only statistic used to sum.p.list in order to use it for stat plots
-		sum.p.list <- cp.list
-	if ("adj.meta.p.value" %in% export.what) # Useless for one statistics but just for safety
-		adj.sum.p.list <- wapply(multic,sum.p.list,function(x,a) return(p.adjust(x,a)),adjust.method)
-	else
-		adj.sum.p.list <- NULL
-	
 	# At this point, all method-specific objects must become a matrices for exporting and plotting
 	switch(class(norm.genes.expr),
 		CountDataSet = { # Has been processed with DESeq
@@ -1462,6 +1410,30 @@ metaseqr <- function(
 		}
 		# We don't need the matrix case
 	)
+
+	# Calculate meta-statistics, if more than one statistical algorithm has been used
+	if (length(statistics)>1) # This whole part must move to its own file... returning sum.p.list...
+	{
+		sum.p.list <- meta.test(
+			cp.list=cp.list,
+			meta.p=meta.p,
+			counts=norm.genes.expr,
+			sample.list=sample.list,
+			statistics=statistics,
+			stat.args=stat.args,
+			norm.args=norm.args,
+			libsize.list=libsize.list,
+			nperm=nperm,
+			weight=weight,
+			multic=multic
+		)
+	}
+	else # We assign the p-values from the only statistic used to sum.p.list in order to use it for stat plots
+		sum.p.list <- cp.list
+	if ("adj.meta.p.value" %in% export.what) # Useless for one statistics but just for safety
+		adj.sum.p.list <- wapply(multic,sum.p.list,function(x,a) return(p.adjust(x,a)),adjust.method)
+	else
+		adj.sum.p.list <- NULL
 
 	##############################################################################################################################
 	# BEGIN EXPORT SECTION
@@ -1529,10 +1501,16 @@ metaseqr <- function(
 					whitlock = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
-					hommel = {
+					#hommel = {
+					#	cut.ind <- which(sum.p.list[[cnt]]<pcut)
+					#},
+					dperm.min = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
-					dperm = {
+					dperm.max = {
+						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+					},
+					dperm.weight = {
 						cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					},
 					simes = {
@@ -1793,9 +1771,9 @@ metaseqr <- function(
 #' Assemble a gene model based on exon counts
 #'
 #' This function assembles gene models (single genes, not isoforms) based on the input exon read counts file and a gene annotation
-#' data frame, either from the fixed annotations included with the package, or with the \code{\link{get.annotation}} function. The
-#' \code{gene.data} argument should have a specific format and for this reason it's better to use one of the two aforementioned ways
-#' to supply it. This function is intended mostly for internal use but can be used if the requirements are met.
+#' data frame, either from an external file provided by the user, or with the \code{\link{get.annotation}} function. The \code{gene.data}
+#' argument should have a specific format and for this reason it's better to use one of the two aforementioned ways to supply it.
+#' This function is intended mostly for internal use but can be used if the requirements are met.
 #'
 #' @param exon.counts the exon counts data frame produced by reading the exon read counts file.
 #' @param sample.list the list containing condition names and the samples under each condition.

@@ -98,7 +98,7 @@ result <- metaseqr(
 	sample.list=sample.list.mm9,
 	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
-	annotation="fixed",
+	annotation="download",
 	org="mm9",
 	count.type="gene",
 	normalization="edger",
@@ -151,7 +151,7 @@ result <- metaseqr(
 	sample.list=sample.list.mm9,
 	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
-	annotation="fixed",
+	annotation="download",
 	org="mm9",
 	count.type="gene",
 	when.apply.filter="prenorm",
@@ -179,7 +179,7 @@ result <- metaseqr(
 	sample.list=sample.list.mm9,
 	contrast=c("e14.5_vs_adult_8_weeks"),
 	libsize.list=libsize.list.mm9,
-	annotation="fixed",
+	annotation="download",
 	org="mm9",
 	count.type="gene",
 	normalization="edaseq",
@@ -249,7 +249,7 @@ metaseqr(
 	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
-	annotation="fixed",
+	annotation="download",
 	org="hg19",
 	count.type="exon",
 	normalization="edaseq",
@@ -446,6 +446,32 @@ feature provided by metaseqr is currently experimental and does not satisfy the 
 combination of multiple similar datasets under the same statistical methodology. Instead it is the use of multiple statistical tests
 applied to the same data so the results at this point are not guaranteed and should be interpreted appropriately. We are working on a
 more solid methodology for combining multiple statistical tests based on multiple testing correction and Monte Carlo methods.
+
+\section{References}
+
+\begin{enumerate}
+  \item Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.
+  \item Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.
+  \item Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.
+  \item Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics 12, 35.
+  \item Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.
+  \item Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).
+  \item Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.
+  \item Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests of significance. Biometrika 75, 800-803.
+  \item Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics 6, 65-70.
+  \item Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.
+  \item Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043
+  \item Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012). htSeqTools: high-throughput sequencing quality control, processing and visualization in R. Bioinformatics 28, 589-590.
+  \item Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.
+  \item Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.
+  \item Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208.
+  \item Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.
+  \item Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.
+  \item Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.
+  \item Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445.
+  \item Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.
+  \item Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.
+\end{enumerate}
 
 \section{R session information}
 

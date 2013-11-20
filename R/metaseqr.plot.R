@@ -29,9 +29,10 @@
 #' help page.
 #' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
 #' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of 
-#' interactive volcano plots only when reporting the output, through the highcharts javascript library.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"png"},  \code{"jpg"}, \code{"bmp"},
+#' \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive volcano plots only when
+#' reporting the output, through the highcharts javascript library. The default plotting (\code{"x11"}) is not supported due to instability
+#' in certain devices.
 #' @param path the path to create output files.
 #' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
 #' @return A named list containing the file names of the produced plots. Each list member is names according to the selected plotting
@@ -39,8 +40,8 @@
 #' to a physical location (not meaningful for \code{"x11"}).
 #' @note In order to make the best out of this function, you should generally provide the annotation argument as most and also the
 #' most informative plots depend on this. If you don't know what is inside your counts table or how many annotation elements you can
-#' provide by embedding it, it's always best to set the annotation parameter of the main metaseqr function to \code{"download"} or 
-#' \code{"fixed"} to use predefined annotations that work better with the functions of the whole package.
+#' provide by embedding it, it's always best to set the annotation parameter of the main metaseqr function to \code{"download"} to 
+#' use predefined annotations that work better with the functions of the whole package.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -1837,7 +1838,7 @@ graphics.open <- function(o,f,...) {
 		stopwrap("Please specify an output file name for your plot")
 	
 	switch(o,
-		x11 = { x11(...) },
+		x11 = { dev.new(...) },
 		pdf = { pdf(file=f,pointsize=10,...) },
 		ps = { postscript(file=f,pointsize=10,...) },
 		png = { png(file=f,pointsize=12,...) },

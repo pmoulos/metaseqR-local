@@ -27,12 +27,12 @@ Depends:
     GenomicRanges,
     Rsamtools,
     rtracklayer,
-    Repitools
-Suggests:
+    Repitools,
     qvalue,
     vsn,
     multicore,
-    VennDiagram,
+    VennDiagram
+Suggests:
     TCC
 Description: Provides an interface to several normalization and
     statistical testing packages for RNA-Seq gene expression data.
@@ -44,17 +44,20 @@ Encoding: UTF-8
 LazyLoad: yes
 LazyData: yes
 URL: http://www.fleming.gr
+biocViews: Bioinformatics, Preprocessing, HighThroughputSequencing,
+    RNAseq, DifferentialExpression
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 1.00
-Date: 2013-11-19
+Version: 0.9.0
+Date: 2013-11-20
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'
     'metaseqr.export.R'
     'metaseqr.filter.R'
     'metaseqr.main.R'
+    'metaseqr.meta.R'
     'metaseqr.norm.R'
     'metaseqr-package.R'
     'metaseqr.plot.R'

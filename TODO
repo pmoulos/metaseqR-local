@@ -1,4 +1,3 @@
-- Reconsider meta-analysis, using advice from stats exchange, leave the current but state that they might not be appropriate
 - Add EBSeq in statistics
 - Write evaluation functions for filters
 - Write evaluation functions for normalization and statistical list arguments
