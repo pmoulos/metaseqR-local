@@ -1,0 +1,77 @@
+\name{meta.test}
+\alias{meta.test}
+\title{Meta-analysis using several RNA-Seq statistics}
+\usage{
+  meta.test(cp.list,
+    meta.p = c("simes", "fisher", "dperm.min", "dperm.max", 
+    "dperm.weight", "fperm", "whitlock", "intersection", 
+    "union", "none"),
+    counts, sample.list, statistics, stat.args, norm.args,
+    libsize.list, nperm = 10000,
+    weight = rep(1/length(statistics), length(statistics)),
+    multic = FALSE)
+}
+\arguments{
+  \item{cp.list}{a named list whose names are the contrasts
+  requested from metaseqr. Each member is a p-value matrix
+  whose colnames are the names of the statistical tests
+  applied to the data. See the main \code{\link{metaseqr}}
+  help page.}
+
+  \item{meta.p}{the p-value combination method to use. See
+  the main \code{\link{metaseqr}} help page.}
+
+  \item{counts}{the normalized and possibly filtered read
+  counts matrix. See the main \code{\link{metaseqr}} help
+  page.}
+
+  \item{sample.list}{the list containing condition names
+  and the samples under each condition. See the main
+  \code{\link{metaseqr}} help page.}
+
+  \item{statistics}{the statistical algorithms used in
+  metaseqr. See the main \code{\link{metaseqr}} help page.}
+
+  \item{stat.args}{the parameters for each statistical
+  argument. See the main \code{\link{metaseqr}} help page.}
+
+  \item{norm.args}{the parameters for normalization. See
+  the main \code{\link{metaseqr}} and the \code{stat.*}
+  help pages.}
+
+  \item{libsize.list}{a list with library sizes. See the
+  main \code{\link{metaseqr}} and the \code{stat.*} help
+  pages.}
+
+  \item{nperm}{the number of permutations (Monte Carlo
+  simulations) to perform.}
+
+  \item{weight}{a numeric vector of weights for each
+  statistical algorithm}
+
+  \item{multic}{use multiple cores to execute the
+  premutations. This is an external parameter and implies
+  the existence of multicore package in the execution
+  environment. See the main \code{\link{metaseqr}} help
+  page.}
+}
+\value{
+  A named list with combined p-values. The names are the
+  contrasts and the list members are combined p-value
+  vectors, one for each contrast.
+}
+\description{
+  This function calculates the combined p-values when
+  multiple statistical algorithms are applied to the input
+  dataset. It is a helper and it requires very specific
+  arguments so it should not be used individually
+}
+\examples{
+\dontrun{
+# Not yet available
+}
+}
+\author{
+  Panagiotis Moulos
+}
+
