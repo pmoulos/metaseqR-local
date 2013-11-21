@@ -8,7 +8,7 @@
 #' @param file.type the type of raw input files. It can be \code{"bed"} for BED files or \code{"sam"}, \code{"bam"} for SAM/BAM files. 
 #' See the same argument in the main \code{\link{metaseqr}} function for the case of auto-guessing.
 #' @param annotation see the \code{annotation} argument in the main \code{\link{metaseqr}} function. The \code{"annotation"} parameter
-#' here is the result of the same parameter in the main function. See also \code{\link{get.annotation}} and \code{\link{read.annotation}}.
+#' here is the result of the same parameter in the main function. See also \code{\link{get.annotation}}.
 #' @param has.all.fields a logical variable indicating if all annotation fields used by \code{metaseqr} are available (that is apart
 #' from the main chromosome, start, end, unique id and strand columns, if also present are the gene name and biotype columns). The
 #' default is \code{FALSE}.
@@ -18,12 +18,12 @@
 #' @examples
 #' # Not yet implenented
 read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
-	if (!require(GenomicRanges))
-		stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
-	if (file.type=="bed" && !require(rtracklayer))
-		stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
-	if (file.type %in% c("sam","bam") && !require(Rsamtools))
-		stopwrap("The Bioconductor package Rsamtools is required to process BAM files!")
+	#if (!require(GenomicRanges))
+	#	stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
+	#if (file.type=="bed" && !require(rtracklayer))
+	#	stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
+	#if (file.type %in% c("sam","bam") && !require(Rsamtools))
+	#	stopwrap("The Bioconductor package Rsamtools is required to process BAM files!")
 
 	# Convert annotation to GRanges
 	disp("Converting annotation to GenomicRanges object...")
@@ -78,8 +78,8 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 		}
 	}
 	else if (file.type %in% c("sam","bam")) {
-		if (suppressWarnings(!require(Repitools))) # Gives some warnings about reloaded functions
-			stopwrap("Bioconductor package Repitools is required to proceed with reading BAM files!")
+		#if (suppressWarnings(!require(Repitools))) # Gives some warnings about reloaded functions
+		#	stopwrap("Bioconductor package Repitools is required to proceed with reading BAM files!")
 		if (file.type=="sam") {
 			for (n in sample.names) {
 				dest <- file.path(dirname(sample.files[n]),n)
@@ -282,7 +282,7 @@ get.defaults <- function(what,method=NULL) {
 					known=NA,
 					custom=NA
 				),
-				biotype=get.defaults("biotype.filter",org[1])
+				biotype=get.defaults("biotype.filter",method[1])
 			))
 		},
 		exon.filter = {
@@ -1713,7 +1713,7 @@ make.report.messages <- function(lang) {
 					mds=paste(
 						"The Multi-Dimensional Scaling (MDS) plots comprise a means of visualizing the level of similarity of",
 						"individual cases of a dataset. It is similar to Principal Component Analysis (PCA), but instead of using",
-						"the covariance matrix to find similarities among cases, MDS is using absolute distance metrics such as",
+						"the covariance matrix to find similarities among cases, MDS uses absolute distance metrics such as",
 						"the classical Euclidean distance. Because of the relative linear relations among sequencing samples, it",
 						"provides a more realistic clustering among samples. MDS serves quality control and it can be interpreted",
 						"as follows: when the distance among samples of the same biological condition in the MDS space is small,",
@@ -1795,7 +1795,7 @@ make.report.messages <- function(lang) {
 						"for all pairwise sample comparisons, together with their pearson correlation coefficient. It is a simple measure",
 						"of between sample correlation using all the available data points instead of only the correlation matrix. The",
 						"lower diagonal, consist of mean-difference plots for all pairwise sample comparisons. A mean-difference plot (or",
-						"a Bland–Altman plots) is a method of data plotting used in analyzing the agreement between two different assays/variables.",
+						"a Bland-Altman plots) is a method of data plotting used in analyzing the agreement between two different assays/variables.",
 						"In this graphical method the differences (or alternatively the ratios) between the two variables are plotted",
 						"against the averages of the two. Such a plot is useful, for example, to analyze data with strong correlation between",
 						"x and y axes, when the (x,y) dots on the plot are close to the diagonal x=y. In this case, the value of the",
@@ -1821,14 +1821,14 @@ make.report.messages <- function(lang) {
 					),
 					boxplot=paste(
 						"The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of a",
-						"bar with extending lines, as commonly used way of graphically presenting groups of numerical data. A",
+						"bar with extending lines, as a commonly used way of graphically presenting groups of numerical data. A",
 						"boxplot also indicates which observations, if any, might be considered outliers and is able to visually",
 						"show different types of populations, without making any assumptions of the underlying statistical",
 						"distribution. The spacings between the different parts of the box help indicate variance, skewness and",
 						"identify outliers. The thick bar inside the colored box is the median of the observations while the box",
 						"extends over the Interquartile Range of the observations. The whiskers extend up (down) to +/-1.5xIQR.",
 						"Boxplots at similar levels indicate good quality of the normalization. When after normalization boxplots",
-						"remain at different levels, maybe another normaliation algorithm should be examined. The un-normalized",
+						"remain at different levels, maybe another normalization algorithm may have to be examined. The un-normalized",
 						"boxplots show the need for data normalization in order for the data from different samples to follow the",
 						"same underlying distribution and statistical testing becoming possible",collapse=" "
 					),
@@ -1842,8 +1842,8 @@ make.report.messages <- function(lang) {
 						"and conditions. However, Risso et al. (2011) showed that the GC-content could have an impact in the statistical",
 						"testing procedure. The GC-content bias plot depicts the dependence of the read counts to the GC content",
 						"before and after normalization. The smoothing lines for each sample, should be as 'straight' as possible",
-						"after normalization. In addition, if the smoothing lines differ significantly aming biological conditions",
-						"it would comprise a possible quality warning.",collapse=" "
+						"after normalization. In addition, if the smoothing lines differ significantly among biological conditions",
+						"it would constitute a possible quality warning.",collapse=" "
 					),
 					lengthbias=paste(
 						"The gene/transcript length bias plot is a quality control chart that shows the possible dependence of the",
@@ -1856,11 +1856,11 @@ make.report.messages <- function(lang) {
 						"studies that the gene length could have an impact in the statistical testing procedure. The length bias plot",
 						"depicts the dependence of the read counts to the gene/transcript length before and after normalization. The",
 						"smoothing lines for each sample, should be as 'straight' as possible after normalization. In addition, if",
-						"the smoothing lines differ significantly aming biological conditions it would comprise a possible quality warning.",
+						"the smoothing lines differ significantly among biological conditions it would constitute a possible quality warning.",
 						collapse=" "
 					),
 					meandiff=paste(
-						"A mean-difference plot (or a Bland–Altman plot) is a method of data plotting used in analyzing the agreement between",
+						"A mean-difference plot (or a Bland-Altman plot) is a method of data plotting used in analyzing the agreement between",
 						"two different assays/variables. In this graphical method the differences (or alternatively the ratios) between the two",
 						"variables are plotted against the averages of the two. Such a plot is useful, for example, to analyze data with strong",
 						"correlation between x and y axes, when the (x,y) dots on the plot are close to the diagonal x=y. In this case, the",
@@ -1962,7 +1962,7 @@ make.report.messages <- function(lang) {
 							"Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
 						),
 						#hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
-						simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.",
+						simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.",
 						none=NULL
 					),
 					multiple=list(
@@ -2052,7 +2052,7 @@ make.highcharts.points <- function(x,y,a) {
 #' head(dd$simdata)
 #'}
 make.sim.data <- function(...) {
-	if (!require(TCC))
+	if (suppressWarnings(!require(TCC)))
 		stopwrap("Bioconductor package TCC is required to create simulated data!")
 	#tcc <- simulateReadCounts(Ngene=Ngene,PDEG=PDEG,DEG.assign=DEG.assign,
 	#	DEG.foldchange=DEG.foldchange,replicates=replicates)
@@ -2256,9 +2256,12 @@ filter.high <- function(x,f) { return(all(x>=f)) }
 #' disp("Now running iteration ",i,"...")
 #'}
 disp <- function(...) {
-	if (VERBOSE) {
-		cat("\n",...,sep="")
-		flush.console()
+	if (exists("VERBOSE")) {
+		verbose <- get("VERBOSE")
+		if (verbose) {
+			cat("\n",...,sep="")
+			flush.console()
+		}
 	}
 	if (exists("LOGGER")) {
 		levalias <- c("one","two","three","four","five")
@@ -2283,8 +2286,9 @@ stopwrap <- function(...,t="fatal") {
 }
 
 warnwrap <- function(...) {
-	if (exists("LOGGER"))
+	if (exists("LOGGER")) {
 		warn(LOGGER,gsub("\\n","",paste0(...)))
+	}
 	warning(paste0(...),call.=FALSE)
 }
 

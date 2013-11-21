@@ -601,7 +601,6 @@ metaseqr <- function(
 	# Initialize environmental variables
 	if (!exists("HOME"))
 		init.envar()
-	
 	# Globalize the project's path and verbosity
 	if (from.raw)
 		PROJECT.PATH <<- make.project.path(export.where)
@@ -609,21 +608,29 @@ metaseqr <- function(
 		PROJECT.PATH <<- make.project.path(export.where,counts)
 	VERBOSE <<- verbose
 	# Check logger, here
-	if (run.log && !require(log4r))
-		stop("R package log4r is required to create an log file!")
+	if (run.log && suppressWarnings(!require(log4r)))
+	{
+		warning("R package log4r is required to create an log file! Log will not be created...")
+		run.log <- FALSE
+	}	
 	if (run.log)
 		LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,"metaseqr_run.log"),level=log4r:::INFO,logformat="%d %c %m")
-
+	
 	# Check if sample names match in file/df and list, otherwise meaningless to proceed
 	if (!from.raw)
 	{
-		if (!is.data.frame(counts) && file.exists(counts))
+		if (!is.data.frame(counts))
 		{
-			aline <- read.delim(counts,nrows=5) # Read the 1st line
-			aline <- colnames(aline)
+			if (file.exists(counts))
+			{
+				aline <- read.delim(counts,nrows=5) # Read the 1st line
+				aline <- colnames(aline)
+			}
+			else
+				stopwrap("The counts file you provided does not exist!")
 		}
 		else
-			aline <- colnames(counts)			
+			aline <- colnames(counts)
 		samples <- unlist(sample.list,use.names=FALSE)
 		if (length(which(!is.na(match(samples,aline)))) != length(samples))
 			stopwrap("The sample names provided in the counts file do not match with those of the sample.list!")
@@ -687,8 +694,8 @@ metaseqr <- function(
 	if (!is.null(contrast)) check.contrast.format(contrast,sample.list)
 	if ("bayseq" %in% statistics) libsize.list <- check.libsize(libsize.list,sample.list)
 
-	# Check main functionality packages
-	check.packages(normalization,statistics,adjust.method,meta.p,export.scale,qc.plots,report)
+	## Check main functionality packages
+	#check.packages(normalization,statistics,adjust.method,meta.p,export.scale,qc.plots,report)
 	# Check if parallel processing is available
 	multic <- check.parallel(restrict.cores)
 	# Check the case of embedded annotation but not given gc and gene name columns
@@ -715,11 +722,11 @@ metaseqr <- function(
 				qc.plots <- qc.plots[-to.remove]
 		}
 	}
-	else if (annotation=="download" || count.type=="exon") # Requires package biomaRt
-	{
-		if (!require(biomaRt))
-			stopwrap("Bioconductor package biomaRt is required when annotation is \"download\" or type argument is \"exon\"!")
-	}
+	#else if (annotation=="download" || count.type=="exon") # Requires package biomaRt
+	#{
+	#	if (!require(biomaRt))
+	#		stopwrap("Bioconductor package biomaRt is required when annotation is \"download\" or type argument is \"exon\"!")
+	#}
 	# Check if drawing a Venn diagram is possible
 	if ("venn" %in% qc.plots && length(statistics)==1)
 	{
@@ -888,11 +895,11 @@ metaseqr <- function(
 			disp("Downloading gene annotation for ",org,"...")
 			gene.data <- get.annotation(org,"gene")
 		}
-		else
-		{
-			disp("Reading stored gene annotation for ",org,"...")
-			gene.data <- read.annotation(org,"gene")
-		}
+		#else
+		#{
+		#	disp("Reading stored gene annotation for ",org,"...")
+		#	gene.data <- read.annotation(org,"gene")
+		#}
 	
 		if (annotation=="download")
 		{
@@ -1688,12 +1695,14 @@ metaseqr <- function(
 		if (tolower(report.template)=="default")
 		{
 			if (exists("TEMPLATE"))
+			{
 				report.template=list(
 					html=file.path(TEMPLATE,"metaseqr_report.html"),
 					css=file.path(TEMPLATE,"styles.css"),
 					logo=file.path(TEMPLATE,"logo.png"),
 					loader=file.path(TEMPLATE,"loader.gif")
 				)
+			}
 			else
 				report.template=list(html=NULL,css=NULL,logo=NULL,loader=NULL)
 		}
@@ -1743,7 +1752,6 @@ metaseqr <- function(
 		}
 		else
 			warnwrap(paste("The report loader image was not provided!"))
-		
 		if (has.template)
 		{
 			exec.time <- elap2human(TB)

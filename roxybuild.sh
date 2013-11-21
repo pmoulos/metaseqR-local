@@ -18,7 +18,7 @@ rm $METASEQR_HOME/inst/doc/metaseqr-html.html
 rm $METASEQR_HOME/inst/doc/metaseqr-pdf.pdf
 #rm $METASEQR_HOME/inst/doc/metaseqr-pdf.aux
 rm $METASEQR_HOME/inst/doc/.build.timestamp
-rm -r $METASEQR_HOME/man
+#rm -r $METASEQR_HOME/man
 rm -r $REPO_HOME/*
 
 Rscript -e "remove.packages('metaseqr')"

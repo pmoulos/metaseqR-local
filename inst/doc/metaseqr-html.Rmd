@@ -343,16 +343,16 @@ This file should contain at least: a) a column with a unique identifier for each
 supported unless the required annotation elements for each genomic region are embedded in the file), b) as many columns as the number
 of samples in the experiment. Each column with sample read counts should be named with a unique sample name. Optionally, the read
 counts file can contain annotation elements for each genomic feature (gene or exon) corresponding to the unique identifier column.
-In this case, the pipeline may be executed with the `annotation=”embedded”` argument and it is very useful when the user does
+In this case, the pipeline may be executed with the `annotation=\"embedded\"` argument and it is very useful when the user does
 not wish to use Ensembl annotation or the organisms under investigation is not supported by metaseqr. If the user chooses to use
 embedded to the read counts file annotation, then at least the following elements should be provided for each genomic region, apart
 from its unique name should be provided (in parenthesis next to each element, the required column name): chromosome where the genomic
 feature is located (chromosome), starting base pair in the chromosome (start), ending base pair in the chromosome (end). For best
 performance (e.g. availability of all quality control and diagnostic plots), the following annotation elements should also be
-provided: GC content (gc_content) for genomic features of type “gene”, the gene model name (gene_name) for genomic features of
-type “exon”, the transcribing strand of each feature, denoted as “+” or “-“ (strand), HUGO (or other alias) gene name (gene_name)
-and each genomic features biotype/biological categorization, for example Ensembl’s categorizations like “protein_coding”, ”ncRNA”,
-“pseudogene”, etc. (biotype). In any case, if the user needs are satisfied with Ensembl annotation, it’s better practice not to
+provided: GC content (gc_content) for genomic features of type \"gene\", the gene model name (gene_name) for genomic features of
+type \"exon\", the transcribing strand of each feature, denoted as \"+\" or \"-\" (strand), HUGO (or other alias) gene name (gene_name)
+and each genomic features biotype/biological categorization, for example Ensembl categorizations like \"protein_coding\", \"ncRNA\",
+\"pseudogene\", etc. (biotype). In any case, if the user needs are satisfied with Ensembl annotation, it is better practice not to
 use embedded annotation in the counts file but download it or use the embedded in the package annotation using the respective options.
 3. Like case (2) but all the data mentioned in (2) are stored in an R data frame object (for example, derived after a user-defined
 or otherwise customized preprocessing).
@@ -374,7 +374,7 @@ detection of differential splicing.
 Currently only one exon filter is implemented in metaseqr. This filter excludes genes that do not have enough reads presence in a
 fraction of their exons. This fraction should not be too high so that to avoid excluding genes that are possibly simply differentially
 spliced (although metaseqr is not intended to detect differential splicing), nor too low so as to be able to exclude artifacts. This
-filtered was inspired by the fact that certain genes contain “spikes” of read data in their UTR regions or a couple of their exons.
+filtered was inspired by the fact that certain genes contain \"spikes\" of read data in their UTR regions or a couple of their exons.
 These spikes are usually artifacts that can affect the subsequent differential expression analysis. The exon filter has three parameters:
 `exons.per.gene`, `min.exons` and `frac` and is applied as follows: if a gene has up to `exons.per.gene exons`,
 then read presence is required in at least `min.exons` of them, else read presence is required in a `frac` fraction of the
@@ -457,10 +457,10 @@ When analyzing data with metaseqr, the user may use more than one statistical te
 supported). In this case, metaseqr will perform meta-analysis on the p-values that will be returned from each of the applied statistical
 tests and will also report, apart from the p-value from each method, a combined p-value using one of the following methods:
 
-1. the Fisher’s p-value combination meta-analysis method, implemented in the R package MADAM. This is the default method.
+1. the Fisher p-value combination meta-analysis method, implemented in the R package MADAM. This is the default method.
 2. same as (1) but using permutations, as implemented in the R package MADAM. This option is quite computationally intensive
 and requires additional running time.
-3. the Whitlock’s p-value combination method, implemented in the Bioconductor package survcomp. This method has the advantage
+3. the Whitlock p-value combination method, implemented in the Bioconductor package survcomp. This method has the advantage
 of allowing weighting for each methodology. In the current version of metaseqr, the weights are equal for all statistical tests.
 4. intersection of the results derived from each statistical test. The reported p-value is the product of the p-values returned
 from each method. However, this product is not used as the final statistical threshold like with the three previous options. This
@@ -470,7 +470,7 @@ by all methods are reported. The product of the p-values is also reported as men
 5. union of the results derived from each statistical test. The reported p-value is the sum of the p-values returned by each
 method. The sum is used as in case (4) and the union of the genes found by all methods are reported.
 
-It should be noted that in the case of NOISeq, the significance value returned is not similar to the “classic” t-test like statistics,
+It should be noted that in the case of NOISeq, the significance value returned is not similar to the \"classic\" t-test like statistics,
 thus its inclusion to a meta-analysis should be handled and interpreted with caution. It should also be noted that the meta-analysis
 feature provided by metaseqr is currently experimental and does not satisfy the strict definition of "meta-analysis", which is the
 combination of multiple similar datasets under the same statistical methodology. Instead it is the use of multiple statistical tests
@@ -495,7 +495,7 @@ more solid methodology for combining multiple statistical tests based on multipl
 14. Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.
 15. Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208.
 16. Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.
-17. Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.
+17. Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.
 18. Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.
 19. Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445.
 20. Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.

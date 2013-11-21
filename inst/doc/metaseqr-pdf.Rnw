@@ -316,8 +316,8 @@ The metaseqr package currently supports three methods of data input:
   performance (e.g. availability of all quality control and diagnostic plots), the following annotation elements should also be
   provided: GC content (gc\_content) for genomic features of type ``gene'', the gene model name (gene\_name) for genomic features of
   type ``exon'', the transcribing strand of each feature, denoted as ``+'' or ``-'' (strand), HUGO (or other alias) gene name (gene\_name)
-  and each genomic features biotype/biological categorization, for example Ensembl’s categorizations like ``protein\_coding'', ``ncRNA'',
-  ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied with Ensembl annotation, it’s better practice not to
+  and each genomic features biotype/biological categorization, for example Ensembl categorizations like ``protein\_coding'', ``ncRNA'',
+  ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied with Ensembl annotation, it is better practice not to
   use embedded annotation in the counts file but download it or use the embedded in the package annotation using the respective options.
   \item Like case (2) but all the data mentioned in (2) are stored in an R data frame object (for example, derived after a user-defined
   or otherwise customized preprocessing).
@@ -466,7 +466,7 @@ more solid methodology for combining multiple statistical tests based on multipl
   \item Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.
   \item Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208.
   \item Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.
-  \item Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751–754.
+  \item Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.
   \item Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.
   \item Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445.
   \item Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.

@@ -452,8 +452,8 @@ diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=N
 	x <- as.matrix(mat)
 	type <- tolower(type[1])
 	check.text.args("type",type,c("heatmap","correlogram"))
-	if (!require(corrplot) && type=="correlogram")
-		stop("R package corrplot is required!")
+	#if (!require(corrplot) && type=="correlogram")
+	#	stop("R package corrplot is required!")
 	cor.mat <- cor(mat)
 	if (!is.null(colnames(mat)))
 		colnames(cor.mat) <- colnames(mat)
@@ -1312,7 +1312,7 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #'
 #' @param pmat a matrix with p-values corresponding to the application of each statistical algorithm. The p-value matrix must have
 #' the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the specific column (e.g. if
-#' \code{"statistics"=c("deseq","edger","nbpseq")} then \code{colnames(pmat) <- c("deseq","edger","nbpseq")}.
+#' \code{"statistics"=c("deseq","edger","nbpseq")} then \code{colnames(pmat) <-} \code{c("deseq","edger","nbpseq")}.
 #' @param pcut a p-value cutoff for statistical significance. Defaults to \code{0.05}.
 #' @param nam a name to be appended to the output graphics file (if \code{"output"} is not \code{"x11"}).
 #' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
