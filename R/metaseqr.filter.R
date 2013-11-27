@@ -44,7 +44,12 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 						#names(pass[[n]]) <- names(the.gene.counts[[n]]) <- the.genes
 						names(pass[[n]]) <- the.genes
 						pass[[n]] <- wapply(multic,the.counts[[n]],function(x,f) {
-							if (length(x$count) <= f$exons.per.gene)
+							if (length(x$count) == 1)
+								if (x$count[1]!=0)
+									return(TRUE)
+								else
+									return(FALSE)
+							else if (length(x$count) <= f$exons.per.gene)
 								if (length(which(x$count!=0)) >= f$min.exons)
 									return(TRUE)
 								else

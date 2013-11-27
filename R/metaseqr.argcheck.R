@@ -150,17 +150,17 @@ check.file.args <- function(arg.name,arg.value) {
 
 #' Parallel run validator
 #'
-#' Checks existence of multiple cores and loads multicore package. Internal use only.
+#' Checks existence of multiple cores and loads parallel package. Internal use only.
 #'
 #' @param rc fraction of available cores to use.
 #' @author Panagiotis Moulos
 #' @export
 check.parallel <- function(rc) {
-	if (suppressWarnings(!require(multicore)))
+	if (suppressWarnings(!require(parallel)))
 		multi <- FALSE
 	else {
 		multi <- TRUE
-		ncores <- multicore:::detectCores()
+		ncores <- parallel:::detectCores()
 		if (!missing(rc) || !is.na(rc) || !is.null(rc))
 			ncores <- ceiling(rc*ncores)
 		options(cores=ncores)

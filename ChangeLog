@@ -1,6 +1,13 @@
-ChangeLog for package metaseqr
+ChangeLog for package metaseqr mustaRd
 
 changes in version 0.9.0 (2013-11-21)
 added:
   - First release
+
+changes in version 0.9.1 (2013-11-27)
+added:
+  - Permutation methods for combining p-values from multiple statistics
+  - More interactive and compact report
+fixed:
+  - A bug in exon filters resulting in removing genes/transcripts with only one exon
 

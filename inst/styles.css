@@ -10,6 +10,8 @@ body
     margin: 0px;
 }
 
+img { max-width: 100%; }
+
 ul
 {
 	margin: 0.2em;
@@ -97,7 +99,7 @@ td.mainContainer
 
 td.leftContainer
 {
-	width: 13%;
+	width: 10%;
 	height: 95%;
 	padding: 5px;
 	padding-top: 15px;
@@ -113,7 +115,7 @@ td.leftContainer
 
 td.rightContainer
 {
-    width: 7%;
+    width: 10%;
     height: 90%;
     padding: 5px;
     border-width: 0px;
@@ -179,14 +181,42 @@ td.footer a:hover
 	font-weight: normal; 
 	color: #0E2B8A; 
 	text-decoration: none;
-	width: 1024px;
+	width: 100%;
 	/*table-layout: fixed;*/
 }
 
 .volcano
 {
-	width: 768px;
-	height: 1024px;
+	width: 640px;
+	height: 800px;
+	margin: auto;
+}
+
+.imageContainerRect
+{
+	width: 80%;
+	height: 60%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 25px;
+	margin-bottom: 25px;
+}
+
+.imageContainerSq
+{
+	width: 80%;
+	height: 80%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 25px;
+	margin-bottom: 25px;
+}
+
+.figureHint
+{
+	width: 80%;
+	margin: auto;
+	text-align: justify;
 }
 
 .innerTable
@@ -239,6 +269,16 @@ td.footer a:hover
 	font-weight: bold;
 	font-style: italic; 
 	letter-spacing: 1px;
+}
+
+.figCaption
+{  
+	font-family: Verdana, Arial, Helvetica, sans-serif; 
+	font-size: 1.1em; 
+	font-weight: bold;
+	font-style: italic; 
+	letter-spacing: 1px;
+	text-align: center;
 }
 
 .pageTitle 

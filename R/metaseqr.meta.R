@@ -15,7 +15,7 @@
 #' @param libsize.list a list with library sizes. See the main \code{\link{metaseqr}} and the \code{stat.*} help pages.
 #' @param nperm the number of permutations (Monte Carlo simulations) to perform.
 #' @param weight a numeric vector of weights for each statistical algorithm
-#' @param multic use multiple cores to execute the premutations. This is an external parameter and implies the existence of multicore
+#' @param multic use multiple cores to execute the premutations. This is an external parameter and implies the existence of parallel
 #' package in the execution environment. See the main \code{\link{metaseqr}} help page.
 #' @return A named list with combined p-values. The names are the contrasts and the list members are combined p-value vectors, one
 #' for each contrast.
@@ -193,7 +193,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 #' without replacement. It can also be \code{"auto"}, to determine bootstraping or not with the following rule: if \code{ncol(counts)<=4}
 #' \code{replace=FALSE else} \code{replace=TRUE}. This protects from the case of having zero variability across resampled conditions.
 #' In such cases, most statistical tests would crash.
-#' @param multic use multiple cores to execute the premutations. This is an external parameter and implies the existence of multicore
+#' @param multic use multiple cores to execute the premutations. This is an external parameter and implies the existence of parallel
 #' package in the execution environment. See the main \code{\link{metaseqr}} help page.
 #' @return A vector of meta p-values
 #' @author Panagiotis Moulos

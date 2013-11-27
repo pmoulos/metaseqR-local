@@ -2,16 +2,24 @@
 
 <html>
 <head>
-<title>meetaseqr report</title>
+<title>metaseqr report</title>
 <meta http-equiv="Content-Type" content="text/html;">
 <link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
 <link type="text/css" rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css">
 <link type="text/css" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/redmond/jquery-ui.min.css">
+<link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/fancybox/2.1.5/helpers/jquery.fancybox-buttons.css">
+<link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.css">
+<link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/fancybox/2.1.5/jquery.fancybox.css">
 <link type="text/css" rel="stylesheet" href="styles.css">
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="http://code.highcharts.com/highcharts.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/fancybox/2.1.5/jquery.fancybox.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/fancybox/2.1.5/helpers/jquery.fancybox-buttons.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/fancybox/2.1.5/helpers/jquery.fancybox-media.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/fancybox/2.1.5/helpers/jquery.fancybox-thumbs.js"></script>
 <script type="text/javascript">// <![CDATA[
 	function preloader() {
 		document.getElementById("loading").style.display="none";
@@ -29,7 +37,7 @@
 			<img src="logo.png" alt="logo here" height="100%">
 		</td>
 		<td style="padding:5px; border-width:0px; text-align:center; width:80%">
-			<span class="pageTitle"><span style="font-size:1.4em; font-weight:bold">metaseqr Analysis Report</span></br></br><%=basename(PROJECT.PATH$main)%></span>
+			<span class="pageTitle"><span style="font-size:1.4em; font-weight:bold">metaseqr analysis report</span></br></br><%=basename(PROJECT.PATH$main)%></span>
 		</td>
 	</tr>
 	<tr> 
@@ -59,7 +67,7 @@
 						<!--We want the TOC here-->
 						<div id="contents"><div>
 							<span class="title" style="font-size:1.1em;">Contents</span>
-							<div id="toc" style="float: left; width:200px; word-wrap: break-word;">
+							<div id="toc" style="float: left; width:160px; word-wrap: break-word;">
 								<%
 								cat("<h5>Summary</h5>")
 								cat("<div><ul class=\"tocul\">")
@@ -171,11 +179,11 @@
 					</td>
 					<td class="mainContainer">
 						<div id="loading" style="margin:auto; position:absolute; z-index:1000; width:350px; height:350px; background:url(loader.gif) no-repeat; cursor:wait;"></div>
-						<div id="report" style="display:none;"> <!-- Start main accordion container -->
+						<div id="report" style="display:none; width:75%;"> <!-- Start main accordion container -->
 							<h3 id="summary" class="title">Summary </h3>
 							<div id="summary_container"> <!-- Start summary container -->
 								<h4 id="summary_summary" class="subtitle">Analysis summary </h4>
-								<div id="summary_summary_container">
+								<div id="summary_summary_container" style="text-align:justify;">
 									<strong>Summary: </strong>
 									<%
 									if (from.raw) {
@@ -506,18 +514,24 @@
 								if (!is.null(fig.raw$mds)) {
 									cat("<h4 class=\"subtitle\">Multidimensional scaling</h4>")
 									cat("<div id=\"figures_mds\">")
-									cat("<div>",report.messages$explain$mds,"</br></br></div>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\"></div>")
-									cat("</div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$mds,"</br></br></div>",sep="")
+									cat("<div class=\"imageContainerRect\">")
+									cat("<a class=\"fancybox\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" title=\"MDS\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$mds),"\" alt=\"MDS\">",sep="")
+									cat("</a></div></div>")
 								}
 								%>
 								<%
 								if (!is.null(fig.raw$biodetection)) {
 									cat("<h4 class=\"subtitle\">Biotype detection</h4>")
 									cat("<div id=\"figures_biodetection\"> ")
-									cat("<div>",report.messages$explain$biodetection,"</br></br></div>")
-									for (s in gsub(PROJECT.PATH$main,".",fig.raw$biodetection))
-										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$biodetection,"</br></br></div>",sep="")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$biodetection)) {
+										cat("<div class=\"imageContainerRect\">")
+										cat("<a class=\"fancybox\" rel=\"biodetection\" href=\"",s,"\" title=\"Biotype detection\">",sep="")
+										cat("<img src=\"",s,"\" alt=\"biotype detection\">",sep="")
+										cat("</a></div>")
+									}
 									cat("</div>")
 								}
 								%>								
@@ -525,9 +539,13 @@
 								if (!is.null(fig.raw$countsbio)) {
 									cat("<h4 class=\"subtitle\">Biotype detection counts</h4>")
 									cat("<div id=\"figures_countsbio\">")
-									cat("<div>",report.messages$explain$countsbio,"</br></br></div>")
-									for (s in gsub(PROJECT.PATH$main,".",fig.raw$countsbio))
-										cat("<div><img src=\"",s,"\" alt=\"biotype detection\"></br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$countsbio,"</br></br></div>",sep="")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$countsbio)) {
+										cat("<div class=\"imageContainerRect\">")
+										cat("<a class=\"fancybox\" rel=\"countsbio\" href=\"",s,"\" title=\"Biotype detection counts\">",sep="")
+										cat("<img src=\"",s,"\" alt=\"biotype detection counts\">",sep="")
+										cat("</a></div>")
+									}
 									cat("</div>")
 								}
 								%>
@@ -535,12 +553,19 @@
 								if (!is.null(fig.raw$saturation)) {
 									cat("<h4 class=\"subtitle\">Read and biotype saturation</h4>")
 									cat("<div id=\"figures_saturation\">")
-									cat("<div>",report.messages$explain$saturation,"</br></br></div>")
-									cat("<span class=\"subtitle\">Read saturation per biotype for all samples</span></br>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\"></br></br></div>")
-									cat("<span class=\"subtitle\">Read saturation per sample for all biotypes </span></br>")
-									for (s in gsub(PROJECT.PATH$main,".",fig.raw$saturation$sample))
-										cat("<div><img src=\"",s,"\" alt=\"sample biotype saturation\"></br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$saturation,"</br></br></div>",sep="")
+									cat("<div class=\"figCaption\">Read saturation per biotype for all samples</div></br>",sep="")
+									cat("<div class=\"imageContainerSq\" style=\"width: 680px; height: 680px;\">",sep="")
+									cat("<a class=\"fancybox\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" title=\"Biotype saturation per sample\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$saturation$biotype),"\" alt=\"sample biotype saturation\">",sep="")
+									cat("</a></div>")
+									cat("<div class=\"figCaption\">Read saturation per sample for all biotypes </div></br>",sep="")
+									for (s in gsub(PROJECT.PATH$main,".",fig.raw$saturation$sample)) {
+										cat("<div class=\"imageContainerRect\">")
+										cat("<a class=\"fancybox\" rel=\"saturation_sample\" href=\"",s,"\" title=\"Biotype saturation per sample\">",sep="")
+										cat("<img src=\"",s,"\" alt=\"sample biotype saturation\">",sep="")
+										cat("</a></div>")
+									}
 									cat("</div>")
 								}
 								%>
@@ -548,21 +573,29 @@
 								if (!is.null(fig.raw$readnoise)) {
 									cat("<h4 class=\"subtitle\">RNA-Seq reads noise </h4>")
 									cat("<div id=\"figures_readnoise\">")
-									cat("<div>",report.messages$explain$readnoise,"</br></br></div>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$readnoise),"\" alt=\"Read noise\"></div>")
-									cat("</div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$readnoise,"</br></br></div>",sep="")
+									cat("<div class=\"imageContainerSq\" style=\"width:50%; height:50%;\">")
+									cat("<a class=\"fancybox\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$readnoise),"\" title=\"Read noise\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$readnoise),"\" alt=\"Read noise\">",sep="")
+									cat("</a></div></div>")
 								}
 								%>
 								<%
 								if (!is.null(fig.raw$correl)) {
 									cat("<h4 class=\"subtitle\">Correlation plots</h4>")
 									cat("<div id=\"figures_correl\">")
-									cat("<div>",report.messages$explain$correl,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$correl,"</br></br></div>",sep="")
 									cat("<table class=\"innerTable\"><tr>")
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Correlation heatmap </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$heatmap),"\" alt=\"Correlation heatmap\"></td>")
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Data correlogram </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$correlogram),"\" alt=\"Correlogram\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Correlation heatmap </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"correl\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$heatmap),"\" title=\"Correlation heatmap\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$heatmap),"\" alt=\"Correlation heatmap\">",sep="")
+									cat("</a></div></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Data correlogram </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"correl\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$correlogram),"\" title=\"Correlogram\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$correl$correlogram),"\" alt=\"Correlogram\"></td>",sep="")
+									cat("</a></div></td>")
 									cat("</tr></table></div>")
 								}
 								%>
@@ -570,25 +603,33 @@
 								if (!is.null(fig.raw$pairwise)) {
 									cat("<h4 class=\"subtitle\">Pairwise scatterplots</h4>")
 									cat("<div id=\"figures_pairwise\">")
-									cat("<div>",report.messages$explain$pairwise,"</br></br></div>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$pairwise),"\" alt=\"Pairwise scatterplots\"></div>")
-									cat("</div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$pairwise,"</br></br></div>",sep="")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" href=\"",gsub(PROJECT.PATH$main,".",fig.raw$pairwise),"\" title=\"Pairwise sample scatterplots\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.raw$pairwise),"\" alt=\"Pairwise scatterplots\">",sep="")
+									cat("</a></div></div>")
 								}
 								%>
 								<%
 								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot)) {
 									cat("<h4 class=\"subtitle\">Boxplots</h4>")
 									cat("<div id=\"figures_boxplot\">")
-									cat("<div>",report.messages$explain$boxplot,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$boxplot,"</br></br></div>",sep="")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$boxplot)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Boxplot of un-normalized data </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$boxplot),"\" alt=\"Un-normalized boxplot\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Boxplot of un-normalized data </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"boxplot\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$boxplot),"\" title=\"Un-normalized boxplot\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$boxplot),"\" alt=\"Un-normalized boxplot\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$boxplot)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Boxplot of normalized data </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$boxplot),"\" alt=\"Normalized boxplot\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Boxplot of normalized data </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"boxplot\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$boxplot),"\" title=\"Normalized boxplot\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$boxplot),"\" alt=\"Normalized boxplot\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$boxplot) || !is.null(fig.norm$boxplot))
 									cat("</tr></table></div>")
@@ -597,16 +638,22 @@
 								if (!is.null(fig.unorm$rnacomp) || !is.null(fig.norm$rnacomp)) {
 									cat("<h4 class=\"subtitle\">RNA composition</h4>")
 									cat("<div id=\"figures_rnacomp\">")
-									cat("<div>",report.messages$explain$rnacomp,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$rnacomp,"</br></br></div>",sep="")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$rnacomp)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">RNA composition of un-normalized data </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$rnacomp),"\" alt=\"Un-normalized rnacomp\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">RNA composition of un-normalized data </div></br>",sep="")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"rnacomp\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$rnacomp),"\" title=\"Un-normalized RNA composition\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$rnacomp),"\" alt=\"Un-normalized rnacomp\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$rnacomp)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">RNA composition of normalized data </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$rnacomp),"\" alt=\"Normalized rnacomp\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">RNA composition of normalized data </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"rnacomp\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$rnacomp),"\" title=\"Normalized RNA composition\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$rnacomp),"\" alt=\"Normalized rnacomp\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$rnacomp) || !is.null(fig.norm$rnacomp))
 									cat("</tr></table></div>")
@@ -615,16 +662,22 @@
 								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias)) {
 									cat("<h4 class=\"subtitle\">GC content bias</h4>")
 									cat("<div id=\"figures_gcbias\">")
-									cat("<div>",report.messages$explain$gcbias,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$gcbias,"</br></br></div>",sep="")
 									cat("<table class=\"innerTable\"><tr>")
 								}
 								if (!is.null(fig.unorm$gcbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">GC content bias un-normalized </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$gcbias),"\" alt=\"Un-normalized gcbias\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">GC content bias un-normalized </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"gcbias\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$gcbias),"\" title=\"Un-normalized GC-content bias\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$gcbias),"\" alt=\"Un-normalized gcbias\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.norm$gcbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">GC content bias normalized </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$gcbias),"\" alt=\"Normalized gcbias\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">GC content bias normalized </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"gcbias\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$gcbias),"\" title=\"Normalized GC-content bias\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$gcbias),"\" alt=\"Normalized gcbias\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$gcbias) || !is.null(fig.norm$gcbias))
 									cat("</tr></table></div>")
@@ -633,16 +686,22 @@
 								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias)) {
 									cat("<h4 class=\"subtitle\">Gene/transcript length bias</h4>")
 									cat("<div id=\"figures_lengthbias\">")
-									cat("<div>",report.messages$explain$lengthbias,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$lengthbias,"</br></br></div>",sep="")
 									cat("<table class=\"innerTable\"><tr>")	
 								}
 								if (!is.null(fig.unorm$lengthbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Gene/transcript length bias un-normalized </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$lengthbias),"\" alt=\"Un-normalized lengthbias\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Gene/transcript length bias un-normalized </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"lengthbias\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$lengthbias),"\" title=\"Un-normalized gene/transcript length bias\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$lengthbias),"\" alt=\"Un-normalized lengthbias\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.norm$lengthbias)) {
-									cat("<td class=\"innerCell\"><span class=\"subtitle\">Gene/transcript length bias normalized </span></br>")
-									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$lengthbias),"\" alt=\"Normalized lengthbias\"></td>")
+									cat("<td class=\"innerCell\"><div class=\"figCaption\">Gene/transcript length bias normalized </div></br>")
+									cat("<div class=\"imageContainerSq\">")
+									cat("<a class=\"fancybox\" rel=\"lengthbias\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$lengthbias),"\" title=\"Normalized gene/transcript length bias\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$lengthbias),"\" alt=\"Normalized lengthbias\">",sep="")
+									cat("</a></div></td>")
 								}
 								if (!is.null(fig.unorm$lengthbias) || !is.null(fig.norm$lengthbias))
 									cat("</tr></table></div>")
@@ -651,26 +710,44 @@
 								if (!is.null(fig.unorm$meandiff) || !is.null(fig.norm$meandiff)) {
 									cat("<h4 class=\"subtitle\">Mean-difference</h4>")
 									cat("<div id=\"figures_meandiff\">")
-									cat("<div>",report.messages$explain$meandiff,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$meandiff,"</br></br></div>",sep="")
 									if (is.null(fig.unorm$meandiff))
 										nn <- names(fig.norm$meandiff)
 									else
 										nn <- names(fig.unorm$meandiff)
 									for (n in nn) {
-										cat("<table class=\"innerTable\"><tr><td class=\"innerCell\"><span class=\"subtitle\">Mean-difference plots for the replicates of ",n,"</span></td></tr>")
+										cat("<table class=\"innerTable\"><tr><td colspan=2 class=\"innerCell\"><div class=\"figCaption\">Mean-difference plots for the replicates of ",n,"</div></td></tr>",sep="")
 										if (!is.null(fig.unorm$meandiff[[n]]) && !is.null(fig.norm$meandiff[[n]])) {
 											for (i in 1:length(fig.norm$meandiff[[n]])) {
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unnorm meandiff\"></td>")
-												cat("<td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\"></td></tr>")
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meandiff\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" title=\"Un-normalized mean-difference plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unnorm meandiff\">",sep="")
+												cat("</a></div></td>")
+												cat("<td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meandiff\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" title=\"Normalized mean-difference plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\">",sep="")
+												cat("</a></div></td></tr>")
 											}
 										}
 										else if (is.null(fig.unorm$meandiff[[n]]) && !is.null(fig.norm$meandiff[[n]])) {
-											for (i in 1:length(fig.norm$meandiff[[n]]))
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\"></td><td class=\"innerCell\"></td></tr>")
+											for (i in 1:length(fig.norm$meandiff[[n]])) {
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meandiff\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" title=\"Normalized mean-difference plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meandiff[[n]][i]),"\" alt=\"norm meandiff\">",sep="")
+												cat("</a></div></td><td class=\"innerCell\"></td></tr>")
+											}
 										}
 										else if (!is.null(fig.unorm$meandiff[[n]]) && is.null(fig.norm$meandiff[[n]])) {
-											for (i in 1:length(fig.unorm$meandiff[[n]]))
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unorm meandiff\"></td><td class=\"innerCell\"></td></tr>")
+											for (i in 1:length(fig.unorm$meandiff[[n]])) {
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meandiff\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" title=\"Un-normalized mean-difference plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meandiff[[n]][i]),"\" alt=\"unorm meandiff\">",sep="")
+												cat("</a></div></td><td class=\"innerCell\"></td></tr>")
+											}
 										}
 										cat("</table>")
 									}
@@ -681,26 +758,44 @@
 								if (!is.null(fig.unorm$meanvar) || !is.null(fig.norm$meanvar)) {
 									cat("<h4 class=\"subtitle\">Mean-variance</h4>")
 									cat("<div id=\"figures_meanvar\">")
-									cat("<div>",report.messages$explain$meanvar,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$meanvar,"</br></br></div>",sep="")
 									if (is.null(fig.unorm$meanvar))
 										nn <- names(fig.norm$meanvar)
 									else
 										nn <- names(fig.unorm$meanvar)
 									for (n in nn) {
-										cat("<table class=\"innerTable\"><tr><td class=\"innerCell\"><span class=\"subtitle\">Mean-variance plots for the replicates of ",n,"</span></td></tr>")
+										cat("<table class=\"innerTable\"><tr><td colspan=2 class=\"innerCell\"><div class=\"figCaption\">Mean-variance plots for the replicates of ",n,"</div></td></tr>",sep="")
 										if (!is.null(fig.unorm$meanvar[[n]]) && !is.null(fig.norm$meanvar[[n]])) {
 											for (i in 1:length(fig.norm$meanvar[[n]])) {
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unnorm meanvar\"></td>")
-												cat("<td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\"></td></tr>")
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meanvar\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" title=\"Un-normalized mean-variane plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unnorm meanvar\">",sep="")
+												cat("</a></div></td>")
+												cat("<td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meanvar\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" title=\"Normalized mean-variance plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\">",sep="")
+												cat("</a></div></td></tr>")
 											}
 										}
 										else if (is.null(fig.unorm$meanvar[[n]]) && !is.null(fig.norm$meanvar[[n]])) {
-											for (i in 1:length(fig.norm$meanvar[[n]]))
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\"></td><td class=\"innerCell\"></td></tr>")
+											for (i in 1:length(fig.norm$meanvar[[n]])) {
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meanvar\" href=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" title=\"Normalized mean-variance plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.norm$meanvar[[n]][i]),"\" alt=\"norm meanvar\">",sep="")
+												cat("</a></div></td><td class=\"innerCell\"></td></tr>")
+											}
 										}
 										else if (!is.null(fig.unorm$meanvar[[n]]) && is.null(fig.norm$meanvar[[n]])) {
-											for (i in 1:length(fig.unorm$meanvar[[n]]))
-												cat("<tr><td class=\"innerCell\"><img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unorm meanvar\"></td><td class=\"innerCell\"></td></tr>")
+											for (i in 1:length(fig.unorm$meanvar[[n]])) {
+												cat("<tr><td class=\"innerCell\">")
+												cat("<div class=\"imageContainerSq\">")
+												cat("<a class=\"fancybox\" rel=\"meanvar\" href=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" title=\"Un-normalized mean-variance plots\">",sep="")
+												cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.unorm$meanvar[[n]][i]),"\" alt=\"unorm meanvar\">",sep="")
+												cat("</a></div></td><td class=\"innerCell\"></td></tr>")
+											}
 										}
 										cat("</table>")
 									}
@@ -711,20 +806,22 @@
 								if (!is.null(fig.other$filtered)) {
 									cat("<h4 class=\"subtitle\">Chromosome and biotype distribution of filtered genes</h4>")
 									cat("<div id=\"figures_filtered\">")
-									cat("<div>",report.messages$explain$filtered,"</br></br></div>")
-									cat("<div><img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\"></div>")
-									cat("</div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$filtered,"</br></br></div>",sep="")
+									cat("<div class=\"imageContainerRect\">")
+									cat("<a class=\"fancybox\" href=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" title=\"Filtered genes\">",sep="")
+									cat("<img src=\"",gsub(PROJECT.PATH$main,".",fig.other$filtered),"\" alt=\"filtered\">",sep="")
+									cat("</a></div></div>")
 								}
 								%>
 								<%
 								if (!is.null(fig.stat$volcano)) {
 									cat("<h4 class=\"subtitle\">Volcano plots</h4>")
 									cat("<div id=\"figures_volcano\">")
-									cat("<div>",report.messages$explain$volcano,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$volcano,"</br></br></div>",sep="")
 									nn <- names(contrast.list)
 									counter <- 1
 									for (n in nn) {
-										cat("<span class=\"subtitle\">Volcano plot for the contrast",n,"</span></br>")
+										cat("<div class=\"figCaption\">Volcano plot for the contrast",n,"</div></br>",sep="")
 										cat("<div class=\"volcano\" id=\"volcano_",counter,"\" ></div></br></br>",sep="")
 										fc <- log2(make.fold.change(n,sample.list,norm.genes.expr,1))
 										for (contrast in colnames(fc)) {
@@ -740,15 +837,17 @@
 								if (!is.null(fig.stat$deheatmap)) {
 									cat("<h4 class=\"subtitle\">DEG heatmaps</h4>")
 									cat("<div id=\"figures_deheatmap\">")
-									cat("<div>",report.messages$explain$deheatmap,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$deheatmap,"</br></br></div>",sep="")
 									nn <- names(fig.stat$deheatmap)
 									counter <- 1
 									for (n in nn) {
-										cat("<div id=\"deheatmap_",counter,"\"><span class=\"subtitle\">DEG heatmap for the contrast ",n,"</span></br>",sep="")
+										cat("<div id=\"deheatmap_",counter,"\"><div class=\"figCaption\">DEG heatmap for the contrast ",n,"</div></br>",sep="")
 										s <- gsub(PROJECT.PATH$main,".",fig.stat$deheatmap[n])
-										cat("<img src=\"",s,"\" alt=\"deg heatmap\"></br></br>")
+										cat("<div class=\"imageContainerRect\">")
+										cat("<a class=\"fancybox\" rel=\"deheatmap\" href=\"",s,"\" title=\"DEG heatmap\">",sep="")
+										cat("<img src=\"",s,"\" alt=\"deg heatmap\">",sep="")
+										cat("</a></div></div></br>")
 										counter <- counter + 1
-										cat("</div></br>")
 									}
 									cat("</div>")
 								}
@@ -757,15 +856,17 @@
 								if (!is.null(fig.stat$biodist)) {
 									cat("<h4 class=\"subtitle\">Chromosome and biotype distributions of DEGs</h4>")
 									cat("<div id=\"figures_biodist\">")
-									cat("<div>",report.messages$explain$biodist,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$biodist,"</br></br></div>",sep="")
 									nn <- names(fig.stat$biodist)
 									counter <- 1
 									for (n in nn) {
 										if (fig.stat$biodist[[n]] != "error") {
-											cat("<div id=\"biodist_",counter,"\"><span class=\"subtitle\">Biotype distribution in DEG for the contrast ",n,"</span></br>",sep="")
+											cat("<div id=\"biodist_",counter,"\"><div class=\"figCaption\">Biotype distribution in DEG for the contrast ",n,"</div></br>",sep="")
 											s <- gsub(PROJECT.PATH$main,".",fig.stat$biodist[n])
-											cat("<img src=\"",s,"\" alt=\"deg biodist\"></br></br>")
-											cat("</div></br>")
+											cat("<div class=\"imageContainerRect\">")
+											cat("<a class=\"fancybox\" rel=\"biodist\" href=\"",s,"\" title=\"DEG biotype distribution\">",sep="")
+											cat("<img src=\"",s,"\" alt=\"deg biodist\">",sep="")
+											cat("</a></div></div></br>")
 											counter <- counter + 1
 										}
 									}
@@ -776,13 +877,16 @@
 								if (!is.null(fig.venn$venn)) {
 									cat("<h4 class=\"subtitle\">Meta-analysis Venn diagrams</h4>")
 									cat("<div id=\"figures_venn\">")
-									cat("<div>",report.messages$explain$venn,"</br></br></div>")
+									cat("<div class=\"figureHint\">",report.messages$explain$venn,"</br></br></div>",sep="")
 									nn <- names(fig.venn$venn)
 									counter <- 1
 									for (n in nn) {
-										cat("<div id=\"venn_",counter,"\"><span class=\"subtitle\">Venn diagram for the contrast ",n,"</span></br>",sep="")
+										cat("<div id=\"venn_",counter,"\"><div class=\"figCaption\">Venn diagram for the contrast ",n,"</div></br>",sep="")
 										s <- gsub(PROJECT.PATH$main,".",fig.venn$venn[n])
-										cat("<img src=\"",s,"\" alt=\"deg heatmap\"></br></br>")
+										cat("<div class=\"imageContainerRect\">")
+										cat("<a class=\"fancybox\" rel=\"venn\" href=\"",s,"\" title=\"Venn diagram\">",sep="")
+										cat("<img src=\"",s,"\" alt=\"deg heatmap\">",sep="")
+										cat("</a></div>")
 										cat("Get the genes in each category <a href=\"lists/venn_categories_",n,".txt\" download>here</a>",sep="")
 										counter <- counter + 1
 										cat("</br></div></br>")
@@ -797,14 +901,15 @@
 								</div>
 							</div> <!-- End figures container -->
 							<h3 id="results" class="title">Results</h3>
-							<div id="results_container" style="width:1024px"> <!-- Start results container -->
+							<div id="results_container"> <!-- Start results container -->
 								<%
 								if (!is.null(html)) {
 									nn <- names(html)
 									for (n in nn) {
-										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>")
+										cat("<div style=\"width:720px;\">")
+										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>",sep="")
 										cat("<div>")
-										cat("<div>The following table presents the results for the contrast <strong>",n,"</strong>. The fields of the table correspond to the ",
+										cat("<div class=\"figureHint\">The following table presents the results for the contrast <strong>",n,"</strong>. The fields of the table correspond to the ",
 										"requested features to be exported. The table can be searched using the search field on the top right.</br></br></div>",sep="")
 										cat(html[[n]],"</br>")
 										cat("<strong><a href=\"lists/metaseqr_sig_out_",n,".txt.gz\" download>Download</a> the DEG result list for ",n,".</strong></br>",sep="")
@@ -815,10 +920,11 @@
 									counter <- 1
 									cat("<script type=\"text/javascript\">")
 									for (n in nn) {
-										cat("$('#table_",counter,"').dataTable({\"sScrollY\": 400,\"sScrollX\": 1024,\"bJQueryUI\": true,\"sPaginationType\": \"full_numbers\",\"bStateSave\": true,\"iDisplayLength\": 50});",sep="")
+										cat("$('#table_",counter,"').dataTable({\"sScrollY\": 400,\"sScrollX\": 900,\"bJQueryUI\": true,\"sPaginationType\": \"full_numbers\",\"bStateSave\": true,\"iDisplayLength\": 50});",sep="")
 										counter <- counter + 1
 									}
 									cat("</script>")
+									cat("</div>")
 								}
 								%>
 							</div> <!-- End results container -->
@@ -832,10 +938,10 @@
 										report.messages$references$multiple[[adjust.method]],
 										report.messages$references$meta[[meta.p]]
 									))
-									cat("<ol>")
+									cat("<div class=\"figureHint\" style=\"margin-left:25px\"><ol>")
 									for (r in refs)
-										cat("<li>",r,"</li>")
-									cat("</ol>")
+										cat("<li>",r,"</li>",sep="")
+									cat("</ol></div>")
 								%>
 							</div> <!-- End references container -->
 						</div> <!-- End main accordion container -->
@@ -932,6 +1038,23 @@
 										}
 									})
 								})
+							});
+
+							$(".fancybox").fancybox({
+								openEffect: "none",
+								closeEffect: "none",
+								helpers: {
+									title: {
+										type: "float"
+									},
+									thumbs: {
+										width: 48,
+										height: 48
+									},
+									buttons: {
+										position: "top"	
+									}
+								}
 							});
 							
 							var el = $("#contents");

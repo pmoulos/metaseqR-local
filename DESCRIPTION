@@ -32,7 +32,7 @@ Depends:
     vsn,
     VennDiagram
 Suggests:
-    multicore,
+    parallel,
     TCC,
     log4r
 Description: Provides an interface to several normalization and
@@ -50,8 +50,8 @@ biocViews: Bioinformatics, Preprocessing, HighThroughputSequencing,
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 0.9.0
-Date: 2013-11-21
+Version: 0.9.1
+Date: 2013-11-27
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'

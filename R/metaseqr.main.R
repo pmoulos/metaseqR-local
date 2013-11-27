@@ -890,10 +890,14 @@ metaseqr <- function(
 
 	if (count.type=="exon")
 	{
+		# Download gene annotation anyway
+		disp("Downloading gene annotation for ",org,"...")
+		gene.data <- get.annotation(org,"gene")
+		
 		if (annotation=="download")
 		{
-			disp("Downloading gene annotation for ",org,"...")
-			gene.data <- get.annotation(org,"gene")
+			disp("Downloading exon annotation for ",org,"...")
+			exon.data <- get.annotation(org,count.type)
 		}
 		#else
 		#{
@@ -901,11 +905,11 @@ metaseqr <- function(
 		#	gene.data <- read.annotation(org,"gene")
 		#}
 	
-		if (annotation=="download")
-		{
-			disp("Downloading exon annotation for ",org,"...")
-			exon.data <- get.annotation(org,count.type)
-		}
+		#if (annotation=="download")
+		#{
+		#	disp("Downloading exon annotation for ",org,"...")
+		#	exon.data <- get.annotation(org,count.type)
+		#}
 		#else if (annotation=="fixed")
 		#{
 		#	disp("Reading stored exon annotation for ",org,"...")
@@ -1787,7 +1791,7 @@ metaseqr <- function(
 #' @param sample.list the list containing condition names and the samples under each condition.
 #' @param gene.data an annotation data frame from the same organism as \code{exon.counts} (such the ones produced by \code{get.annotation}).
 #' @param multic a logical value indicating the presence of multiple cores. Defaults to \code{FALSE}. Do not change it if you are not sure
-#' whether package multicore has been loaded or not.
+#' whether package parallel has been loaded or not.
 #' @return A named list where names represent samples. Each list member is a also a named list where names correspond to gene ids
 #' and members are named vectors. Each vector is named according to the exons corresponding to each gene and contains the read counts
 #' for each exon. This structure is used for exon filtering and assembling final gene counts in the metaseqr pipeline.

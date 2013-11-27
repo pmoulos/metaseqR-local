@@ -201,6 +201,7 @@ result <- metaseqr(
 	),
 	fig.format=c("png","pdf"),
 	preset="medium.normal",
+	export.where="~/metaseqr_test2",
 	out.list=TRUE
 )
 ```
@@ -469,6 +470,23 @@ p-value threshold given to the pipeline by the argument pcut is applied to the r
 by all methods are reported. The product of the p-values is also reported as mentioned above.
 5. union of the results derived from each statistical test. The reported p-value is the sum of the p-values returned by each
 method. The sum is used as in case (4) and the union of the genes found by all methods are reported.
+6. The Simes p-value combination method. This method uses the minimum p-value from all methods divided by the number of statistics
+used and multiplied by the number of tests performed (similar to Bonferroni correction).
+7. A method based on permutations. After the construction of an original combined p-value with one of the variants below, a permutation
+procedure is initialed, where `nperm` permutations are performed across the samples of the normalized counts matrix, producing `nperm`
+permuted instances of the initial dataset. Then, all the chosen statistical tests are re-executed for each permutation. The final p-value
+is the number of times that the p-value of the permuted datasets is smaller than the original dataset. The p-value of the original
+dataset is created based on the choice of one. Generally, the permutation procedure usually requires a lot of time in order to yield
+accurate results (at least 10000 iterations especially in smaller datasets). Additionally, this method will NOT work when there are \
+no replicated samples across biological conditions. In that case, the Simes method or one of the others should be used. This method
+has three variants:
+7.1 In the first variant (`dperm.min`), an initial p-value vector is constructed for each gene, containing the minimum p-value resulted
+from the applied statistical tests (more lose).
+7.2 In the second variant (`dperm.max`), an initial p-value vector is constructed for each gene, containing the maximum p-value resulted
+from the applied statistical tests (more strict).
+7.3 In the third variant (\lstinline{dperm.weight}), an initial p-value vector is constructed for each gene, containing the convex
+linear combination of the p-values resulted from all the statistical tests applied for each gene. To construct the convex linear
+combination, a vector of weights is used, one for each statistical test, and the sum of all weights must be 1.
 
 It should be noted that in the case of NOISeq, the significance value returned is not similar to the \"classic\" t-test like statistics,
 thus its inclusion to a meta-analysis should be handled and interpreted with caution. It should also be noted that the meta-analysis

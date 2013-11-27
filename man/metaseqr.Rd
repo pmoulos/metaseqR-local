@@ -298,9 +298,9 @@
   Simes (Simes, R. J., 1986) is used. Finally, with the
   \code{"dperm.min"}, \code{"dperm.max"},
   \code{"dperm.weight"} options, a permutation procedure is
-  initialed, where \code{nperm} permutations are performed
+  initiated, where \code{nperm} permutations are performed
   across the samples of the normalized counts matrix,
-  producing \code{nperm} permuted instances of the initital
+  producing \code{nperm} permuted instances of the initial
   dataset. Then, all the chosen statistical tests are
   re-executed for each permutation. The final p-value is
   the number of times that the p-value of the permuted
@@ -308,7 +308,7 @@
   p-value of the original dataset is created based on the
   choice of one of \code{dperm.min}, \code{dperm.max} or
   \code{dperm.weight} options. In case of \code{dperm.min},
-  the intial p-value vector is consists of the minimum
+  the initial p-value vector is consists of the minimum
   p-value resulted from the applied statistical tests for
   each gene. The maximum p-value is used with the
   \code{dperm.max} option. With the \code{dperm.weight}

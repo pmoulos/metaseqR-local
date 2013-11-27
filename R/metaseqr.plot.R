@@ -728,7 +728,7 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 			D <- cddat(local.obj)
 			fil <- file.path(path,paste(which.plot,".",output,sep=""))
 			graphics.open(output,fil)
-			cdplot(D,main="RNA composition")
+			cdplot(D,main="RNA-Seq reads noise")
 			grid()
 			graphics.close(output)
 		},
@@ -893,9 +893,9 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 	g <- make.grid(length(biotypes))
 	f.all <- file.path(path,paste("biotype_saturation.",o,sep=""))
 	if (o %in% c("pdf","ps"))
-		graphics.open(o,f.all,width=12,height=12)
+		graphics.open(o,f.all,width=14,height=14)
 	else
-		graphics.open(o,f.all,width=1024,height=1024)
+		graphics.open(o,f.all,width=1600,height=1600,res=150)
 	par(cex.axis=0.8,cex.main=0.9,cex.lab=0.8,pty="m",lty=2,lwd=1.5,mfrow=g,mar=c(3,3,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0))
 	for (b in biotypes) {
 		y <- depth <- vector("list",length(x))

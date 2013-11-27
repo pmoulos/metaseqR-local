@@ -3,7 +3,7 @@ SCRIPT <<- file.path(HOME,"R")
 TEMPLATE <<- file.path(HOME,"inst")
 ANNOTATION <<- file.path(HOME,"data")
 
-require(multicore)
+#require(parallel)
 require(log4r)
 require(GenomicRanges)
 require(rtracklayer)

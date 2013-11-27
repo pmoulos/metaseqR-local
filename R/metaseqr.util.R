@@ -93,7 +93,8 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 			disp("Reading bam file ",basename(sample.files[n])," for sample with name ",n,". This might take some time...")
 			bam <- BAM2GRanges(sample.files[n],verbose=FALSE)
 			disp("  Checking for chromosomes not present in the annotation...")
-			bam <- bam[which(!is.na(match(seqnames(bam),seqlevels(annotation.gr))))]
+			bam <- bam[which(!is.na(match(as(seqnames(bam),"character"),seqlevels(annotation.gr))))]
+			#bam <- bam[which(!is.na(GenomicRanges::match(seqnames(bam),seqlevels(annotation.gr))))]
 			libsize[[n]] <- length(bam)
 			if (length(bam)>0) {
 				disp("  Counting reads overlapping with given annotation...")
@@ -105,7 +106,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 		}
 	}
 	
-	return(list(counts=counts,libsize=NULL))
+	return(list(counts=counts,libsize=libsize))
 }
 
 #' Creates sample list and BAM/BED file list from file
@@ -2201,7 +2202,7 @@ wp.adjust <- function(p,m) {
 
 #' List apply helper
 #'
-#' A wrapper around normal and parallel apply (\code{\link{mclapply}} or multicore package) to avoid excessive coding for control
+#' A wrapper around normal and parallel apply (\code{\link{mclapply}} or parallel package) to avoid excessive coding for control
 #' of single or parallel code execution. Internal use.
 #'
 #' @param m a logical indicating whether to execute in parallel or not.
@@ -2210,7 +2211,7 @@ wp.adjust <- function(p,m) {
 #' @author Panagiotis Moulos
 wapply <- function(m,...) {
 	if (m)
-		return(mclapply(...))
+		return(mclapply(...,mc.cores=getOption("cores")))
 	else
 		return(lapply(...))
 }
