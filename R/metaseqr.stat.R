@@ -20,7 +20,7 @@
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
 #' p <- stat.deseq(norm.data.matrix,sample.list,contrast)
@@ -106,7 +106,7 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
 #' p <- stat.edger(norm.data.matrix,sample.list,contrast)
@@ -233,7 +233,7 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
 #' p <- stat.limma(norm.data.matrix,sample.list,contrast)
@@ -311,7 +311,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' lengths <- round(1000*runif(nrow(data.matrix)))
 #' starts <- round(1000*runif(nrow(data.matrix)))
@@ -469,7 +469,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data)
 #' p <- stat.bayseq(norm.data.matrix,sample.list,contrast)
@@ -558,7 +558,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)
 #' p <- stat.nbpseq(norm.data.matrix,sample.list,contrast)

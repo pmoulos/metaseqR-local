@@ -132,6 +132,11 @@
 #' \strong{solid and only experience shows improved results!}
 #' @param nperm the number of permutations performed to derive the meta p-value when \code{meta.p="fperm"} or \code{meta.p="dperm"}.
 #' It defaults to 10000.
+#' @param reprod create reproducible permutations when \code{meta.p="dperm.min"}, \code{meta.p="dperm.max"} or \code{meta.p="dperm.weight"}.
+#' Ideally one would want to create the same set of indices for a given dataset so as to create reproducible p-values. If \code{reprod=TRUE},
+#' a fixed seed is used by \code{meta.perm} for all the datasets analyzed with \code{metaseqr}. If \code{reprod=FALSE}, then the p-values
+#' will not be reproducible, although statistical significance is not expected to change for a large number of resambling. Finally,
+#' \code{reprod} can be a numeric vector of seeds with the same length as \code{nperm} so that the user can supply his/her own seeds.
 #' @param pcut a p-value cutoff for exporting differentially genes, default is to export all the non-filtered genes.
 #' @param log.offset an offset to be added to values during logarithmic transformations in order to avoid Infinity (default is \code{1}).
 #' @param preset an analysis strictness preset. \code{preset} can be one of \code{"all.basic"}, \code{"all.normal"}, \code{"all.full"},
@@ -551,6 +556,7 @@ metaseqr <- function(
 	meta.p=if (length(statistics)>1) c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none") else "none",
 	weight=rep(1/length(statistics),length(statistics)),
 	nperm=10000,
+	reprod=TRUE,
 	pcut=NA, # A p-value cutoff for exporting DE genes, default is to export all
 	log.offset=1, # Logarithmic transformation offset to avoid +/-Inf (log2(a+offset/b+offset))
 	preset=NULL, # An analysis strictness preset
@@ -1436,6 +1442,7 @@ metaseqr <- function(
 			libsize.list=libsize.list,
 			nperm=nperm,
 			weight=weight,
+			reprod=reprod,
 			multic=multic
 		)
 	}
@@ -1498,37 +1505,37 @@ metaseqr <- function(
 			{
 				switch(meta.p,
 					intersection = {
-						cut.ind <- which(apply(cp.list[[cnt]],1,function(x,p) return(all(x<p)),pcut)) # The correct way
+						cut.ind <- which(apply(cp.list[[cnt]],1,function(x,p) return(all(x<=p)),pcut)) # The correct way
 					},
 					union = {
-						cut.ind <- which(apply(cp.list[[cnt]],1,function(x,p) return(any(x<p)),pcut)) # The correct way
+						cut.ind <- which(apply(cp.list[[cnt]],1,function(x,p) return(any(x<=p)),pcut)) # The correct way
 					},
 					fisher = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					fperm = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					whitlock = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					#hommel = {
 					#	cut.ind <- which(sum.p.list[[cnt]]<pcut)
 					#},
 					dperm.min = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					dperm.max = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					dperm.weight = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					simes = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
 					none = {
-						cut.ind <- which(sum.p.list[[cnt]]<pcut)
+						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					}
 				)
 				export <- export[cut.ind,]

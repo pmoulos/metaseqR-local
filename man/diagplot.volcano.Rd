@@ -56,7 +56,7 @@
 \dontrun{
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
-sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 contrast <- "A_vs_B"
 M <- norm.edger(data.matrix,sample.list)
 p <- stat.edger(M,sample.list,contrast)

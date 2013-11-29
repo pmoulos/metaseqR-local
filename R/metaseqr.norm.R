@@ -19,7 +19,7 @@
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' lengths <- round(1000*runif(nrow(data.matrix)))
@@ -105,7 +105,7 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
@@ -148,7 +148,7 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
@@ -210,7 +210,7 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' lengths <- round(1000*runif(nrow(data.matrix)))
@@ -306,7 +306,7 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)

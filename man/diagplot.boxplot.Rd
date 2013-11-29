@@ -58,7 +58,7 @@
 \dontrun{
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
-sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 diagplot.boxplot(data.matrix,sample.list)
 
 norm.args <- get.defaults("normalization","deseq")

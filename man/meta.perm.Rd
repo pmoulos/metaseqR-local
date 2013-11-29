@@ -24,7 +24,7 @@
   metaseqr. See the main \code{\link{metaseqr}} help page.}
 
   \item{stat.args}{the parameters for each statistical
-  argument. See the main \code{\link{metaseqr}} help page.}
+  algorithm. See the main \code{\link{metaseqr}} help page.}
 
   \item{norm.args}{the parameters for normalization. See
   the main \code{\link{metaseqr}} and the \code{stat.*}
@@ -63,6 +63,19 @@
   the existence of multicore package in the execution
   environment. See the main \code{\link{metaseqr}} help
   page.}
+
+  \item{reprod}{create reproducible permutations. Ideally 
+  one would want to create the same set of indices for a 
+  given dataset so as to create reproducible p-values. If 
+  \code{reprod=TRUE}, a fixed seed is used by 
+  \code{meta.perm} for all the datasets analyzed
+  with \code{metaseqr}. If \code{reprod=FALSE}, then the 
+  p-values will not be reproducible, although statistical 
+  significance is not expected to change for a large 
+  number of resambling. Finally, \code{reprod} can be a 
+  numeric vector of seeds with the same length as 
+  \code{nperm} so that the user can supply his/her own 
+  seeds.}
 }
 \value{
   A vector of meta p-values

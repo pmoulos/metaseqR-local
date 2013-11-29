@@ -48,7 +48,7 @@
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.metaseqr(data.matrix,sample.list,diagplot.type=c("mds","boxplot"))
 #'
 #' norm.args <- get.defaults("normalization","deseq")
@@ -230,7 +230,7 @@ diagplot.metaseqr <- function(
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.boxplot(data.matrix,sample.list)
 #'
 #' norm.args <- get.defaults("normalization","deseq")
@@ -312,7 +312,7 @@ diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.mds(data.matrix,sample.list)
 #'}
 diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",path=NULL,...) {
@@ -514,7 +514,7 @@ diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=N
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' gc <- runif(nrow(data.matrix))
 #' diagplot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar","meandiff","gcbias"))
 #'}
@@ -627,7 +627,7 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' lengths <- round(1000*runif(nrow(data.matrix)))
 #' starts <- round(1000*runif(nrow(data.matrix)))
 #' ends <- starts + lengths
@@ -954,7 +954,7 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' M <- norm.edger(data.matrix,sample.list)
 #' p <- stat.edger(M,sample.list,contrast)
@@ -1176,7 +1176,7 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2",B3"))
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' contrast <- "A_vs_B"
 #' M <- norm.edger(data.matrix,sample.list)
 #' p <- stat.edger(M,sample.list,contrast)

@@ -2211,7 +2211,7 @@ wp.adjust <- function(p,m) {
 #' @author Panagiotis Moulos
 wapply <- function(m,...) {
 	if (m)
-		return(mclapply(...,mc.cores=getOption("cores")))
+		return(mclapply(...,mc.cores=getOption("cores"),mc.set.seed=FALSE))
 	else
 		return(lapply(...))
 }
@@ -2260,8 +2260,9 @@ disp <- function(...) {
 	if (exists("VERBOSE")) {
 		verbose <- get("VERBOSE")
 		if (verbose) {
-			cat("\n",...,sep="")
-			flush.console()
+			#cat("\n",...,sep="")
+			message("\n",...,appendLF=FALSE)
+			#flush.console()
 		}
 	}
 	if (exists("LOGGER")) {

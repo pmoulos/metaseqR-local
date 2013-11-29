@@ -30,11 +30,11 @@ Depends:
     Repitools,
     qvalue,
     vsn,
-    VennDiagram
+    VennDiagram,
+	log4r
 Suggests:
     parallel,
-    TCC,
-    log4r
+    TCC
 Description: Provides an interface to several normalization and
     statistical testing packages for RNA-Seq gene expression data.
     Additionally, it creates several diagnostic plots, performs
