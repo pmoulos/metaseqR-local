@@ -29,9 +29,13 @@
   slow down.}
 }
 \value{
-  a named list whose names are the exon filter names and
-  its members are the filtered rownames of
-  \code{gene.data}.
+  a named list with two members. The first member 
+  (\code{result} is a named list whose names are the 
+  exon filter names and its members are the filtered 
+  rownames of \code{gene.data}. The second member is a 
+  matrix of binary flags (0 for non-filtered, 1 for 
+  filtered) for each gene. The rownames of the flag 
+  matrix correspond to gene ids.
 }
 \description{
   This function performs the gene expression filtering

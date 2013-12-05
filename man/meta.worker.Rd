@@ -2,7 +2,7 @@
 \alias{meta.worker}
 \title{Permutation tests helper}
 \usage{
-  meta.worker <- function(x,co,sl,cnt,s,r,sa,na,
+  meta.worker(x,co,sl,cnt,s,r,sa,na,
     ll,el)
 }
 \arguments{

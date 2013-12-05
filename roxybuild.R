@@ -36,9 +36,11 @@ roxy.package(
 		"doc",
 		#"log",
 		"check",
-		"package"
-	),
-	ChangeLog=list(
-		added=c("First release")
-	)
+		"package",
+		"win",
+		"macosx"
+	)#,
+	#ChangeLog=list(
+	#	added=c("First release")
+	#)
 )

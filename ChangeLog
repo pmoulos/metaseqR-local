@@ -10,4 +10,5 @@ added:
   - More interactive and compact report
 fixed:
   - A bug in exon filters resulting in removing genes/transcripts with only one exon
+  - A serious bug in exon filters causing wrong genes to be filtered out under circumstances
 

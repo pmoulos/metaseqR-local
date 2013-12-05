@@ -568,7 +568,7 @@ metaseqr <- function(
 	fig.format=c("png","jpg","tiff","bmp","pdf","ps"),
 	out.list=FALSE,
 	export.where=NA, # An output directory for the project
-	export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),
+	export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags"),
 	export.scale=c("natural","log2","log10","vst"),
 	export.values=c("raw","normalized"),
 	export.stats=c("mean","median","sd","mad","cv","rcv"),
@@ -652,7 +652,7 @@ metaseqr <- function(
 	meta.p <- tolower(meta.p[1])
 	statistics <- tolower(statistics)
 	fig.format <- tolower(fig.format)
-	qc.plots <- tolower(qc.plots)
+	if (!is.null(qc.plots)) qc.plots <- tolower(qc.plots)
 	export.what <- tolower(export.what)
 	export.scale <- tolower(export.scale)
 	export.values <- tolower(export.values)
@@ -681,7 +681,7 @@ metaseqr <- function(
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
 	check.text.args("meta.p",meta.p,c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
-	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),multiarg=TRUE)
+	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags"),multiarg=TRUE)
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)
 	check.text.args("export.values",export.values,c("raw","normalized"),multiarg=TRUE)
 	check.text.args("export.stats",export.stats,c("mean","median","sd","mad","cv","rcv"),multiarg=TRUE)
@@ -985,9 +985,13 @@ metaseqr <- function(
 
 		# Apply exon filters
 		if (!is.null(exon.filters))
-			exon.filter.result <- filter.exons(the.counts,gene.data,sample.list,exon.filters)
+		{
+			exon.filter.out <- filter.exons(the.counts,gene.data,sample.list,exon.filters)
+			exon.filter.result <- exon.filter.out$result
+			exon.filter.flags <- exon.filter.out$flags
+		}
 		else
-			exon.filter.result <- NULL
+			exon.filter.result <- exon.filter.flags <- NULL
 		
 		disp("Summarizing count data...")
 		the.gene.counts <- the.exon.lengths <- vector("list",length(unlist(sample.list)))
@@ -1154,9 +1158,14 @@ metaseqr <- function(
 		
 		# Now filter
 		if (!is.null(gene.filters))
-			gene.filter.result <- filter.genes(temp.genes,gene.data,gene.filters)
+		{
+			gene.filter.out <- filter.genes(temp.genes,gene.data,gene.filters)
+			gene.filter.result <- gene.filter.out$result
+			gene.filter.cutoff <- gene.filter.out$cutoff
+			gene.filter.flags <- gene.filter.out$flags
+		}
 		else
-			gene.filter.result <- NULL
+			gene.filter.result <- gene.filter.cutoff <- gene.filter.flags <- NULL
 
 		# Unify the filters and filter
 		the.dead.genes <- list(
@@ -1261,10 +1270,14 @@ metaseqr <- function(
 		)
 
 		# Implement gene filters after normalization
-		if (!is.null(gene.filters))
-			gene.filter.result <- filter.genes(temp.matrix,gene.data,gene.filters)
+		if (!is.null(gene.filters)) {
+			gene.filter.out <- filter.genes(temp.matrix,gene.data,gene.filters)
+			gene.filter.result <- gene.filter.out$result
+			gene.filter.cutoff <- gene.filter.out$cutoff
+			gene.filter.flags <- gene.filter.out$flags
+		}
 		else
-			gene.filter.result <- NULL
+			gene.filter.result <- gene.filter.cutoff <- gene.filter.flags <- NULL
 
 		# Unify the filters and filter
 		the.dead.genes <- list(
@@ -1457,6 +1470,17 @@ metaseqr <- function(
 	# BEGIN EXPORT SECTION
 	##############################################################################################################################
 
+	# Bind all the flags
+	if (count.type=="gene")
+		flags <- gene.filter.flags
+	else if (count.type=="exon")
+	{
+		flags <- cbind(gene.filter.flags,as.matrix(exon.filter.flags[rownames(gene.filter.flags),]))
+		nams <- c(colnames(gene.filter.flags),colnames(exon.filter.flags))
+		rownames(flags) <- rownames(gene.filter.flags)
+		colnames(flags) <- nams
+	}
+	
 	disp("Building output files...")
 	
 	disp("  Adding non-filtered data...")
@@ -1470,6 +1494,10 @@ metaseqr <- function(
 		raw.list <- make.transformation(gene.counts.expr,export.scale,log.offset)
 	else
 		raw.list <- NULL
+	if ("flags" %in% export.what)
+		good.flags <- flags[rownames(norm.genes.expr),]
+	else
+		good.flags <- NULL
 	counter <- 1
 	for (cnt in contrast)
 	{
@@ -1478,6 +1506,7 @@ metaseqr <- function(
 			gene.data=gene.data.expr,
 			raw.gene.counts=gene.counts.expr,
 			norm.gene.counts=norm.genes.expr,
+			flags=good.flags,
 			sample.list=sample.list,
 			cnt=cnt,
 			statistics=statistics,
@@ -1583,8 +1612,8 @@ metaseqr <- function(
 	if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
 	{
 		disp("  Adding filtered data...")
-		gene.counts.filtered <- rbind(gene.counts.dead,gene.counts.zero)
-		gene.counts.unnorm.filtered <- rbind(gene.counts.unnorm,gene.counts.zero)
+		gene.counts.filtered <- rbind(gene.counts.zero,gene.counts.dead)
+		gene.counts.unnorm.filtered <- rbind(gene.counts.zero,gene.counts.unnorm)
 		if ("normalized" %in% export.values)
 			norm.list.filtered <- make.transformation(gene.counts.filtered,export.scale,log.offset)
 		else
@@ -1593,6 +1622,12 @@ metaseqr <- function(
 			raw.list.filtered <- make.transformation(gene.counts.unnorm.filtered,export.scale,log.offset)
 		else
 			raw.list.filtered <- NULL
+		if ("flags" %in% export.what)
+			all.flags <- rbind(
+				matrix(1,nrow(gene.counts.zero),ncol(flags)),flags[rownames(gene.counts.dead),]
+			)
+		else
+			all.flags <- NULL
 		for (cnt in contrast)
 		{
 			disp("    Contrast: ",cnt)
@@ -1600,6 +1635,7 @@ metaseqr <- function(
 				gene.data=gene.data.filtered,
 				raw.gene.counts=gene.counts.unnorm.filtered,
 				norm.gene.counts=gene.counts.filtered,
+				flags=all.flags,
 				sample.list=sample.list,
 				cnt=cnt,
 				statistics=statistics,
@@ -1702,6 +1738,8 @@ metaseqr <- function(
 			fig.other <- fig.other[["png"]]
 			fig.venn <- fig.venn[["png"]]
 		}
+		else
+			fig.raw <- fig.unorm <- fig.norm <- fig.stat <- fig.other <- fig.venn <- NULL
 
 		if (tolower(report.template)=="default")
 		{

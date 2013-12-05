@@ -9,15 +9,15 @@
     multic = FALSE)
 }
 \arguments{
+  \item{contrast}{the contrasts to be tested by each
+  statistical algorithm. See the main
+  \code{\link{metaseqr}} help page.}
+
   \item{counts}{a normalized read counts table, one row for
   each gene, one column for each sample}
 
   \item{sample.list}{the list containing condition names
   and the samples under each condition. See the main
-  \code{\link{metaseqr}} help page.}
-
-  \item{contrast}{the contrasts to be tested by each
-  statistical algorithm. See the main
   \code{\link{metaseqr}} help page.}
 
   \item{statistics}{the statistical algorithms used in
@@ -58,12 +58,6 @@
   resampled conditions. In such cases, most statistical
   tests would crash.}
 
-  \item{multic}{use multiple cores to execute the
-  premutations. This is an external parameter and implies
-  the existence of multicore package in the execution
-  environment. See the main \code{\link{metaseqr}} help
-  page.}
-
   \item{reprod}{create reproducible permutations. Ideally 
   one would want to create the same set of indices for a 
   given dataset so as to create reproducible p-values. If 
@@ -76,6 +70,12 @@
   numeric vector of seeds with the same length as 
   \code{nperm} so that the user can supply his/her own 
   seeds.}
+
+  \item{multic}{use multiple cores to execute the
+  premutations. This is an external parameter and implies
+  the existence of multicore package in the execution
+  environment. See the main \code{\link{metaseqr}} help
+  page.}
 }
 \value{
   A vector of meta p-values

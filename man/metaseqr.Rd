@@ -39,7 +39,7 @@
     out.list = FALSE, export.where = NA,
     export.what = c("annotation", "p.value", "adj.p.value", 
         "meta.p.value", "adj.meta.p.value", "fold.change", 
-        "stats", "counts"),
+        "stats", "counts","flags"),
     export.scale = c("natural", "log2", "log10", "vst"),
     export.values = c("raw", "normalized"),
     export.stats = c("mean", "median", "sd", "mad", "cv", 
@@ -332,6 +332,21 @@
   \item{nperm}{the number of permutations performed to
   derive the meta p-value when \code{meta.p="fperm"} or
   \code{meta.p="dperm"}. It defaults to 10000.}
+
+  \item{reprod}{create reproducible permutations when 
+  \code{meta.p="dperm.min"}, \code{meta.p="dperm.max"} 
+  or \code{meta.p="dperm.weight"}. Ideally one would 
+  want to create the same set of indices for a given 
+  dataset so as to create reproducible p-values. If 
+  \code{reprod=TRUE}, a fixed seed is used by 
+  \code{meta.perm} for all the datasets analyzed with 
+  \code{metaseqr}. If \code{reprod=FALSE}, then the 
+  p-values will not be reproducible, although statistical 
+  significance is not expected to change for a large 
+  number of resambling. Finally, \code{reprod} can be 
+  a numeric vector of seeds with the same length as 
+  \code{nperm} so that the user can supply his/her 
+  own seeds.}
 
   \item{reprod}{create reproducible permutations when 
   \code{meta.p="dperm.min"}, \code{meta.p="dperm.max"} 

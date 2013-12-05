@@ -10,7 +10,11 @@ body
     margin: 0px;
 }
 
-img { max-width: 100%; }
+img
+{
+	width: 100%;
+	display: block;
+}
 
 ul
 {
@@ -99,8 +103,9 @@ td.mainContainer
 
 td.leftContainer
 {
-	width: 10%;
-	height: 95%;
+	width: 15%;
+	min-width: 160px;
+	height: 90%;
 	padding: 5px;
 	padding-top: 15px;
 	vertical-align: top;
@@ -115,7 +120,7 @@ td.leftContainer
 
 td.rightContainer
 {
-    width: 10%;
+    width: 5%;
     height: 90%;
     padding: 5px;
     border-width: 0px;

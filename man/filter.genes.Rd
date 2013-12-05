@@ -17,9 +17,16 @@
   \code{\link{metaseqr}} for details.}
 }
 \value{
-  a named list whose names are the gene filter names and
-  its members are the filtered rownames of
-  \code{gene.data}.
+  a named list with three members. The first member 
+  (\code{result} is a named list whose names are the 
+  gene filter names and its members are the filtered 
+  rownames of \code{gene.data}. The second member 
+  (\code{cutoff} is a named list whose names are the 
+  gene filter names and its members are the cutoff 
+  values corresponding to each filter. The third member 
+  is a matrix of binary flags (0 for non-filtered, 1 
+  for filtered) for each gene. The rownames of the 
+  flag matrix correspond to gene ids.
 }
 \description{
   This function performs the gene expression filtering

@@ -349,6 +349,13 @@ total exons in the gene mode. With the default values, the filter instructs that
 in at least 2, else in at least 20\% of its exons, in order to be included in further analysis. More filters will be implemented in
 future versions and users are encouraged to propose exon filter ideas.
 
+After the determination of the genes that will be filtered from further processing (normalization and/or statistical analysis), a
+gene model expression value is constructed based on the sum of all exons of an annotated Ensembl gene. It should be noted that while
+this particular way of summarizing a gene expression value is not recommended in applications where for example, one studies
+differential splicing, differential isoform expression or differential exon usage, it is sufficient for most applications where only
+expression of a gene as a total is the goal of the study. Thus, it should be sufficient for a majority of related projects, where
+the researchers are interested in summarized gene expression values.
+
 \subsubsection{Gene filters}
 
 The gene filters are a set of filters applied to gene expression as this is manifested through the read presence on each gene and can

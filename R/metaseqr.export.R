@@ -6,6 +6,7 @@
 #' @param gene.data an annotation data frame (such the ones produced by \code{\link{get.annotation}}).
 #' @param raw.gene.counts a matrix of un-normalized gene counts.
 #' @param norm.gene.counts a matrix of normalized gene counts.
+#' @param flags a matrix of filtering flags (0,1), created by the filtering functions.
 #' @param sample.list see the documentation of \code{\link{metaseqr}}.
 #' @param cnt the statistical contrast for which the export builder is currently running.
 #' @param statistics the statistical tests used (see the documentation of \code{\link{metaseqr}}).
@@ -28,14 +29,14 @@
 #' \dontrun{
 #' # Not yet available
 #'}
-build.export <- function(gene.data,raw.gene.counts,norm.gene.counts,
+build.export <- function(gene.data,raw.gene.counts,norm.gene.counts,flags,
 	sample.list,cnt,statistics,
 	raw.list,norm.list,
 	p.mat=matrix(NA,nrow(gene.data),length(statistics)),
 	adj.p.mat=matrix(NA,nrow(gene.data),length(statistics)),
 	sum.p=rep(NA,nrow(gene.data)),
 	adj.sum.p=rep(NA,nrow(gene.data)),
-	export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts"),
+	export.what=c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags"),
 	export.scale=c("natural","log2","log10","vst"),
 	export.values=c("raw","normalized"),
 	export.stats=c("mean","median","sd","mad","cv","rcv"),
@@ -261,6 +262,13 @@ build.export <- function(gene.data,raw.gene.counts,norm.gene.counts,
 				the.names <- c(the.names,part.2)
 			}
 		}
+	}
+	if ("flags" %in% export.what && !is.null(flags))
+	{
+		disp("      binding filtering flags...")
+		export <- cbind(export,as.data.frame(flags))
+		if (report) export.html <- cbind(export.html,make.html.cells(flags))
+		the.names <- c(the.names,colnames(flags))
 	}
 	names(export) <- the.names
 

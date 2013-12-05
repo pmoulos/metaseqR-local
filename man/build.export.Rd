@@ -3,14 +3,14 @@
 \title{Results export builder}
 \usage{
   build.export(gene.data, raw.gene.counts,
-    norm.gene.counts, sample.list, cnt, statistics,
-    raw.list, norm.list,
+    norm.gene.counts, flags, sample.list, cnt, 
+    statistics, raw.list, norm.list,
     p.mat = matrix(NA, nrow(gene.data), length(statistics)),
     adj.p.mat = matrix(NA, nrow(gene.data), length(statistics)),
     sum.p = rep(NA, nrow(gene.data)),
     adj.sum.p = rep(NA, nrow(gene.data)),
     export.what = c("annotation", "p.value", "adj.p.value", "meta.p.value", 
-        "adj.meta.p.value", "fold.change", "stats", "counts"),
+        "adj.meta.p.value", "fold.change", "stats", "counts","flags"),
     export.scale = c("natural", "log2", "log10", "vst"),
     export.values = c("raw", "normalized"),
     export.stats = c("mean", "median", "sd", "mad", "cv", "rcv"),
@@ -20,10 +20,13 @@
   \item{gene.data}{an annotation data frame (such the ones
   produced by \code{\link{get.annotation}}).}
 
-  \item{raw.gene.counts}{a matrix of un-normalized gene
-  counts.}
+  \item{raw.gene.counts}{a matrix of filtering flags (0,1), created 
+  by the filtering functions.}
 
   \item{norm.gene.counts}{a matrix of normalized gene
+  counts.}
+
+  \item{flags}{a matrix of normalized gene
   counts.}
 
   \item{sample.list}{see the documentation of

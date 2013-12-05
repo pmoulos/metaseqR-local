@@ -898,7 +898,7 @@ get.preset.opts <- function(preset,org) {
 			exon.filters <- NULL
 			gene.filters <- NULL
 			pcut <- 1
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags")
 			export.scale <- c("natural","log2","log10","vst")
 			export.values <- c("raw","normalized")
 			export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -991,7 +991,7 @@ get.preset.opts <- function(preset,org) {
 				biotype=get.defaults("biotype.filter",org[1])
 			)
 			pcut <- 0.05
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags")
 			export.scale <- c("natural","log2","log10","vst")
 			export.values <- c("raw","normalized")
 			export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -1084,7 +1084,7 @@ get.preset.opts <- function(preset,org) {
 				biotype=get.strict.biofilter(org[1])
 			)
 			pcut <- 0.01
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts")
+			export.what <- c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags")
 			export.scale <- c("natural","log2","log10","vst")
 			export.values <- c("raw","normalized")
 			export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -2104,7 +2104,13 @@ make.permutation <- function(counts,sample.list,contrast,repl=FALSE) {
 	virtual.contrast <- paste(paste("VirtCond",1:length(cnts),sep=""),collapse="_vs_")
 	virtual.sample.list <- vector("list",length(sample.list))
 	names(virtual.sample.list) <- paste("VirtCond",1:length(sample.list),sep="")
-	resample <- sample(1:ncol(counts),ncol(counts),replace=repl)
+	if (repl) { # Avoid the extreme case of returning a vector with all samples the same
+		resample <- rep(1,ncol(counts))
+		while(length(unique(resample))==1)
+			resample <- sample(1:ncol(counts),ncol(counts),replace=repl)
+	}
+	else
+		resample <- sample(1:ncol(counts),ncol(counts),replace=repl)
 	virtual.counts <- counts[,resample]
 	samples <- paste("VirtSamp",1:ncol(counts),sep="")
 	colnames(virtual.counts) <- samples

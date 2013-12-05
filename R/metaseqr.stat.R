@@ -83,6 +83,7 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm
 			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
 		}
 		names(p[[con.name]]) <- rownames(object)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }
@@ -210,6 +211,7 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		}
 		p[[con.name]] <- res$table[,"PValue"]
 		names(p[[con.name]]) <- rownames(res$table)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }
@@ -283,6 +285,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			res <- topTable(fit,coef=1:ncol(fit$design),n=nrow(vom))
 		p[[con.name]] <- res[,"P.Value"]
 		names(p[[con.name]]) <- rownames(res)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }
@@ -442,6 +445,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
 		}
 		names(p[[con.name]]) <- rownames(ns.obj)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }
@@ -525,6 +529,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		tmp <- topCounts(cd,group="DE",number=nrow(cd))
 		p[[con.name]] <- 1 - as.numeric(tmp[,"Likelihood"])
 		names(p[[con.name]]) <- rownames(tmp)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }
@@ -698,6 +703,7 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
 		}
 		names(p[[con.name]]) <- rownames(nb.data$counts)
+		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
 }

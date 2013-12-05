@@ -89,20 +89,16 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				select="min",reprod=reprod,
 				multic=multic)
 			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
+				x[which(is.na(x))] <- 1
 				switch(m,
 					min = {
-						return(apply(x,1,min,na.rm=TRUE))
+						return(apply(x,1,min))
 					},
 					max = {
-						return(apply(x,1,max,na.rm=TRUE))
+						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) {
-							if (any(is.na(p)))
-								return(1)
-							else
-								return(prod(w,p))
-						},w))
+						return(apply(x,1,function(p,w) return(prod(w,p)),w))
 					}
 				)
 			},"min")
@@ -112,6 +108,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
+			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			#assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		dperm.max = {
 			sum.p.list <- vector("list",length(cp.list))
@@ -128,18 +126,13 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
 				switch(m,
 					min = {
-						return(apply(x,1,min,na.rm=TRUE))
+						return(apply(x,1,min))
 					},
 					max = {
 						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) {
-							if (any(is.na(p)))
-								return(1)
-							else
-								return(prod(w,p))
-						},w))
+						return(apply(x,1,function(p,w) return(prod(w,p)),w))
 					}
 				)
 			},"max")
@@ -149,6 +142,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
+			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			#assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		dperm.weight = {
 			sum.p.list <- vector("list",length(cp.list))
@@ -160,7 +155,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				statistics=statistics,stat.args=stat.args,
 				norm.args=norm.args,libsize.list=libsize.list,
 				nperm=nperm,weight=weight,
-				select="min",reprod=reprod,
+				select="weight",reprod=reprod,
 				multic=multic)
 			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
 				switch(m,
@@ -171,12 +166,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) {
-							if (any(is.na(p)))
-								return(1)
-							else
-								return(prod(w,p))
-						},w))
+						return(apply(x,1,function(p,w) { return(prod(w,p)) },w))
 					}
 				)
 			},"weight",weight)
@@ -186,6 +176,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
+			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			#assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		none = { # A default value must be there to use with volcanos, we say the one of the first statistic in order of input
 			sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
@@ -263,10 +255,10 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 	# In this case, we must not use wapply as we want to be able to track progress through mc.preschedule...
 	if (multic)
 		pp <- mclapply(relist,meta.worker,counts,sample.list,contrast,statistics,replace,
-			stat.args,norm.args,libsize.list,select,mc.preschedule=FALSE,mc.cores=getOption("cores"))
+			stat.args,norm.args,libsize.list,select,weight,mc.preschedule=FALSE,mc.cores=getOption("cores"))
 	else
 		pp <- lapply(relist,meta.worker,counts,sample.list,contrast,statistics,replace,stat.args,norm.args,
-			libsize.list,select)
+			libsize.list,select,weight)
 	disp("  Resampling procedure ended...")
 	return(do.call("cbind",pp))
 }
@@ -284,13 +276,14 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 #' @param ll a list with library sizes.
 #' @param r same as the \code{replace} argument in the \code{\link{sample}} function.
 #' @param el min, max or weight.
+#' @param w the weights when \code{el="weight"}.
 #' @return A matrix of p-values.
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
 #' # Not yet available
 #'}
-meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el) {
+meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el,w) {
 	set.seed(x$seed)
 	disp("    running permutation #",x$prog)
 	pl <- make.permutation(co,sl,cnt,r)
@@ -321,20 +314,16 @@ meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el) {
 		)
 		ppmat[,alg] <- as.numeric(p.list[[1]])
 	}
+	ppmat[which(is.na(ppmat))] <- 1
 	switch(el,
 		min = {
-			p.iter <- apply(ppmat,1,min,na.rm=TRUE)
+			p.iter <- apply(ppmat,1,min)
 		},
 		max = {
-			p.iter <- apply(ppmat,1,max,na.rm=TRUE)
+			p.iter <- apply(ppmat,1,max)
 		},
 		weight = {
-			p.iter <- apply(ppmat,1,function(p,w) {
-				if (any(is.na(p)))
-					return(1)
-				else
-					return(prod(w,p))
-			})
+			p.iter <- apply(ppmat,1,function(p,w) return(prod(w,p)),w)
 		}
 	)
 	return(p.iter)

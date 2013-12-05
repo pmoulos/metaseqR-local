@@ -44,7 +44,7 @@
 		<td colspan=2 style="height:5px; background-color:#0E38C4; padding:0px; border-width:0px;"></td>
 	</tr>
 </table>
-<table class="menuContainer">
+<!--<table class="menuContainer">
 	<tr>
 		<td>
 			<table class="menuContainer" style="width:100%">
@@ -57,7 +57,7 @@
 			</table>
 		</td>
 	</tr>
-</table>
+</table>-->
 <table class="mainContainer">
 	<tr>
 		<td class="mainContainer" style="height:80%;">
@@ -65,8 +65,8 @@
 				<tr>
 					<td class="leftContainer">
 						<!--We want the TOC here-->
-						<div id="contents"><div>
-							<span class="title" style="font-size:1.1em;">Contents</span>
+						<div id="contents">
+							<div><span class="title" style="font-size:1em;">Contents</span></div>
 							<div id="toc" style="float: left; width:160px; word-wrap: break-word;">
 								<%
 								cat("<h5>Summary</h5>")
@@ -174,7 +174,7 @@
 								cat("<li class=\"tocli\"><a href=\"#references\">References</a></li>")
 								cat("</ul></div>")
 								%>
-							</div></div>
+							</div>
 						</div>
 					</td>
 					<td class="mainContainer">
@@ -239,7 +239,8 @@
 											msg.gene.filters.avg.reads <- paste(
 												latin.numbered[counter]," genes whose average reads per ",gene.filters$avg.reads$average.per.bp," bp was less than the ",
 												100*gene.filters$avg.reads$quantile,"<sup>th</sup> quantile of the total normalized distribution of average reads per ",
-												gene.filters$avg.reads$average.per.bp,"bp (",length(gene.filter.result$average.per.bp)," genes)",sep=""
+												gene.filters$avg.reads$average.per.bp,"bp (",length(gene.filter.result$average.per.bp)," genes with cutoff value ",
+												gene.filter.cutoff$avg.reads," average reads per ",gene.filters$avg.reads$average.per.bp,")",sep=""
 											)
 										}
 										if (!is.null(gene.filters$expression)) {
@@ -247,21 +248,24 @@
 												counter <- counter + 1
 												msg.gene.filters.expression.median <- paste(
 													latin.numbered[counter]," genes with read counts below the median read counts of the total normalized count distribution ",
-													"(",length(gene.filter.result$expression$median)," genes)",sep=""
+													"(",length(gene.filter.result$expression$median)," genes with cutoff value ",gene.filter.cutoff$expression$median,
+													" normalized read counts)",sep=""
 												)
 											}
 											if (!is.null(gene.filters$expression$mean) && gene.filters$expression$mean) {
 												counter <- counter + 1
 												msg.gene.filters.expression.mean <- paste(
 													latin.numbered[counter]," genes with read counts below the mean read counts of the total normalized counts distribution ",
-													"(",length(gene.filter.result$expression$mean)," genes)",sep=""
+													"(",length(gene.filter.result$expression$mean)," genes with cutoff value ",gene.filter.cutoff$expression$mean,
+													" normalized read counts)",sep=""
 												)
 											}
 											if (!is.null(gene.filters$expression$quantile) && !is.na(gene.filters$expression$quantile)) {
 												counter <- counter + 1
 												msg.gene.filters.expression.quantile <- paste(
 													latin.numbered[counter]," genes with read counts below the ",100*gene.filters$expression$quantile,"<sup>th</sup> ",
-													"quantile of the normalized counts distribution (",length(gene.filter.result$expression$quantile)," genes)",sep=""
+													"quantile of the normalized counts distribution (",length(gene.filter.result$expression$quantile)," genes with cutoff value",
+													gene.filter.cutoff$expression$quantile," normalized read counts)",sep=""
 												)
 											}
 											if (!is.null(gene.filters$expression$known) && !is.na(gene.filters$expression$known)) {
@@ -269,14 +273,16 @@
 												msg.gene.filters.expression.known <- paste(
 													latin.numbered[counter]," genes with read counts below the 90<sup>th</sup> quantile of the counts of the following ",
 													"genes, known to not being expressed from the related literature: ",paste(gene.filters$expression$known,collapse=", "),
-													"(",length(gene.filter.result$expression$known)," genes)",sep=""
+													"(",length(gene.filter.result$expression$known)," genes with cutoff value",gene.filter.cutoff$expression$known,
+													" normalized read counts)",sep=""
 												)
 											}
 											if (!is.null(gene.filters$expression$custom) && !is.na(gene.filters$expression$custom)) {
 												counter <- counter + 1
 												msg.gene.filters.expression.custom <- paste(
 													latin.numbered[counter]," genes not passing the user defined filter provided to the metaseqr pipeline ",
-													"(",length(gene.filter.result$expression$custom)," genes)",sep=""
+													"(",length(gene.filter.result$expression$custom)," genes with cutoff value",gene.filter.cutoff$expression$custom,
+													")",sep=""
 												)
 											}
 										}
@@ -451,6 +457,7 @@
 										<li>Filtered because of zero reads: <%=length(the.zeros)%></li>
 										<li>
 											Filtered because of exon filters: <%=sum(as.numeric(sapply(exon.filter.result,length)))%>
+											<em> which is the <strong>union</strong> of</em>
 											<ul>
 												<%=
 												for (n in names(exon.filter.result)) {
@@ -460,11 +467,28 @@
 											</ul>
 										</li>
 										<li>
-											Filtered because of gene filters: <%=sum(as.numeric(sapply(gene.filter.result,length)))%>
+											Filtered because of gene filters: <%=length(unique(unlist(gene.filter.result)))%>
+											<em> which is the <strong>union</strong> of</em>
 											<ul>
 												<%=
 												for (n in names(gene.filter.result)) {
-													cat("<li>",n,": ",length(unlist(gene.filter.result[[n]])),"</li>")
+													if (!is.list(gene.filter.result[[n]])) {
+														if (!is.null(gene.filter.result[[n]]))
+															cat("<li>",n,": ",length(unlist(gene.filter.result[[n]])),
+																" genes with filter cutoff value ",gene.filter.cutoff[[n]],"</li>")
+													}
+													else {
+														cat("<li>",n,": ",length(unlist(gene.filter.result[[n]])),
+															" genes further decomposed to (filter name, filtered genes, filter cutoff):</li>")
+														cat("<li><ul>")
+														for (nn in names(gene.filter.result[[n]])) {
+															if (!is.null(gene.filter.result[[n]][[nn]]))
+																cat("<li>",nn,": ",length(unlist(gene.filter.result[[n]][[nn]])),
+																" genes with filter cutoff value ",paste(gene.filter.cutoff[[n]][[nn]],
+																collapse=", "),"</li>")
+														}
+														cat("</ul></li>")
+													}
 												}
 												%>
 											</ul>
@@ -821,7 +845,7 @@
 									nn <- names(contrast.list)
 									counter <- 1
 									for (n in nn) {
-										cat("<div class=\"figCaption\">Volcano plot for the contrast",n,"</div></br>",sep="")
+										cat("<div class=\"figCaption\">Volcano plot for the contrast ",n,"</div></br>",sep="")
 										cat("<div class=\"volcano\" id=\"volcano_",counter,"\" ></div></br></br>",sep="")
 										fc <- log2(make.fold.change(n,sample.list,norm.genes.expr,1))
 										for (contrast in colnames(fc)) {
@@ -907,7 +931,7 @@
 									nn <- names(html)
 									for (n in nn) {
 										cat("<div style=\"width:720px;\">")
-										cat("<h4 class=\"subtitle\">DEG table for the contrast",n,"</h4>",sep="")
+										cat("<h4 class=\"subtitle\">DEG table for the contrast ",n,"</h4>",sep="")
 										cat("<div>")
 										cat("<div class=\"figureHint\">The following table presents the results for the contrast <strong>",n,"</strong>. The fields of the table correspond to the ",
 										"requested features to be exported. The table can be searched using the search field on the top right.</br></br></div>",sep="")
@@ -1022,7 +1046,7 @@
 							$("#summary_container").togglepanels_h4();
 							$("#figures_container").togglepanels_h4();
 							$("#results_container").togglepanels_h4();
-							$("#toc").togglepanels_h5();
+							$("#toc").togglepanels_h5().css("font-size","0.9em");
 
 							// Small hack to recalcluate the column widths of the datatable objects because they are being changed
 							// after the application of accordion
@@ -1057,10 +1081,20 @@
 								}
 							});
 							
-							var el = $("#contents");
+							/*var el = $("#contents");
 							var pos = el.position().top;
 							$(window).scroll(function() {
 								el.toggleClass("fixed", $(this).scrollTop() >= pos);
+							});*/
+							
+							var offset = $("#contents").offset().top - parseFloat($("#contents").css('margin-top').replace(/auto/, 0));
+							$(window).scroll(function() {
+								if (jQuery(window).scrollTop() >= offset) {
+									$("#contents").addClass('detached-independent');
+								} 
+								else { 
+									$("#contents").removeClass('detached-independent');
+								};
 							});
 						</script>
 					</td>
