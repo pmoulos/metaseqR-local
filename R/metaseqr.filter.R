@@ -69,8 +69,6 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 					}
 					pass.matrix <- do.call("cbind",pass)
 					exon.filter.result[[xf]] <- the.genes[which(apply(pass.matrix,1,function(x) return(all(x))))]
-					assign("pass",pass.matrix,envir=.GlobalEnv)
-					assign("the.counts",the.counts,envir=.GlobalEnv)
 					flags[exon.filter.result[[xf]],"MAE"] <- 1
 				}
 				# More to come...

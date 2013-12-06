@@ -3,7 +3,7 @@
 \title{Permutation tests helper}
 \usage{
   meta.worker(x,co,sl,cnt,s,r,sa,na,
-    ll,el)
+    ll,el,w)
 }
 \arguments{
   \item{x}{a virtual list with the random seed and 
@@ -25,10 +25,10 @@
   \item{r}{same as the \code{replace} argument in 
   the \code{\link{sample}} function.}
 
-  \item{weight}{a numeric vector of weights for each
-  statistical algorithm}
-
   \item{el}{min, max or weight.}
+
+  \item{w}{a numeric vector of weights for each
+  statistical algorithm}
 }
 \value{
   A matrix of p-values.

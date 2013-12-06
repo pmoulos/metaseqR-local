@@ -9,7 +9,7 @@
     counts, sample.list, statistics, stat.args, norm.args,
     libsize.list, nperm = 10000,
     weight = rep(1/length(statistics), length(statistics)),
-    multic = FALSE)
+    reprod=TRUE, multic = FALSE)
 }
 \arguments{
   \item{cp.list}{a named list whose names are the contrasts

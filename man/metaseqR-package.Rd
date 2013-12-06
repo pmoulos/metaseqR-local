@@ -1,21 +1,22 @@
 \docType{package}
-\name{metaseqr-package}
-\alias{metaseqr}
-\alias{metaseqr-package}
-\title{The metaseqr Package}
+\name{metaseqR-package}
+\alias{metaseqR}
+\alias{metaseqR-package}
+\title{The metaseqR Package}
 \description{
-  An R package for the analysis, meta-analysis and result
-  reporting of RNA-Seq gene expression data.
+  An R package for the analysis and result reporting
+  of RNA-Seq gene expression data, using multiple 
+  statistical algorithms.
 }
 \details{
   \tabular{ll}{ Package: \tab metaseqr\cr Type: \tab
-  Package\cr Version: \tab 0.9.0\cr Date: \tab
-  2013-11-21\cr Depends: \tab R (>= 2.13.0), Biobase,
+  Package\cr Version: \tab 0.9.1\cr Date: \tab
+  2013-12-06\cr Depends: \tab R (>= 2.13.0), Biobase,
   BiocGenerics, rjson, biomaRt, utils, knitr, EDASeq,
   DESeq, edgeR, limma, NOISeq, baySeq, NBPSeq, MADAM,
   survcomp, brew, gplots, corrplot, GenomicRanges,
   Rsamtools, rtracklayer, Repitools, qvalue, vsn,
-  VennDiagram\cr Encoding: \tab UTF-8\cr License: \tab GPL
+  VennDiagram, log4r\cr Encoding: \tab UTF-8\cr License: \tab GPL
   (>= 3)\cr LazyLoad: \tab yes\cr URL: \tab
   http://www.fleming.gr\cr }
 

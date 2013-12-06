@@ -6,7 +6,7 @@
     stat.args, norm.args, libsize.list, nperm = 10000,
     weight = rep(1/ncol(counts), ncol(counts)),
     select = c("min", "max", "weight"), replace = "auto",
-    multic = FALSE)
+    reprod=TRUE, multic = FALSE)
 }
 \arguments{
   \item{contrast}{the contrasts to be tested by each

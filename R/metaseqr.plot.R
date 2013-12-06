@@ -1191,6 +1191,7 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 		con <- paste("for ",con)
 	}
 	y <- nat2log(x,2,1)
+	# First plot the normal image
 	fil <- file.path(path,paste("de_heatmap_",conn,".",output,sep=""))
 	if (output %in% c("pdf","ps","x11"))
 		graphics.open(output,fil,width=10,height=10)
@@ -1198,6 +1199,33 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 		graphics.open(output,fil,width=800,height=800)
 	heatmap.2(y,trace="none",col=bluered(16),labRow="",cexCol=0.9,keysize=1,font.lab=2,main=paste("DEG heatmap",con),cex.main=0.9)
 	graphics.close(output)
+	## Then the "interactive" using sendplot
+	#xy.labels <- list(normalized_counts=x,log2_normalized_counts=y)
+	#x.labels <- data.frame(
+	#	label=colnames(x),
+	#	description=paste("Sample",colnames(x))
+	#)
+	#y.labels <- data.frame(
+	#	label=rownames(x),
+	#	description=paste("Gene ID:",rownames(x))
+	#)
+	#suppressWarnings(heatmap.send(
+	#	y,
+	#	distfun=dist,
+	#	hclustfun=hclust,
+	#	MainColor=bluered(16),
+	#	labRow="",
+	#	labCol=NULL,
+	#	keep.dendro=TRUE, 
+	#	x.labels=x.labels,
+	#	y.labels=y.labels,
+	#	xy.labels=xy.labels,
+	#	image.size="2048x4096",
+	#	fname.root=paste("iframe_de_heatmap_",conn,sep=""),
+	#	dir=paste(path,.Platform$file.sep,sep=""),
+	#	header="v3",
+	#	window.size="2048x4192"
+	#))
 	return(fil)
 }
 

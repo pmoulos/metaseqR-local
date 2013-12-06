@@ -426,10 +426,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' require(metaseqr)
+#' require(metaseqR)
 #'
 #' # An example pipeline with exon counts
-#' data("hg19.exon.data",package="metaseqr")
+#' data("hg19.exon.data",package="metaseqR")
 #' metaseqr(
 #'  counts=hg19.exon.counts,
 #'  sample.list=list(normal="normal",paracancerous="paracancerous",cancerous="cancerous"),
@@ -468,7 +468,7 @@
 #' )
 #'
 #' # An example pipeline with gene counts
-#' data("mm9.gene.data",package="metaseqr")
+#' data("mm9.gene.data",package="metaseqR")
 #' result <- metaseqr(
 #'  counts=mm9.gene.counts,
 #'  sample.list=list(e14.5=c("e14.5_1","e14.5_2"), adult_8_weeks=c("a8w_1","a8w_2")),
@@ -614,11 +614,11 @@ metaseqr <- function(
 		PROJECT.PATH <<- make.project.path(export.where,counts)
 	VERBOSE <<- verbose
 	# Check logger, here
-	if (run.log && suppressWarnings(!require(log4r)))
-	{
-		warning("R package log4r is required to create an log file! Log will not be created...")
-		run.log <- FALSE
-	}	
+	#if (run.log && suppressWarnings(!require(log4r)))
+	#{
+	#	warning("R package log4r is required to create an log file! Log will not be created...")
+	#	run.log <- FALSE
+	#}	
 	if (run.log)
 		LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,"metaseqr_run.log"),level=log4r:::INFO,logformat="%d %c %m")
 	

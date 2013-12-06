@@ -27,6 +27,7 @@ require(brew)
 require(biomaRt)
 require(utils)
 require(rjson)
+#require(sendplot)
 
 source(file.path(SCRIPT,"metaseqr.main.R"))
 source(file.path(SCRIPT,"metaseqr.argcheck.R"))

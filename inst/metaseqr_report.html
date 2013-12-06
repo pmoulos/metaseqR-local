@@ -867,8 +867,11 @@
 									for (n in nn) {
 										cat("<div id=\"deheatmap_",counter,"\"><div class=\"figCaption\">DEG heatmap for the contrast ",n,"</div></br>",sep="")
 										s <- gsub(PROJECT.PATH$main,".",fig.stat$deheatmap[n])
+										#ss <- gsub("de_heatmap","iframe_de_heatmap",s)
+										#ss <- gsub(".png",".html",ss)
 										cat("<div class=\"imageContainerRect\">")
 										cat("<a class=\"fancybox\" rel=\"deheatmap\" href=\"",s,"\" title=\"DEG heatmap\">",sep="")
+										#cat("<a class=\"fancybox\" data-fancybox-type=\"iframe\" rel=\"deheatmap\" href=\"",ss,"\" title=\"DEG heatmap\">",sep="")
 										cat("<img src=\"",s,"\" alt=\"deg heatmap\">",sep="")
 										cat("</a></div></div></br>")
 										counter <- counter + 1

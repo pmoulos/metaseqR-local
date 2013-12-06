@@ -29,7 +29,7 @@
         "dperm.max", "dperm.weight", "fperm", "whitlock", "intersection", 
         "union", "none") else "none",
     weight = rep(1/length(statistics), length(statistics)),
-    nperm = 10000, pcut = NA, log.offset = 1,
+    nperm = 10000, reprod=TRUE, pcut = NA, log.offset = 1,
     preset = NULL,
     qc.plots = c("mds", "biodetection", "countsbio", "saturation", 
         "readnoise", "filtered", "correl", "pairwise", "boxplot", 
@@ -950,10 +950,10 @@
 }
 \examples{
 \dontrun{
-require(metaseqr)
+require(metaseqR)
 
 # An example pipeline with exon counts
-data("hg19.exon.data",package="metaseqr")
+data("hg19.exon.data",package="metaseqR")
 metaseqr(
  counts=hg19.exon.counts,
  sample.list=list(normal="normal",paracancerous="paracancerous",cancerous="cancerous"),
@@ -994,7 +994,7 @@ metaseqr(
 )
 
 # An example pipeline with gene counts
-data("mm9.gene.data",package="metaseqr")
+data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
  counts=mm9.gene.counts,
  sample.list=list(e14.5=c("e14.5_1","e14.5_2"), adult_8_weeks=c("a8w_1","a8w_2")),

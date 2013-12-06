@@ -98,7 +98,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) return(prod(w,p)),w))
+						return(apply(x,1,function(p,w) return(prod(p^w)),w))
 					}
 				)
 			},"min")
@@ -132,7 +132,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) return(prod(w,p)),w))
+						return(apply(x,1,function(p,w) return(prod(p^w)),w))
 					}
 				)
 			},"max")
@@ -166,7 +166,7 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 						return(apply(x,1,max))
 					},
 					weight = {
-						return(apply(x,1,function(p,w) { return(prod(w,p)) },w))
+						return(apply(x,1,function(p,w) { return(prod(p^w)) },w))
 					}
 				)
 			},"weight",weight)
@@ -323,7 +323,7 @@ meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el,w) {
 			p.iter <- apply(ppmat,1,max)
 		},
 		weight = {
-			p.iter <- apply(ppmat,1,function(p,w) return(prod(w,p)),w)
+			p.iter <- apply(ppmat,1,function(p,w) return(prod(p^w)),w)
 		}
 	)
 	return(p.iter)
