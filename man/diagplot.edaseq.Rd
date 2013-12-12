@@ -24,11 +24,11 @@
   can be one or more of \code{"meanvar"},
   \code{"meandiff"}, \code{"gcbias"} or
   \code{"lengthbias"}. Please refer to the documentation of
-  the EDASeq package for details on the use of these plots.
-  The \code{which.plot="lengthbias"} case is not covered by
-  EDASeq documentation, however it is similar to the
-  GC-bias plot when the covariate is the gene length
-  instead of the GC content.}
+  the EDASeq package for details on the use of these 
+  plots. The \code{which.plot="lengthbias"} case is 
+  not covered by EDASeq documentation, however it is 
+  similar to the GC-bias plot when the covariate is the 
+  gene length instead of the GC content.}
 
   \item{output}{one or more R plotting device to direct the
   plot result to. Supported mechanisms: \code{"x11"}
@@ -59,7 +59,8 @@ require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 gc <- runif(nrow(data.matrix))
-diagplot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar","meandiff","gcbias"))
+diagplot.edaseq(data.matrix,sample.list,covar=gc,
+  which.plot=c("meanvar","meandiff","gcbias"))
 }
 }
 \author{

@@ -1341,9 +1341,9 @@ metaseqr <- function(
 	
 	# Store the final filtered, maybe we do some stats
 	gene.data.filtered <- rbind(gene.data.zero,gene.data.dead)
-	if (nrow(gene.data.filtered)>0)
+	if (!is.null(gene.data.filtered) && nrow(gene.data.filtered)>0)
 	{
-		if (nrow(gene.data.zero)>0)
+		if (!is.null(gene.data.zero) && nrow(gene.data.zero)>0)
 			attr(gene.data.filtered,"gene.length") <- c(attr(gene.data.zero,"gene.length"),attr(gene.data.dead,"gene.length"))
 		else
 			attr(gene.data.filtered,"gene.length") <- attr(gene.data.dead,"gene.length")
@@ -1896,7 +1896,7 @@ reduce.gene.data <- function(exon.data,gene.data) {
 #'
 #' @author Panagiotis Moulos
 init.envar <- function() {
-	HOME <<- system.file(package="metaseqr")
+	HOME <<- system.file(package="metaseqR")
 	SCRIPT <<- file.path(HOME,"R")
 	TEMPLATE <<- HOME
 	ANNOTATION <<- file.path(HOME,"data")

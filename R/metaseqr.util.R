@@ -1515,7 +1515,7 @@ make.project.path <- function(path,f=NULL) {
 	}
 	else {
 		success <- tryCatch(
-			if (!file.exists(path)) dir.create(path) else TRUE,
+			if (!file.exists(path)) dir.create(path,recursive=TRUE) else TRUE,
 			error=function(e) {
 				disp("Cannot create ",path,"! Is it a valid system path? Is there a write permissions problem? Reverting to automatic creation...")
 				return(FALSE)

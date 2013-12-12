@@ -13,6 +13,8 @@
 
   \item{sl}{the sample list.}
 
+  \item{cnt}{the contrast name.}
+
   \item{s}{the statistical algorithms.}
 
   \item{sa}{the parameters for each statistical

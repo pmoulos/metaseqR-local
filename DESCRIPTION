@@ -52,7 +52,7 @@ VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
 Version: 0.9.1
-Date: 2013-11-27
+Date: 2013-12-06
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'
@@ -61,7 +61,7 @@ Collate:
     'metaseqr.main.R'
     'metaseqr.meta.R'
     'metaseqr.norm.R'
-    'metaseqr-package.R'
+    'metaseqR-package.R'
     'metaseqr.plot.R'
     'metaseqr.stat.R'
     'metaseqr.util.R'

@@ -39,12 +39,12 @@
   documentation of \code{\link{metaseqr}}).}
 
   \item{raw.list}{a list of transformed un-normalized
-  counts, see the documentation of
-  \code{\link{make.transformation}}.}
+  counts, see the documentation 
+  of \code{\link{make.transformation}}.}
 
   \item{norm.list}{a list of transformed normalized counts,
-  see the documentation of
-  \code{\link{make.transformation}}.}
+  see the documentation 
+  of \code{\link{make.transformation}}.}
 
   \item{p.mat}{a matrix of p-values, see the documentation
   of \code{\link{metaseqr}}.}

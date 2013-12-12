@@ -108,8 +108,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
+			assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		dperm.max = {
 			sum.p.list <- vector("list",length(cp.list))
@@ -142,8 +142,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
+			assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		dperm.weight = {
 			sum.p.list <- vector("list",length(cp.list))
@@ -176,8 +176,8 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 				ly <- ncol(pc)
 				sum.p.list[[cc]] <- apply(pc,1,function(y,m) return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
 			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
+			assign("perm.list",temp.p.list,envir=.GlobalEnv)
+			assign("o.list",original.p.list,envir=.GlobalEnv)
 		},
 		none = { # A default value must be there to use with volcanos, we say the one of the first statistic in order of input
 			sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
@@ -229,12 +229,12 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 	weight=rep(1/ncol(counts),ncol(counts)),select=c("min","max","weight"),replace="auto",reprod=TRUE,
 	multic=FALSE) {
 	check.text.args("select",select,c("min","max","weight"))
-	if (replace=="auto") {
-		if (ncol(counts)<=4)
-			replace=FALSE
-		else
+	#if (replace=="auto") {
+	#	if (ncol(counts)<=4)
+	#		replace=FALSE
+	#	else
 			replace=TRUE
-	}
+	#}
 	# We will construct relist in a way so that we can assign seeds for random number generation and track progress at the same time
 	if (is.logical(reprod)) {
 		relist <- vector("list",nperm)
@@ -270,6 +270,7 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 #' @param x a virtual list with the random seed and the permutation index.
 #' @param co the counts matrix.
 #' @param sl the sample list.
+#' @param cnt the contrast name.
 #' @param s the statistical algorithms.
 #' @param sa the parameters for each statistical algorithm.
 #' @param na the parameters for normalization.

@@ -11,8 +11,8 @@
   \code{\link{metaseqr}}.}
 
   \item{data.list}{a list containing natural or transformed
-  data, typically an output from
-  \code{\link{make.transformation}}.}
+  data, typically an output 
+  from \code{\link{make.transformation}}.}
 
   \item{export.scale}{the output transformations used as
   input also to \code{\link{make.transformation}}.}

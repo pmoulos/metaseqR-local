@@ -43,6 +43,10 @@ package.
 
 \section{Getting started}
 
+<<init-init, eval=TRUE, echo=FALSE, message=FALSE>>=
+library(metaseqR)
+@
+
 Detailed instructions on how to run the metaseqr pipeline can be found under the main documentation of the metaseqR package:
 
 <<init-metaseqr, eval=FALSE, echo=TRUE>>=
@@ -92,7 +96,7 @@ libsize.list.mm9
 
 Following is a full example with the informative messages that are printed in the command window:
 
-<<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE>>=
+<<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -107,7 +111,8 @@ result <- metaseqr(
 	statistics="edger",
 	pcut=0.05,
 	fig.format=c("png","pdf"),
-	export.what=c("annotation","p.value","meta.p.value","adj.meta.p.value","fold.change"),
+	export.what=c("annotation","p.value","meta.p.value",
+	  "adj.meta.p.value","fold.change"),
 	export.scale=c("natural","log2"),
 	export.values="normalized",
 	export.stats=c("mean","sd","cv"),
@@ -145,7 +150,7 @@ Check the HTML report generated in the output directory defined by the export.wh
 Now, the same example but with more than one statistical selection algorithms, a different normalization, an analysis preset and
 filtering applied prior to normalization:
 
-<<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE>>=
+<<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -161,9 +166,9 @@ result <- metaseqr(
 	statistics=c("deseq","edger"),
 	meta.p="fisher",
 	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","readnoise","filtered","correl",
-		"pairwise","boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp",
-		"deheatmap","volcano","biodist","venn"
+		"mds","biodetection","countsbio","saturation","readnoise","filtered",
+		"correl","pairwise","boxplot","gcbias","lengthbias","meandiff",
+		"meanvar","rnacomp","deheatmap","volcano","biodist","venn"
 	),
 	fig.format=c("png","pdf"),
 	preset="medium.normal",
@@ -204,7 +209,8 @@ data("hg19.exon.data",package="metaseqR")
 metaseqr(
 	counts=hg19.exon.counts,
 	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+	  "normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",
@@ -249,7 +255,8 @@ data("hg19.exon.data",package="metaseqR")
 metaseqr(
 	counts=hg19.exon.counts,
 	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+	  "normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",

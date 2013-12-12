@@ -11,8 +11,8 @@
   \code{\link{metaseqr}}.}
 
   \item{data.list}{a list containing natural or transformed
-  data, typically an output from
-  \code{\link{make.transformation}}.}
+  data, typically an output 
+  from \code{\link{make.transformation}}.}
 
   \item{stat}{the statistics to calculate. Can be one or
   more of \code{"mean"}, \code{"median"}, \code{"sd"},

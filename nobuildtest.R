@@ -1,4 +1,4 @@
-HOME <<- "/media/HD4/Fleming/dev/metaseqr"
+HOME <<- "/media/HD4/Fleming/dev/metaseqR"
 SCRIPT <<- file.path(HOME,"R")
 TEMPLATE <<- file.path(HOME,"inst")
 ANNOTATION <<- file.path(HOME,"data")

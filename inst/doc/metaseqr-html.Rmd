@@ -28,7 +28,7 @@ refers to the name of the analysis pipeline while _metaseqR_ refers to the name 
 
 Detailed instructions on how to run the metaseqr pipeline can be found under the main documentation of the metaseqR package:
 
-```{r eval=FALSE}
+```{r eval=TRUE, message=FALSE}
 library(metaseqR)
 ```
 
@@ -92,7 +92,8 @@ result <- metaseqr(
 	statistics="edger",
 	pcut=0.05,
 	fig.format=c("png","pdf"),
-	export.what=c("annotation","p.value","meta.p.value","adj.meta.p.value","fold.change"),
+	export.what=c("annotation","p.value","meta.p.value",
+	  "adj.meta.p.value","fold.change"),
 	export.scale=c("natural","log2"),
 	export.values="normalized",
 	export.stats=c("mean","sd","cv"),
@@ -121,7 +122,7 @@ result <- metaseqr(
 
 will result in the following output in the command window:
 
-```{r echo=FALSE, eval=TRUE, message=FALSE}
+```{r echo=FALSE, eval=TRUE, message=TRUE}
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -180,7 +181,7 @@ Check the HTML report file created at "~/metaseqr_test".
 Now, the same example but with more than one statistical selection algorithms, a different normalization, an analysis preset and
 filtering applied prior to normalization:
 
-```{r eval=TRUE, echo=TRUE, tidy=FALSE, message=FALSE}
+```{r eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE}
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -196,9 +197,9 @@ result <- metaseqr(
 	statistics=c("deseq","edger"),
 	meta.p="fisher",
 	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","readnoise","filtered","correl",
-		"pairwise","boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp",
-		"deheatmap","volcano","biodist","venn"
+		"mds","biodetection","countsbio","saturation","readnoise","filtered",
+		"correl","pairwise","boxplot","gcbias","lengthbias","meandiff",
+		"meanvar","rnacomp","deheatmap","volcano","biodist","venn"
 	),
 	fig.format=c("png","pdf"),
 	preset="medium.normal",
@@ -239,7 +240,8 @@ data("hg19.exon.data",package="metaseqR")
 metaseqr(
 	counts=hg19.exon.counts,
 	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+	  "normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",
@@ -284,7 +286,8 @@ data("hg19.exon.data",package="metaseqR")
 metaseqr(
 	counts=hg19.exon.counts,
 	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous","normal_vs_paracancerous_vs_cancerous"),
+	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+	  "normal_vs_paracancerous_vs_cancerous"),
 	libsize.list=libsize.list.hg19,
 	id.col=4,
 	annotation="download",
