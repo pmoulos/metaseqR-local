@@ -275,7 +275,8 @@
   p-values from multiple statistical tests
   \strong{(experimental! see also the second note below,
   regarding meta-analysis)}. It can be one of
-  \code{"simes"} (default), \code{"dperm.min"},
+  \code{"simes"} (default), \code{"bonferroni"}, 
+  \code{"dperm.min"},
   \code{"dperm.max"}, \code{"dperm.weight"},
   \code{"fisher"}, \code{"fperm"}, \code{"whitlock"},
   \code{"intersection"}, \code{"union"} or \code{"none"}.

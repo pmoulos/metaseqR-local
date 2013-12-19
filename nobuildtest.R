@@ -38,6 +38,7 @@ source(file.path(SCRIPT,"metaseqr.stat.R"))
 source(file.path(SCRIPT,"metaseqr.meta.R"))
 source(file.path(SCRIPT,"metaseqr.plot.R"))
 source(file.path(SCRIPT,"metaseqr.export.R"))
+source(file.path(SCRIPT,"metaseqr.sim.R"))
 
 ## Redefine function based on the package data and path
 #read.annotation <- function(org,type) {

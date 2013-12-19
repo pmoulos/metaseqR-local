@@ -1,0 +1,72 @@
+\name{make.sim.data.sd}
+\alias{make.sim.data.sd}
+\title{Create simulated counts using the 
+  Soneson-Delorenzi method}
+\usage{
+  make.sim.data.sd(N,param,samples=c(5,5),
+    ndeg=rep(round(0.1*N)),fc.basis=1.5,
+	libsize.range=c(0.7,1.4),libsize.mag=1e+7,
+    seed=NULL)
+}
+\arguments{
+  \item{N}{the number of genes to produce.}
+
+  \item{param}{a named list with negative binomial 
+  parameter sets to sample from. The first member is
+  the mean parameter to sample from (\code{mu.hat}} 
+  and the second the dispersion (\code{phi.hat}). 
+  This list can be created with the 
+  \code{\link{estimate.sim.params}} function.}
+
+  \item{samples}{a vector with 2 integers, 
+  which are the number of samples for each 
+  condition (two conditions currently supported).}
+
+  \item{ndeg}{a vector with 2 integers, which are 
+  the number of differentially expressed genes to 
+  be produced. The first element is the number of 
+  up-regulated genes while the second is the 
+  number of down-regulated genes.}
+
+  \item{fc.basis}{the minimum fold-change for 
+  deregulation.}
+
+  \item{libsize.range}{a vector with 2 numbers 
+  (generally small, see the default), as they 
+  are multiplied with \code{libsize.mag}. These 
+  numbers control the library sized of the 
+  synthetic data to be produced.}
+
+  \item{libsize.mag}{a (big) number to multiply 
+  the \code{libsize.range} to produce library 
+  sizes.}
+
+  \item{seed}{a seed to use with random number 
+  generation for reproducibility.}
+}
+\value{
+  A named list with two members. The first 
+  member (\code{simdata}) contains the 
+  synthetic dataset 
+}
+\description{
+  This function creates simulated RNA-Seq gene 
+  expression datasets using the method presented 
+  in (Soneson and Delorenzi, BMC Bioinformatics, 
+  2013). For the time being, it creates only 
+  simulated datasets with two conditions.
+}
+\examples{
+\dontrun{
+# File "bottomly_read_counts.txt" from the ReCount database
+N <- 10000
+par.list <- estimate.sim.params("bottomly_read_counts.txt")
+sim <- make.sim.data.sd(N,par.list)
+synth.data <- sim$simdata
+true.deg <- which(sim$truedeg!=0)
+}
+}
+\author{
+  Panagiotis Moulos
+}
+

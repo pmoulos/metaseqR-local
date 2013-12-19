@@ -3,9 +3,9 @@
 \title{Meta-analysis using several RNA-Seq statistics}
 \usage{
   meta.test(cp.list,
-    meta.p = c("simes", "fisher", "dperm.min", "dperm.max", 
-    "dperm.weight", "fperm", "whitlock", "intersection", 
-    "union", "none"),
+    meta.p = c("simes", "bonferroni", "fisher", "dperm.min", 
+    "dperm.max", "dperm.weight", "fperm", "whitlock", 
+    "intersection", "union", "none"),
     counts, sample.list, statistics, stat.args, norm.args,
     libsize.list, nperm = 10000,
     weight = rep(1/length(statistics), length(statistics)),

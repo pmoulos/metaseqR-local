@@ -30,10 +30,10 @@
 #' \dontrun{
 #' # Not yet available
 #'}
-meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),
+meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),
 	counts,sample.list,statistics,stat.args,norm.args,libsize.list,nperm=10000,weight=rep(1/length(statistics),length(statistics)),
 	reprod=TRUE,multic=FALSE) {
-	check.text.args("meta.p",meta.p,c("simes","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"))
+	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"))
 	contrast <- names(cp.list)
 	disp("Performing meta-analysis with ",meta.p)
 	switch(meta.p,
@@ -70,10 +70,20 @@ meta.test <- function(cp.list,meta.p=c("simes","fisher","dperm.min","dperm.max",
 		#},
 		simes = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p,m) {
-					s <- min(m*p)/length(p)
-					if (s>1 || is.na(s)) return(1) else return(s)
-				},nrow(x)))
+				return(apply(x,1,function(p) {
+					m <- length(p)
+					y <- sort(p)
+					s <- min(m*(y/(1:m)))
+					return(min(c(s,1)))
+				}))
+			})
+		},
+		bonferroni = {
+			sum.p.list <- wapply(multic,cp.list,function(x) {
+				return(apply(x,1,function(p) {
+					b <- length(p)*min(p)
+					return(min(c(1,b)))
+				}))
 			})
 		},
 		dperm.min = {
