@@ -1371,22 +1371,22 @@ metaseqr <- function(
 		disp("Running statistical tests with: ",alg)	
 		switch(alg,
 			deseq = {
-				p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args)
+				p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]])
 			},
 			edger = {
 				p.list <- stat.edger(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]])
 			},
 			noiseq = {
-				p.list <- stat.noiseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args,gene.data.expr,log.offset)
+				p.list <- stat.noiseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],gene.data.expr,log.offset)
 			},
 			bayseq = {
-				p.list <- stat.bayseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args,libsize.list)
+				p.list <- stat.bayseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],libsize.list)
 			},
 			limma = {
 				p.list <- stat.limma(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]])
 			},
 			nbpseq = {
-				p.list <- stat.nbpseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],norm.args,libsize.list)
+				p.list <- stat.nbpseq(norm.genes.expr,sample.list,contrast.list,stat.args[[alg]],libsize.list)
 			}
 		)
 		for (n in names(p.list))
@@ -1451,7 +1451,6 @@ metaseqr <- function(
 			sample.list=sample.list,
 			statistics=statistics,
 			stat.args=stat.args,
-			norm.args=norm.args,
 			libsize.list=libsize.list,
 			nperm=nperm,
 			weight=weight,

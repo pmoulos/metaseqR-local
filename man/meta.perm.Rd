@@ -3,7 +3,7 @@
 \title{Permutation tests for meta-analysis}
 \usage{
   meta.perm(contrast, counts, sample.list, statistics,
-    stat.args, norm.args, libsize.list, nperm = 10000,
+    stat.args, libsize.list, nperm = 10000,
     weight = rep(1/ncol(counts), ncol(counts)),
     select = c("min", "max", "weight"), replace = "auto",
     reprod=TRUE, multic = FALSE)
@@ -25,10 +25,6 @@
 
   \item{stat.args}{the parameters for each statistical
   algorithm. See the main \code{\link{metaseqr}} help page.}
-
-  \item{norm.args}{the parameters for normalization. See
-  the main \code{\link{metaseqr}} and the \code{stat.*}
-  help pages.}
 
   \item{libsize.list}{a list with library sizes. See the
   main \code{\link{metaseqr}} and the \code{stat.*} help

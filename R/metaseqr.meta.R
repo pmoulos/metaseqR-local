@@ -11,7 +11,6 @@
 #' help page.
 #' @param statistics the statistical algorithms used in metaseqr. See the main \code{\link{metaseqr}} help page.
 #' @param stat.args the parameters for each statistical argument. See the main \code{\link{metaseqr}} help page.
-#' @param norm.args the parameters for normalization. See the main \code{\link{metaseqr}} and the \code{stat.*} help pages.
 #' @param libsize.list a list with library sizes. See the main \code{\link{metaseqr}} and the \code{stat.*} help pages.
 #' @param nperm the number of permutations (Monte Carlo simulations) to perform.
 #' @param weight a numeric vector of weights for each statistical algorithm.
@@ -31,7 +30,7 @@
 #' # Not yet available
 #'}
 meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),
-	counts,sample.list,statistics,stat.args,norm.args,libsize.list,nperm=10000,weight=rep(1/length(statistics),length(statistics)),
+	counts,sample.list,statistics,stat.args,libsize.list,nperm=10000,weight=rep(1/length(statistics),length(statistics)),
 	reprod=TRUE,multic=FALSE) {
 	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"))
 	contrast <- names(cp.list)
@@ -94,7 +93,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 			temp.p.list <- wapply(multic,conl,meta.perm,
 				counts=counts,sample.list=sample.list,
 				statistics=statistics,stat.args=stat.args,
-				norm.args=norm.args,libsize.list=libsize.list,
+				libsize.list=libsize.list,
 				nperm=nperm,weight=weight,
 				select="min",reprod=reprod,
 				multic=multic)
@@ -129,7 +128,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 			temp.p.list <- wapply(multic,conl,meta.perm,
 				counts=counts,sample.list=sample.list,
 				statistics=statistics,stat.args=stat.args,
-				norm.args=norm.args,libsize.list=libsize.list,
+				libsize.list=libsize.list,
 				nperm=nperm,weight=weight,
 				select="max",reprod=reprod,
 				multic=multic)
@@ -163,7 +162,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 			temp.p.list <- wapply(multic,conl,meta.perm,
 				counts=counts,sample.list=sample.list,
 				statistics=statistics,stat.args=stat.args,
-				norm.args=norm.args,libsize.list=libsize.list,
+				libsize.list=libsize.list,
 				nperm=nperm,weight=weight,
 				select="weight",reprod=reprod,
 				multic=multic)
@@ -210,7 +209,6 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 #' @param contrast the contrasts to be tested by each statistical algorithm. See the main \code{\link{metaseqr}} help page.
 #' @param statistics the statistical algorithms used in metaseqr. See the main \code{\link{metaseqr}} help page.
 #' @param stat.args the parameters for each statistical algorithm. See the main \code{\link{metaseqr}} help page.
-#' @param norm.args the parameters for normalization. See the main \code{\link{metaseqr}} and the \code{stat.*} help pages.
 #' @param libsize.list a list with library sizes. See the main \code{\link{metaseqr}} and the \code{stat.*} help pages.
 #' @param nperm the number of permutations (Monte Carlo simulations) to perform.
 #' @param weight a numeric vector of weights for each statistical algorithm
@@ -235,7 +233,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 #' \dontrun{
 #' # Not yet available
 #'}
-meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args,libsize.list,nperm=10000,
+meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,libsize.list,nperm=10000,
 	weight=rep(1/ncol(counts),ncol(counts)),select=c("min","max","weight"),replace="auto",reprod=TRUE,
 	multic=FALSE) {
 	check.text.args("select",select,c("min","max","weight"))
@@ -265,9 +263,9 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 	# In this case, we must not use wapply as we want to be able to track progress through mc.preschedule...
 	if (multic)
 		pp <- mclapply(relist,meta.worker,counts,sample.list,contrast,statistics,replace,
-			stat.args,norm.args,libsize.list,select,weight,mc.preschedule=FALSE,mc.cores=getOption("cores"))
+			stat.args,libsize.list,select,weight,mc.preschedule=FALSE,mc.cores=getOption("cores"))
 	else
-		pp <- lapply(relist,meta.worker,counts,sample.list,contrast,statistics,replace,stat.args,norm.args,
+		pp <- lapply(relist,meta.worker,counts,sample.list,contrast,statistics,replace,stat.args,
 			libsize.list,select,weight)
 	disp("  Resampling procedure ended...")
 	return(do.call("cbind",pp))
@@ -283,7 +281,6 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 #' @param cnt the contrast name.
 #' @param s the statistical algorithms.
 #' @param sa the parameters for each statistical algorithm.
-#' @param na the parameters for normalization.
 #' @param ll a list with library sizes.
 #' @param r same as the \code{replace} argument in the \code{\link{sample}} function.
 #' @param el min, max or weight.
@@ -294,7 +291,7 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,norm.args
 #' \dontrun{
 #' # Not yet available
 #'}
-meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el,w) {
+meta.worker <- function(x,co,sl,cnt,s,r,sa,ll,el,w) {
 	set.seed(x$seed)
 	disp("    running permutation #",x$prog)
 	pl <- make.permutation(co,sl,cnt,r)
@@ -305,22 +302,22 @@ meta.worker <- function(x,co,sl,cnt,s,r,sa,na,ll,el,w) {
 		tcl <- make.contrast.list(pl$contrast,pl$sample.list)
 		switch(alg,
 			deseq = {
-				p.list <- suppressMessages(stat.deseq(pl$counts,pl$sample.list,tcl,sa[[alg]],na))
+				p.list <- suppressMessages(stat.deseq(pl$counts,pl$sample.list,tcl,sa[[alg]]))
 			},
 			edger = {
 				p.list <- suppressMessages(stat.edger(pl$counts,pl$sample.list,tcl,sa[[alg]]))
 			},
 			noiseq = {
-				p.list <- suppressMessages(stat.noiseq(pl$counts,pl$sample.list,tcl,sa[[alg]],na))
+				p.list <- suppressMessages(stat.noiseq(pl$counts,pl$sample.list,tcl,sa[[alg]]))
 			},
 			bayseq = {
-				p.list <- suppressMessages(stat.bayseq(pl$counts,pl$sample.list,tcl,sa[[alg]],na,ll))
+				p.list <- suppressMessages(stat.bayseq(pl$counts,pl$sample.list,tcl,sa[[alg]],ll))
 			},
 			limma = {
 				p.list <- suppressMessages(stat.limma(pl$counts,pl$sample.list,tcl,sa[[alg]]))
 			},
 			nbpseq = {
-				p.list <- suppressMessages(stat.nbpseq(pl$counts,pl$sample.list,tcl,sa[[alg]],na,ll))
+				p.list <- suppressMessages(stat.nbpseq(pl$counts,pl$sample.list,tcl,sa[[alg]],ll))
 			}
 		)
 		ppmat[,alg] <- as.numeric(p.list[[1]])

@@ -3,8 +3,7 @@
 \title{Statistical testing with baySeq}
 \usage{
   stat.bayseq(object, sample.list, contrast.list = NULL,
-    stat.args = NULL, norm.args = NULL,
-    libsize.list = NULL)
+    stat.args = NULL, libsize.list = NULL)
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
@@ -25,12 +24,6 @@
   parameters. See the result of
   \code{get.defaults("statistics",} \code{"bayseq")} for an
   example and how you can modify it.}
-
-  \item{norm.args}{a list of normalization parameters
-  required only if normalization has been performed with
-  edgeR. See the result of
-  \code{get.defaults("normalization",} \code{"edger")} for
-  an example and how you can modify it.}
 
   \item{libsize.list}{an optional named list where names
   represent samples (MUST be the same as the samples in

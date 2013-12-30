@@ -3,8 +3,7 @@
 \title{Statistical testing with NOISeq}
 \usage{
   stat.noiseq(object, sample.list, contrast.list = NULL,
-    stat.args = NULL, norm.args = NULL, gene.data = NULL,
-    log.offset = 1)
+    stat.args = NULL, gene.data = NULL, log.offset = 1)
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
@@ -25,11 +24,6 @@
   parameters. See the result of
   \code{get.defaults("statistics",} \code{"noiseq")} for an
   example and how you can modify it.}
-
-  \item{norm.args}{a list of NOISeq normalization
-  parameters. See the result of
-  \code{get.defaults("normalization",} \code{"noiseq")} for
-  an example and how you can modify it.}
 
   \item{gene.data}{an optional annotation data frame (such
   the ones produced by \code{get.annotation} which contains

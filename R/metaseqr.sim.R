@@ -59,6 +59,8 @@ make.sim.data.tcc <- function(...) {
 #' @param libsize.range a vector with 2 numbers (generally small, see the default), as they are multiplied with \code{libsize.mag}.
 #' These numbers control the library sized of the synthetic data to be produced.
 #' @param libsize.mag a (big) number to multiply the \code{libsize.range} to produce library sizes.
+#' @param model.org the organism from which the real data are derived from. It must be one of the supported organisms (see the main
+#' \code{\link{metaseqr}} help page). It is used to sample real values for GC content.
 #' @param seed a seed to use with random number generation for reproducibility.
 #' @return A named list with two members. The first member (\code{simdata}) contains the synthetic dataset 
 #' @author Panagiotis Moulos
@@ -73,8 +75,13 @@ make.sim.data.tcc <- function(...) {
 #' true.deg <- which(sim$truedeg!=0)
 #'}
 make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.basis=1.5,libsize.range=c(0.7,1.4),
-	libsize.mag=1e+7,seed=NULL) {
+	libsize.mag=1e+7,model.org=NULL,seed=NULL) {
 
+	if (!is.null(model.org)) {
+		check.text.args("model.org",model.org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
+		ann <- get.annotation(model.org,"gene")
+		real.gc <- as.numeric(ann$gc_content)
+	}
 	mu.hat <- param$mu.hat
 	phi.hat <- param$phi.hat
 	if (!is.null(seed)) set.seed(seed)
@@ -91,7 +98,7 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 	sim.1 <- matrix(0,N,s1)
 	for (j in 1:s1) {
 		if (!is.null(seed)) set.seed(seed+j)
-		sim.1[,j] <- rnbinom(N,size=1/phi.mle[ii],mu=mu.1[,j])
+		sim.1[,j] <- rnbinom(N,size=1/phi.hat[ii],mu=mu.1[,j])
 	}
 
 	v <- numeric(N)
@@ -104,7 +111,7 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 	mu.2 <- sweep(lambda.2,2,L2/sum(lambda.2[,1]),"*")
 	sim.2 <- matrix(0,N,s2)
 	for (j in 1:s2)
-		sim.2[,j] <- rnbinom(N,size=1/phi.mle[ii],mu=mu.2[,j])
+		sim.2[,j] <- rnbinom(N,size=1/phi.hat[ii],mu=mu.2[,j])
 
 	# Now we have to simulate annotation
 	if (!is.null(seed)) set.seed(seed)
@@ -115,7 +122,14 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 	end <- start + 250 + round(1e+6*runif(N))
 	gene_id <- gene_name <- paste("gene",1:N,sep="_")
 	if (!is.null(seed)) set.seed(seed)
-	gc_content <- runif(N)
+	if (!is.null(model.org)) {
+		if (length(real.gc)<=N)
+			gc_content <- sample(real.gc,N)
+		else
+			gc_content <- sample(real.gc,N,replace=TRUE)
+	}
+	else
+		gc_content <- runif(N)
 	if (!is.null(seed)) set.seed(seed)
 	strand <- sample(c("+","-"),N,replace=TRUE)
 	if (!is.null(seed)) set.seed(seed)
@@ -164,7 +178,12 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 #'}
 estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,eps=1e-11,restrict.cores=0.8,seed=42) {
 	multic <- check.parallel(restrict.cores)
-	real.data <- read.delim(real.counts,row.names=1)
+	if (is.data.frame(real.counts))
+		real.data <- real.counts
+	else if (file.exists(real.counts))
+		real.data <- read.delim(real.counts,row.names=1)
+	else
+		stopwrap("The input count data must be either a file or a data frame!")
 	mat <- as.matrix(real.data)
 	low.lib <- which(apply(mat,2,sum)<libsize.gt)
 	if (length(low.lib)>0)
@@ -178,14 +197,14 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,eps=1e
 		m <- mean(x)
 		v <- var(x)
 		phi <- (v-m)/m^2
-		return(size)
+		return(phi)
 	})
 	phi.ind <- which(phi.est>0)
 	phi.est <- phi.est[phi.ind]
 	dmat <- dmat[phi.ind,]
-	init <- wapply(multic,seq_along(1:nrow(dmat)),function(i) {
-		list(y=dmat[i,],h=phi.hat[i])
-	})
+	init <- wapply(multic,seq_along(1:nrow(dmat)),function(i,d,p) {
+		list(y=d[i,],h=p[i])
+	},dmat,phi.est)
 	phi.hat <- unlist(wapply(multic,init,function(x,eps) {
 		optimize(mlfo,c(x$h-1e-2,x$h+1e-2),y=x$y,tol=eps)$minimum
 	},eps))

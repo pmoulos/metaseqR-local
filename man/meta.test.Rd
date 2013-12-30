@@ -6,7 +6,7 @@
     meta.p = c("simes", "bonferroni", "fisher", "dperm.min", 
     "dperm.max", "dperm.weight", "fperm", "whitlock", 
     "intersection", "union", "none"),
-    counts, sample.list, statistics, stat.args, norm.args,
+    counts, sample.list, statistics, stat.args, 
     libsize.list, nperm = 10000,
     weight = rep(1/length(statistics), length(statistics)),
     reprod=TRUE, multic = FALSE)
@@ -34,10 +34,6 @@
 
   \item{stat.args}{the parameters for each statistical
   argument. See the main \code{\link{metaseqr}} help page.}
-
-  \item{norm.args}{the parameters for normalization. See
-  the main \code{\link{metaseqr}} and the \code{stat.*}
-  help pages.}
 
   \item{libsize.list}{a list with library sizes. See the
   main \code{\link{metaseqr}} and the \code{stat.*} help

@@ -118,11 +118,7 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 	check.text.args("output",output,c("matrix","native"))
 	classes <- as.class.vector(sample.list)
 	cds <- newCountDataSet(gene.counts,classes)
-	cds <- estimateSizeFactors(cds)
-	if (all(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE)))) # Check if there is no replication anywhere
-		cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only",fitType=norm.args$fitType)
-	else
-		cds <- estimateDispersions(cds,method=norm.args$method,sharingMode=norm.args$sharingMode,fitType=norm.args$fitType)
+	cds <- estimateSizeFactors(cds,locfunc=norm.args$locfunc)
 	if (output=="native")
 		return(cds) # Class: CountDataSet
 	else if (output=="matrix")
@@ -161,30 +157,14 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 	check.text.args("output",output,c("matrix","native"))
 	classes <- as.class.vector(sample.list)
 	dge <- DGEList(counts=gene.counts,group=classes)
-	if (norm.args$main.method=="classic") {
-		dge <- calcNormFactors(dge,method=norm.args$norm.method,refColumn=norm.args$refColumn,logratioTrim=norm.args$logratioTrim,
-			sumTrim=norm.args$sumTrim,doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff,p=norm.args$p)
-		dge <- estimateCommonDisp(dge,rowsum.filter=norm.args$rowsum.filter)
-		dge <- estimateTagwiseDisp(dge,prior.df=norm.args$prior.df,trend=norm.args$trend,span=norm.args$span,
-			method=norm.args$tag.method,grid.length=norm.args$grid.length,grid.range=norm.args$grid.range)
-		if (output=="native")
-			return(dge) # Class: DGEList
-		else if (output=="matrix")
-			return(round(dge$pseudo.counts)) # Class: matrix
-	}
-	else if (norm.args$main.method=="glm") {
-		design <- model.matrix(~0+classes,data=dge$samples)
-		dge <- estimateGLMCommonDisp(dge,design=design,offset=norm.args$offset,method=norm.args$glm.method,
-			subset=norm.args$subset,AveLogCPM=norm.args$AveLogCPM)
-		dge <- estimateGLMTrendedDisp(dge,design=design,offset=norm.args$offset,method=norm.args$trend.method,
-			AveLogCPM=norm.args$AveLogCPM)
-		dge <- estimateGLMTagwiseDisp(dge,design=design,offset=norm.args$offset,dispersion=norm.args$dispersion,
-			prior.df=norm.args$prior.df,span=norm.args$span,AveLogCPM=norm.args$AveLogCPM)
+	dge <- calcNormFactors(dge,method=norm.args$method,refColumn=norm.args$refColumn,logratioTrim=norm.args$logratioTrim,
+		sumTrim=norm.args$sumTrim,doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff,p=norm.args$p)
+	if (output=="native")
+		return(dge) # Class: DGEList
+	else if (output=="matrix") {
 		scl <- dge$samples$lib.size * dge$samples$norm.factors
-		if (output=="native")
-			return(dge) # Class: DGEList
-		else if (output=="matrix")
-			return(round(t(t(dge$counts)/scl)*mean(scl))) # Class: matrix
+		return(round(t(t(dge$counts)/scl)*mean(scl)))
+		#return(round(dge$pseudo.counts)) # Class: matrix
 	}
 }
 

@@ -11,8 +11,6 @@
 #' @param stat.args a list of DESeq statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"deseq")}
 #' for an example and how you can modify it. It is not required when the input object is already a CountDataSet from DESeq normalization
 #' as the dispersions are already estimated.
-#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edger")} for
-#' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
 #' @return A named list of p-values, whose names are the names of the contrasts.
 #' @author Panagiotis Moulos
 #' @export
@@ -25,9 +23,9 @@
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
 #' p <- stat.deseq(norm.data.matrix,sample.list,contrast)
 #'}
-stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL) {
-	if (is.null(norm.args) && class(object)=="DGEList")
-		norm.args <- get.defaults("normalization","edger")
+stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
+	#if (is.null(norm.args) && class(object)=="DGEList")
+	#	norm.args <- get.defaults("normalization","edger")
 	if (is.null(stat.args) && class(object)!="CountDataSet")
 		stat.args <- get.defaults("statistics","deseq")
 	if (is.null(contrast.list))
@@ -41,15 +39,15 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm
 	switch(class(object),
 		CountDataSet = { # Has been normalized with DESeq
 			cds <- object
+			if (all(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE)))) # Check if there is no replication anywhere
+				cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only",fitType=stat.args$fitType)
+			else
+				cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode,fitType=stat.args$fitType)
 		},
 		DGEList = { # Has been normalized with edgeR
-			if (norm.args$main.method=="classic") {
-				cds <- newCountDataSet(round(object$pseudo.counts),the.design$condition)
-			}
-			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
-				scl <- object$samples$lib.size * object$samples$norm.factors
-				cds <- newCountDataSet(round(t(t(object$counts)/scl)*mean(scl)),the.design$condition)
-			}
+			# Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+			scl <- object$samples$lib.size * object$samples$norm.factors
+			cds <- newCountDataSet(round(t(t(object$counts)/scl)*mean(scl)),the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
 			cds <- estimateDispersions(cds,method=stat.args$method,sharingMode=stat.args$sharingMode)
 		},
@@ -125,60 +123,36 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 	switch(class(object),
 		CountDataSet = { # Has been normalized with DESeq
 			dge <- DGEList(counts=counts(object,normalized=TRUE),group=classes)
-			if (stat.args$main.method=="classic") {
-				dge <- estimateCommonDisp(dge)
-				dge <- estimateTagwiseDisp(dge)
-			}
-			else if (stat.args$main.method=="glm") {
-				design <- model.matrix(~0+classes,data=dge$samples)
-				dge <- estimateGLMCommonDisp(dge,design=design)
-				dge <- estimateGLMTrendedDisp(dge,design=design)
-				dge <- estimateGLMTagwiseDisp(dge,design=design)
-			}
 		},
 		DGEList = { # Has been normalized with edgeR
-			dge <- object
+			dge <- object	
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			dge <- DGEList(object,group=classes)
-			if (stat.args$main.method=="classic") {
-				dge <- estimateCommonDisp(dge)
-				dge <- estimateTagwiseDisp(dge)
-			}
-			else if (stat.args$main.method=="glm") {
-				design <- model.matrix(~0+classes,data=dge$samples)
-				dge <- estimateGLMCommonDisp(dge,design=design)
-				dge <- estimateGLMTrendedDisp(dge,design=design)
-				dge <- estimateGLMTagwiseDisp(dge,design=design)
-			}
 		},
 		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
 			dge <- DGEList(counts=as.matrix(round(sweep(object$counts,2,object$norm.factors,"*"))),group=classes)
-			if (stat.args$main.method=="classic") {
-				dge <- estimateCommonDisp(dge)
-				dge <- estimateTagwiseDisp(dge)
-			}
-			else if (stat.args$main.method=="glm") {
-				design <- model.matrix(~0+classes,data=dge$samples)
-				dge <- estimateGLMCommonDisp(dge,design=design)
-				dge <- estimateGLMTrendedDisp(dge,design=design)
-				dge <- estimateGLMTagwiseDisp(dge,design=design)
-			}
 		},
 		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"... Jesus...
 			dge <- DGEList(counts=as.matrix(round(object$pseudo.counts)),group=classes)
-			if (stat.args$main.method=="classic") {
-				dge <- estimateCommonDisp(dge)
-				dge <- estimateTagwiseDisp(dge)
-			}
-			else if (stat.args$main.method=="glm") {
-				design <- model.matrix(~0+classes,data=dge$samples)
-				dge <- estimateGLMCommonDisp(dge,design=design)
-				dge <- estimateGLMTrendedDisp(dge,design=design)
-				dge <- estimateGLMTagwiseDisp(dge,design=design)
-			}
 		}
 	)
+	# Dispersion estimate step
+	if (stat.args$main.method=="classic") {
+		dge <- estimateCommonDisp(dge,rowsum.filter=stat.args$rowsum.filter)
+		dge <- estimateTagwiseDisp(dge,prior.df=stat.args$prior.df,trend=stat.args$trend,span=stat.args$span,
+			method=stat.args$tag.method,grid.length=stat.args$grid.length,grid.range=stat.args$grid.range)
+	}
+	else if (stat.args$main.method=="glm") {
+		design <- model.matrix(~0+classes,data=dge$samples)
+		dge <- estimateGLMCommonDisp(dge,design=design,offset=stat.args$offset,method=stat.args$glm.method,
+			subset=stat.args$subset,AveLogCPM=stat.args$AveLogCPM)
+		dge <- estimateGLMTrendedDisp(dge,design=design,offset=stat.args$offset,method=stat.args$trend.method,
+			AveLogCPM=stat.args$AveLogCPM)
+		dge <- estimateGLMTagwiseDisp(dge,design=design,offset=stat.args$offset,dispersion=stat.args$dispersion,
+			prior.df=stat.args$prior.df,span=stat.args$span,AveLogCPM=stat.args$AveLogCPM)
+	}
+	# Actual statistical test
 	for (con.name in names(contrast.list))
 	{
 		disp("  Contrast: ", con.name)
@@ -275,7 +249,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		us <- unique(s)
 		design <- model.matrix(~0+s,data=dge$samples)
 		colnames(design) <- us
-		vom <- voom(dge,design)
+		vom <- voom(dge,design,normalize.method=stat.args$normalize.method)
 		fit <- lmFit(vom,design)
 		co <- makeContrasts(contrasts=paste(us[2],us[1],sep="-"),levels=design)
 		fit <- eBayes(contrasts.fit(fit,co))
@@ -302,8 +276,6 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
 #' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"noiseq")}
 #' for an example and how you can modify it.
-#' @param norm.args a list of NOISeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"noiseq")}
-#' for an example and how you can modify it.
 #' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation} which contains the GC content
 #' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
 #' @param log.offset a number to be added to each element of data matrix in order to avoid Infinity on log type data transformations.
@@ -327,11 +299,11 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)
 #' p <- stat.noiseq(norm.data.matrix,sample.list,contrast,gene.data=gene.data)
 #'}
-stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,gene.data=NULL,log.offset=1) {
-	if (is.null(norm.args) && class(object)=="DGEList")
-		norm.args <- get.defaults("normalization","edger")
+stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,gene.data=NULL,log.offset=1) {
+	#if (is.null(norm.args) && class(object)=="DGEList")
+	#	norm.args <- get.defaults("normalization","edger")
 	if (is.null(stat.args))
-		stat.args <- get.defaults("statistics","limma")
+		stat.args <- get.defaults("statistics","noiseq")
 	if (is.null(contrast.list))
 		contrast.list <- make.contrast.list(paste(names(sample.list)[1:2],sep="_vs_"),sample.list)
 	if (!is.list(contrast.list))
@@ -368,12 +340,9 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			)
 		},
 		DGEList = { # Has been normalized with edgeR
-			if (norm.args$main.method=="classic")
-				dm <- round(object$pseudo.counts)
-			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
-				scl <- object$samples$lib.size * object$samples$norm.factors
-				dm <- round(t(t(object$counts)/scl)*mean(scl))
-			}
+			# Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+			scl <- object$samples$lib.size * object$samples$norm.factors
+			dm <- round(t(t(object$counts)/scl)*mean(scl))			
 			ns.obj <- NOISeq::readData(
 				data=dm,
 				length=gene.length,
@@ -435,7 +404,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 		}
 		else {
 			warnwrap(
-				paste("NOISeq differential expression algorithm does not support ANOVA-like designs with more than two conditions to be compared! Switching to DESeq for this comparison:",con.name))
+				paste("NOISeq differential expression algorithm does not support multi-factor designs (with more than two conditions to be compared)! Switching to DESeq for this comparison:",con.name))
 			M <- assayData(ns.obj)$exprs
 			cds <- newCountDataSet(round(M),data.frame(condition=unlist(con),row.names=names(unlist(con))))
 			sizeFactors(cds) <- rep(1,ncol(cds))
@@ -462,8 +431,6 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' contrasts as defined in the main help page of \code{\link{metaseqr}}.
 #' @param stat.args a list of edgeR statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"bayseq")}
 #' for an example and how you can modify it.
-#' @param norm.args a list of normalization parameters required only if normalization has been performed with edgeR. See the result
-#' of \code{get.defaults("normalization",} \code{"edger")} for an example and how you can modify it.
 #' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, they will be estimated from baySeq.
 #' @return A named list of the value 1-likelihood that a gene is differentially expressed, whose names are the names of the contrasts.
@@ -478,9 +445,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data)
 #' p <- stat.bayseq(norm.data.matrix,sample.list,contrast)
 #'}
-stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,libsize.list=NULL) {
-	if (is.null(norm.args) && class(object)=="DGEList")
-		norm.args <- get.defaults("normalization","edger")
+stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,libsize.list=NULL) {
 	if (is.null(stat.args))
 		stat.args <- get.defaults("statistics","bayseq")
 	if (is.null(contrast.list))
@@ -495,7 +460,8 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			bayes.data <- counts(object,normalized=TRUE)
 		},
 		DGEList = { # Has been normalized with edgeR
-			bayes.data <- round(object$pseudo.counts)
+			scl <- object$samples$lib.size * object$samples$norm.factors
+			bayes.data <- round(t(t(object$counts)/scl)*mean(scl))
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			bayes.data <- object
@@ -548,8 +514,6 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' @param stat.args a list of NBPSeq statistical algorithm parameters. See the result of \code{get.defaults("statistics",} \code{"nbpseq")}
 #' for an example and how you can modify it. It is not required when the input object is already a list from NBPSeq normalization
 #' as the dispersions are already estimated.
-#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edger")} for
-#' an example and how you can modify it. It is required only if the data have been normalized with edgeR.
 #' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples \code{in sample.list}) and
 #' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
 #' \code{gene.counts} matrix.
@@ -568,9 +532,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 #' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)
 #' p <- stat.nbpseq(norm.data.matrix,sample.list,contrast)
 #'}
-stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,norm.args=NULL,libsize.list=NULL) {
-	if (is.null(norm.args) && class(object)=="DGEList")
-		norm.args <- get.defaults("normalization","edger")
+stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,libsize.list=NULL) {
 	if (is.null(stat.args) && class(object)!="list")
 		stat.args <- get.defaults("statistics","nbpseq")
 	if (is.null(contrast.list))
@@ -592,13 +554,9 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,nor
 			lib.sizes <- unlist(libsize.list)
 		},
 		DGEList = { # Has been normalized with edgeR
-			if (norm.args$main.method=="classic") {
-				counts <- round(object$pseudo.counts)
-			}
-			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
-				scl <- object$samples$lib.size * object$samples$norm.factors
-				counts <- round(t(t(object$counts)/scl)*mean(scl))
-			}
+			# Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+			scl <- object$samples$lib.size * object$samples$norm.factors
+			counts <- round(t(t(object$counts)/scl)*mean(scl))			
 			if (is.null(libsize.list)) {
 				libsize.list <- vector("list",length(classes))
 				names(libsize.list) <- unlist(sample.list,use.names=FALSE)

@@ -3,8 +3,7 @@
 \title{Statistical testing with NBPSeq}
 \usage{
   stat.nbpseq(object, sample.list, contrast.list = NULL,
-    stat.args = NULL, norm.args = NULL,
-    libsize.list = NULL)
+    stat.args = NULL, libsize.list = NULL)
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
@@ -27,12 +26,6 @@
   example and how you can modify it. It is not required
   when the input object is already a list from NBPSeq
   normalization as the dispersions are already estimated.}
-
-  \item{norm.args}{a list of edgeR normalization
-  parameters. See the result of
-  \code{get.defaults("normalization",} \code{"edger")} for
-  an example and how you can modify it. It is required only
-  if the data have been normalized with edgeR.}
 
   \item{libsize.list}{an optional named list where names
   represent samples (MUST be the same as the samples

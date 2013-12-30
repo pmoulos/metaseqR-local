@@ -2,8 +2,8 @@
 \alias{meta.worker}
 \title{Permutation tests helper}
 \usage{
-  meta.worker(x,co,sl,cnt,s,r,sa,na,
-    ll,el,w)
+  meta.worker(x,co,sl,cnt,s,r,sa,ll
+    el,w)
 }
 \arguments{
   \item{x}{a virtual list with the random seed and 
@@ -19,8 +19,6 @@
 
   \item{sa}{the parameters for each statistical
   algorithm.}
-
-  \item{na}{the parameters for normalization.}
 
   \item{ll}{a list with library sizes.}
 

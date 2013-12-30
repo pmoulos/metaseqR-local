@@ -202,18 +202,11 @@ get.defaults <- function(what,method=NULL) {
 		normalization = {
 			switch(method,
 				edaseq = { return(list(within.which="loess",between.which="full")) },
-				deseq = { return(list(method="pooled",sharingMode="fit-only",fitType="local")) },
+				deseq = { return(list(locfunc=median)) },
 				edger = {
 					return(list(
-						main.method="classic",									# classic or glm normalization method
-						norm.method="TMM",refColumn=NULL,logratioTrim=0.3,
-						sumTrim=0.05,doWeighting=TRUE,Acutoff=-1e10,
-						p=0.75,rowsum.filter=5,prior.df=10,
-						trend="movingave",span=NULL,							# classic estimateCommonDisp arguments
-						tag.method="grid",grid.length=11,grid.range=c(-6,6),	# classic estimateTagwiseDisp arguments
-						offset=NULL,glm.method="CoxReid",subset=10000,
-						AveLogCPM=NULL,trend.method="auto",					# glm estimateGLMCommonDisp and estimateGLMTrendedDisp arguments
-						dispersion=NULL										# glm estimateGLMTagwiseDisp arguments
+						method="TMM",refColumn=NULL,logratioTrim=0.3,
+						sumTrim=0.05,doWeighting=TRUE,Acutoff=-1e10,p=0.75								
 					))
 				},
 				noiseq = {
@@ -229,10 +222,15 @@ get.defaults <- function(what,method=NULL) {
 		},
 		statistics = {
 			switch(method,
-				deseq = { return(list(method="blind",sharingMode="fit-only")) },
+				deseq = { return(list(method="blind",sharingMode="fit-only",fitType="local")) },
 				edger = {
 					return(list(
 						main.method="classic",							# classic or glm fit
+						rowsum.filter=5,prior.df=10,
+						trend="movingave",span=NULL,							# classic estimateCommonDisp arguments
+						tag.method="grid",grid.length=11,grid.range=c(-6,6),	# classic estimateTagwiseDisp arguments
+						offset=NULL,glm.method="CoxReid",subset=10000,	# glm estimateGLMCommonDisp and estimateGLMTrendedDisp arguments
+						AveLogCPM=NULL,trend.method="auto",	# glm estimateGLMTagwiseDisp arguments
 						dispersion=NULL,offset=NULL,weights=NULL,	# glmFit arguments
 						lib.size=NULL,prior.count=0.125,start=NULL,
 						method="auto",test="chisq",						# glmLRT arguments
@@ -256,7 +254,7 @@ get.defaults <- function(what,method=NULL) {
 						consensus=FALSE,moderate=TRUE,pET="BIC",marginalise=FALSE,subset=NULL,priorSubset=NULL,bootStraps=1,
 						conv=1e-4,nullData=FALSE,returnAll=FALSE,returnPD=FALSE,discardSampling=FALSE,cl=NULL))
 				},
-				limma = { return(list()) },
+				limma = { return(list(normalize.method="none") },
 				nbpseq = {
 					return(list(
 						main.method="nbsmyth",

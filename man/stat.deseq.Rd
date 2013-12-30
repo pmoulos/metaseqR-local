@@ -3,7 +3,7 @@
 \title{Statistical testing with DESeq}
 \usage{
   stat.deseq(object, sample.list, contrast.list = NULL,
-    stat.args = NULL, norm.args = NULL)
+    stat.args = NULL)
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
@@ -27,12 +27,6 @@
   when the input object is already a CountDataSet from
   DESeq normalization as the dispersions are already
   estimated.}
-
-  \item{norm.args}{a list of edgeR normalization
-  parameters. See the result of
-  \code{get.defaults("normalization",} \code{"edger")} for
-  an example and how you can modify it. It is required only
-  if the data have been normalized with edgeR.}
 }
 \value{
   A named list of p-values, whose names are the names of

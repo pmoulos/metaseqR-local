@@ -41,6 +41,12 @@
   the \code{libsize.range} to produce library 
   sizes.}
 
+  \item{model.org}{the organism from which the 
+  real data are derived from. It must be one 
+  of the supported organisms (see the main 
+  \code{\link{metaseqr}} help page). It is used 
+  to sample real values for GC content.}
+
   \item{seed}{a seed to use with random number 
   generation for reproducibility.}
 }
