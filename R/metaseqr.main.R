@@ -749,8 +749,10 @@ metaseqr <- function(
 	if (!is.null(norm.args))
 	{
 		tmp <- norm.args
+		tmp <- validate.list.args("normalization",normalization,tmp)
 		norm.args <- get.defaults("normalization",normalization)
-		norm.args <- set.arg(norm.args,tmp)
+		if (length(tmp)>0)
+			norm.args <- set.arg(norm.args,tmp)
 	}
 	else
 		norm.args <- get.defaults("normalization",normalization)
@@ -758,9 +760,11 @@ metaseqr <- function(
 	{
 		if (!is.null(stat.args[[s]]))
 		{
-			tmp <- stat.args[[s]]	
+			tmp <- stat.args[[s]]
+			tmp <- validate.list.args("statistics",s,tmp)
 			stat.args[[s]] <- get.defaults("statistics",s)
-			stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
+			if (length(tmp)>0)
+				stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
 		}
 		else
 			stat.args[[s]] <- get.defaults("statistics",s)

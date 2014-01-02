@@ -12,7 +12,7 @@
   \code{"exon.filter"} or \code{"biotype.filter"}.}
 
   \item{method}{the supported algorithm included in
-  metaseqr for which to fetch the default settings. When
+  metaseqR for which to fetch the default settings. When
   \code{what} is \code{"normalization"}, method is one of
   \code{"edaseq"}, \code{"deseq"}, \code{"edger"},
   \code{"noiseq"} or \code{"nbpseq"}. When \code{what} is

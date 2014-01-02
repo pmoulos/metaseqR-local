@@ -182,7 +182,7 @@ read.targets <- function(input,path=NULL) {
 #'
 #' @param what a keyword determining the procedure for which to fetch the default settings according to method parameter. It can be
 #' one of \code{"normalization"}, \code{"statistics"}, \code{"gene.filter"}, \code{"exon.filter"} or \code{"biotype.filter"}.
-#' @param method the supported algorithm included in metaseqr for which to fetch the default settings. When \code{what} is 
+#' @param method the supported algorithm included in metaseqR for which to fetch the default settings. When \code{what} is 
 #' \code{"normalization"}, method is one of \code{"edaseq"}, \code{"deseq"}, \code{"edger"}, \code{"noiseq"} or \code{"nbpseq"}. 
 #' When \code{what} is \code{"statistics"}, method is one of \code{"deseq"}, \code{"edger"}, \code{"noiseq"}, \code{"bayseq"},
 #' \code{"limma"} or \code{"nbpseq"}. When \code{method} is \code{"biotype.filter"}, \code{what} is the input organism (see the 
@@ -254,7 +254,7 @@ get.defaults <- function(what,method=NULL) {
 						consensus=FALSE,moderate=TRUE,pET="BIC",marginalise=FALSE,subset=NULL,priorSubset=NULL,bootStraps=1,
 						conv=1e-4,nullData=FALSE,returnAll=FALSE,returnPD=FALSE,discardSampling=FALSE,cl=NULL))
 				},
-				limma = { return(list(normalize.method="none") },
+				limma = { return(list(normalize.method="none")) },
 				nbpseq = {
 					return(list(
 						main.method="nbsmyth",
@@ -448,6 +448,227 @@ get.defaults <- function(what,method=NULL) {
 					))
 				}
 			)
+		}
+	)
+}
+
+#' Validate list parameters for several metaseqR functions
+#'
+#' This function validates the arguments passed by the user to the normalization, statistics and filtering algorithms supported
+#' by metaseqR. As these are given into lists and passed to the algorithms, the list member names must be valid algorithm arguments
+#' for the pipeline not to crash. This function performs these checks and ignores any invalid arguments.
+#'
+#' @param what a keyword determining the procedure for which to validate arguments. It can be one of \code{"normalization"}, 
+#' \code{"statistics"}, \code{"gene.filter"}, \code{"exon.filter"} or \code{"biotype.filter"}.
+#' @param method the normalization/statistics/filtering algorithm included in metaseqR for which to validate user input. When 
+#' \code{what} is \code{"normalization"}, method is one of \code{"edaseq"}, \code{"deseq"}, \code{"edger"}, \code{"noiseq"} or 
+#' \code{"nbpseq"}. When \code{what} is \code{"statistics"}, method is one of \code{"deseq"}, \code{"edger"}, \code{"noiseq"}, 
+#' \code{"bayseq"}, \code{"limma"} or \code{"nbpseq"}. When \code{method} is \code{"biotype.filter"}, \code{what} is the input 
+#' organism (see the main \code{\link{metaseqr}} help page for a list of supported organisms).
+#' @param arg.list the user input list of arguments.
+#' @return A list with valid arguments to be used as user input in the algorithms supported by metaseqR.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' norm.args.edger <- list(method="TMM",refColumn=NULL,
+#'   logratioTrim=0.3,sumTrim=0.05,doWeighting=TRUE,
+#'   Bcutoff=-1e10,p=0.75)
+#' # Bcutoff does not exist, will throw a warning and ignore it.
+#' norm.args.edger <- validate.list.args("normalization","edger",norm.args.edger)
+#'}
+validate.list.args <- function(what,method=NULL,arg.list) {
+	what <- tolower(what)
+	check.text.args("what",what,c("normalization","statistics","gene.filter","exon.filter","biotype.filter"))
+	if (what %in% c("normalization","statistics") && is.null(method))
+		stopwrap("The method argument must be provided when what is \"normalization\" or \"statistics\"!")
+	switch(what,
+		normalization = {
+			switch(method,
+				edaseq = { 
+					valid <- names(arg.list) %in% c("within.which","between.which")
+					not.valid <- which(!valid)
+				},
+				deseq = {
+					valid <- names(arg.list) %in% c("locfunc")
+					not.valid <- which(!valid) 
+				},
+				edger = {
+					valid <- names(arg.list) %in% c("method","refColumn","logratioTrim","sumTrim",
+						"doWeighting","Acutoff","p")
+					not.valid <- which(!valid)
+				},
+				noiseq = {
+					valid <- names(arg.list) %in% c("method","long","lc","k","refColumn","logratioTrim",
+						"sumTrim","doWeighting","Acutoff")
+					not.valid <- which(!valid)
+				},
+				nbpseq = {
+					valid <- names(arg.list) %in% c("main.method","method","thinning")
+					not.valid <- which(!valid)
+				}
+			)
+			if (length(not.valid)>0) {
+				warnwrap(paste("The following",method,what,"argument names are invalid and will be ignored:",
+					paste(names(arg.list)[not.valid],collapse=", ")))
+				arg.list[not.valid] <- NULL
+			}
+			return(arg.list)
+		},
+		statistics = {
+			switch(method,
+				deseq = {
+					valid <- names(arg.list) %in% c("method","sharingMode","fitType")
+					not.valid <- which(!valid)
+				},
+				edger = {
+					valid <- names(arg.list) %in% c("main.method","rowsum.filter","prior.df","trend",
+						"span","tag.method","grid.length","grid.range","offset","glm.method","subset",
+						"AveLogCPM","trend.method","dispersion","offset","weights","lib.size","prior.count",
+						"start","method","test","abundance.trend","robust","winsor.tail.p")
+					not.valid <- which(!valid)
+				},
+				noiseq = {
+					valid <- names(arg.list) %in% c("k","norm","replicates","factor","conditions","pnr",
+						"nss","v","lc","nclust","r","adj","a0per","filter","depth","cv.cutoff","cpm")
+					not.valid <- which(!valid)
+				},
+				bayseq = {
+					valid <- names(arg.list) %in% c("samplesize","samplingSubset","equalDispersions",
+						"estimation","zeroML","consensus","moderate","pET","marginalise","subset","priorSubset",
+						"bootStraps","conv","nullData","returnAll","returnPD","discardSampling","cl")
+					not.valid <- which(!valid)
+				},
+				limma = {
+					valid <- names(arg.list) %in% c("normalize.method")
+					not.valid <- which(!valid)
+				},
+				nbpseq = {
+					valid <- names(arg.list) %in% c("main.method","method","tests","alternative")
+					not.valid <- which(!valid)
+				}
+			)
+			if (length(not.valid)>0) {
+				warnwrap(paste("The following",method,what,"argument names are invalid and will be ignored:",
+					paste(names(arg.list)[not.valid],collapse=", ")))
+				arg.list[not.valid] <- NULL
+			}
+			return(arg.list)
+		},
+		gene.filter = {
+			valid.1 <- names(arg.list) %in% c("length","avg.reads","expression","biotype")
+			not.valid.1 <- which(!valid.1)
+			if (length(not.valid.1)>0) {
+				warnwrap(paste("The following",method,what,"argument names are invalid and will be ignored:",
+					paste(names(arg.list)[not.valid.1],collapse=", ")))
+				arg.list[not.valid.1] <- NULL
+			}
+			if (length(arg.list)>0) {
+				for (n in names(arg.list)) {
+					switch(n,
+						length = {
+							valid.2 <- names(arg.list[[n]]) %in% c("length")
+							not.valid.2 <- which(!valid.2)
+						},
+						avg.reads = {
+							valid.2 <- names(arg.list[[n]]) %in% c("average.per.bp","quantile")
+							not.valid.2 <- which(!valid.2)
+						},
+						expression = {
+							valid.2 <- names(arg.list[[n]]) %in% c("median","mean","quantile","known","custom")
+							not.valid.2 <- which(!valid.2)
+						}
+					)
+					if (length(not.valid.2)>0) {
+						warnwrap(paste("The following",method,what,"sub-argument names are invalid and will be ignored:",
+							paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+						arg.list[[n]][not.valid.2] <- NULL
+					}
+				}
+			}
+			return(arg.list)
+		},
+		exon.filter = {
+			valid.1 <- names(arg.list) %in% c("mnrpx")
+			not.valid.1 <- which(!valid.1)
+			if (length(not.valid.1)>0) {
+				warnwrap(paste("The following",method,what,"argument names are invalid and will be ignored:",
+					paste(names(arg.list)[not.valid.1],collapse=", ")))
+				arg.list[not.valid.1] <- NULL
+			}
+			if (length(arg.list)>0) {
+				for (n in names(arg.list)) {
+					switch(n,
+						mnrpx = {
+							valid.2 <- names(arg.list[[n]]) %in% c("exons.per.gene","min.exons","frac")
+							not.valid.2 <- which(!valid.2)
+						}
+					)
+					if (length(not.valid.2)>0) {
+						warnwrap(paste("The following",method,what,"sub-argument names are invalid and will be ignored:",
+							paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+						arg.list[[n]][not.valid.2] <- NULL
+					}
+				}
+			}
+			return(arg.list)
+		},
+		biotype.filter = {
+			switch(method,
+				hg18 = {
+					valid <- names(arg.list) %in% c("unprocessed_pseudogene","pseudogene","miRNA","retrotransposed",
+						"protein_coding","processed_pseudogene","snRNA","snRNA_pseudogene","Mt_tRNA_pseudogene",
+						"miRNA_pseudogene","misc_RNA","tRNA_pseudogene","snoRNA","scRNA_pseudogene","rRNA_pseudogene",
+						"snoRNA_pseudogene","rRNA","misc_RNA_pseudogene","IG_V_gene","IG_D_gene","IG_J_gene",
+						"IG_C_gene","IG_pseudogene","scRNA")
+					not.valid <- which(!valid)
+				},
+				hg19 = {
+					valid <- names(arg.list) %in% c("pseudogene","lincRNA","protein_coding","antisense",
+						"processed_transcript","snRNA","sense_intronic","miRNA","misc_RNA","snoRNA","rRNA",
+						"polymorphic_pseudogene","sense_overlapping","three_prime_overlapping_ncrna","TR_V_gene",
+						"TR_V_pseudogene","TR_D_gene","TR_J_gene","TR_C_gene","TR_J_pseudogene","IG_C_gene",
+						"IG_C_pseudogene","IG_J_gene","IG_J_pseudogene","IG_D_gene","IG_V_gene","IG_V_pseudogene")
+					not.valid <- which(!valid)
+				},
+				mm9 = {
+					valid <- names(arg.list) %in% c("pseudogene","snRNA","protein_coding","antisense","miRNA",
+						"lincRNA","snoRNA","processed_transcript","misc_RNA","rRNA","sense_overlapping",
+						"sense_intronic","polymorphic_pseudogene","non_coding","three_prime_overlapping_ncrna",
+						"IG_C_gene","IG_J_gene","IG_D_gene","IG_V_gene","ncrna_host")
+					not.valid <- which(!valid)
+				},
+				mm10 = {
+					valid <- names(arg.list) %in% c("pseudogene","snRNA","protein_coding","antisense","miRNA",
+						"snoRNA","lincRNA","processed_transcript","misc_RNA","rRNA","sense_intronic","sense_overlapping",
+						"polymorphic_pseudogene","IG_C_gene","IG_J_gene","IG_D_gene","IG_LV_gene","IG_V_gene",
+						"IG_V_pseudogene","TR_V_gene","TR_V_pseudogene","three_prime_overlapping_ncrna")
+					not.valid <- which(!valid)
+				},
+				dm3 = {
+					valid <- names(arg.list) %in% c("protein_coding","ncRNA","snoRNA","pre_miRNA","pseudogene",
+						"snRNA","tRNA","rRNA")
+					not.valid <- which(!valid)
+				},
+				rn5 = {
+					valid <- names(arg.list) %in% c("protein_coding","pseudogene","processed_pseudogene","miRNA",
+						"rRNA","misc_RNA")
+					not.valid <- which(!valid)
+				},
+				danRer7 = {
+					valid <- names(arg.list) %in% c("antisense","protein_coding","miRNA","snoRNA","rRNA","
+						lincRNA","processed_transcript","snRNA","pseudogene","sense_intronic","misc_RNA","
+						polymorphic_pseudogene","IG_V_pseudogene","IG_C_pseudogene","IG_J_pseudogene","
+						non_coding","sense_overlapping")
+					not.valid <- which(!valid)
+				}
+			)
+			if (length(not.valid)>0) {
+				warnwrap(paste("The following",method,what,"argument names are invalid and will be ignored:",
+					paste(names(arg.list)[not.valid],collapse=", ")))
+				arg.list[not.valid] <- NULL
+			}
+			return(arg.list)
 		}
 	)
 }
