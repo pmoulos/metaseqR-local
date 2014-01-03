@@ -51,8 +51,8 @@ biocViews: Bioinformatics, Preprocessing, HighThroughputSequencing,
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 0.9.1
-Date: 2013-12-06
+Version: 0.91.0
+Date: 2014-01-03
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'
@@ -63,5 +63,6 @@ Collate:
     'metaseqr.norm.R'
     'metaseqR-package.R'
     'metaseqr.plot.R'
+    'metaseqr.sim.R'
     'metaseqr.stat.R'
     'metaseqr.util.R'

@@ -1957,11 +1957,11 @@ make.report.messages <- function(lang) {
 						"line separates the most abundant biotypes (in the left-hand side, corresponding to the left axis scale)",
 						"from the rest (in the right-hand side, corresponding to the right axis scale). Otherwise, the lower abundance",
 						"biotypes would be indistiguishable. Unexpected outcomes in this quality control chart (e.g. very low detection",
-						"of protein coding genes) would signify possible low quality of a sample",collapse=" "
+						"of protein coding genes) would signify possible low quality of a sample.",collapse=" "
 					),
 					countsbio=paste(
 						"The biotype detection counts boxplots are a set of quality control charts that depict both the biological",
-						"classifcation for the detected features and the actual distribution of the read counts for each biological",
+						"classification for the detected features and the actual distribution of the read counts for each biological",
 						"type. The boxplot comprises a means of summarizing the read counts distribution of a sample in the form of",
 						"a bar with extending lines, as commonly used way of graphically presenting groups of numerical data. A boxplot",
 						"also indicates which observations, if any, might be considered outliers and is able to visually show different",
@@ -2008,7 +2008,7 @@ make.report.messages <- function(lang) {
 						"depict the accordance for that pair of samples. Highly correlated samples are depicted as ellipses with narrow",
 						"diameter while while poorly correlated samples are depicted as ellipses with wide diameters. Also, highly correlated",
 						"samples are depicted as ellipses with a left-to-right upwards direction while poorly correlated samples are",
-						"depicted as ellipses with a right-to-left upwards direction",collapse=" "
+						"depicted as ellipses with a right-to-left upwards direction.",collapse=" "
 					),
 					pairwise=paste(
 						"The pairwise comparison plots are split in three parts: the upper diagonal consists of simple scatterplots",
@@ -2050,7 +2050,7 @@ make.report.messages <- function(lang) {
 						"Boxplots at similar levels indicate good quality of the normalization. When after normalization boxplots",
 						"remain at different levels, maybe another normalization algorithm may have to be examined. The un-normalized",
 						"boxplots show the need for data normalization in order for the data from different samples to follow the",
-						"same underlying distribution and statistical testing becoming possible",collapse=" "
+						"same underlying distribution and statistical testing becoming possible.",collapse=" "
 					),
 					gcbias=paste(
 						"The GC-content bias plot is a quality control chart that shows the possible dependence of the read counts",
@@ -2101,7 +2101,7 @@ make.report.messages <- function(lang) {
 						"is a natural and simple way to model count data, it has the limitation of assuming equality of the mean and",
 						"variance. For this reason, the negative binomial distribution has been proposed as an alternative when the data",
 						"show over-dispersion...'</em> If overdispersion is not present, the data cloud is expected to be evenly scattered",
-						"around the smoothing curve",collapse=" "
+						"around the smoothing curve.",collapse=" "
 					),
 					deheatmap=paste(
 						"The Differentially Expressed Genes (DEGs) heatmaps depict how well samples from different conditions cluster",
@@ -2119,7 +2119,7 @@ make.report.messages <- function(lang) {
 						"statistical significance, while the vertical dashed lines set the thresholds for biological significance. You should",
 						"also keep in mind that when using more than one statistical algorithm and performing meta-analysis, the volcano",
 						"plots become harder to interpret. This happens because the genes that have stronger evidence of being differentially",
-						"experessed obtain lower p-values while the rest either remain at similar levels or obtain higher p-values. The",
+						"expressed obtain lower p-values while the rest either remain at similar levels or obtain higher p-values. The",
 						"result is a 'warped' volcano plot, with two main data clouds: one in the upper part of the plot, and one in the",
 						"lower part of the plot. You can always zoom in when using interacting mode (the default).",
 						collapse=" "
@@ -2134,7 +2134,7 @@ make.report.messages <- function(lang) {
 						"presented in grey bars, the percentage of DEGs in each biotype is presented in blue lined bars and the percentage",
 						"of each biotype in DEGs is presented in solid blue lines. The vertical green line separates the most abundant",
 						"biotypes (in the left-hand side, corresponding to the left axis scale), from the rest (in the right-hand side,",
-						"corresponding to the right axis scale). Otherwise, the lower abundance, biotypes would be indistiguishable.",
+						"corresponding to the right axis scale). Otherwise, the lower abundance, biotypes would be indistinguishable.",
 						collapse=" "
 					),
 					filtered=paste(
@@ -2405,6 +2405,8 @@ disp <- function(...) {
 			#flush.console()
 		}
 	}
+	else
+		message("\n",...,appendLF=FALSE)
 	if (exists("LOGGER")) {
 		levalias <- c("one","two","three","four","five")
 		switch(levalias[level(LOGGER)],

@@ -271,57 +271,65 @@
   the qvalue Bioconductor package. Defaults to \code{"BH"}
   for Benjamini-Hochberg correction.}
 
-  \item{meta.p}{the meta-analysis method to combine
-  p-values from multiple statistical tests
-  \strong{(experimental! see also the second note below,
-  regarding meta-analysis)}. It can be one of
-  \code{"simes"} (default), \code{"bonferroni"}, 
-  \code{"dperm.min"},
-  \code{"dperm.max"}, \code{"dperm.weight"},
-  \code{"fisher"}, \code{"fperm"}, \code{"whitlock"},
-  \code{"intersection"}, \code{"union"} or \code{"none"}.
-  For the \code{"fisher"} and \code{"fperm"} methods, see
-  the documentation of the R package MADAM. For the
-  \code{"whitlock"} method, see the documentation of the
-  survcomp Bioconductor package. With the
-  \code{"intersection"} option, the final p-value is the
-  product of individual p-values derived from each method.
-  However, the product is not used for the statistical
-  cutoff to derive gene lists. In this case, the final gene
-  list is derived from the common differentially expressed
-  genes from all applied methods. Similarly, when
-  \code{meta.p="union"}, the final list is derived from the
-  union of individual methods and the final p-values are
-  the sum of individual p-values. The latter can be used as
-  a very lose statistical threshold to aggregate results
-  from all methods regardless of their False Positive Rate.
-  With the \code{"simes"} option, the method proposed by
-  Simes (Simes, R. J., 1986) is used. Finally, with the
-  \code{"dperm.min"}, \code{"dperm.max"},
-  \code{"dperm.weight"} options, a permutation procedure is
-  initiated, where \code{nperm} permutations are performed
-  across the samples of the normalized counts matrix,
-  producing \code{nperm} permuted instances of the initial
-  dataset. Then, all the chosen statistical tests are
-  re-executed for each permutation. The final p-value is
-  the number of times that the p-value of the permuted
-  datasets is smaller than the original dataset. The
-  p-value of the original dataset is created based on the
-  choice of one of \code{dperm.min}, \code{dperm.max} or
-  \code{dperm.weight} options. In case of \code{dperm.min},
-  the initial p-value vector is consists of the minimum
-  p-value resulted from the applied statistical tests for
-  each gene. The maximum p-value is used with the
-  \code{dperm.max} option. With the \code{dperm.weight}
-  option, the \code{weight} weighting vector for each
-  statistical test is used to weight each p-value according
-  to the power of statistical tests (some might work better
-  for a specific dataset). Be careful as the permutation
-  procedure usually requires a lot of time. However, it
-  should be the most accurate. This method will NOT work
-  when there are no replicated samples across biological
-  conditions. In that case, use \code{meta.p="simes"}
-  instead.}
+  \item{meta.p}{the meta-analysis method to combine 
+  p-values from multiple statistical tests 
+  \strong{(experimental! see also the second note 
+  below, regarding meta-analysis)}. It can be one 
+  of \code{"simes"} (default), \code{"bonferroni"}, 
+  \code{"minp"}, \code{"maxp"}, \code{"weight"}, 
+  \code{"dperm.min"}, \code{"dperm.max"}, 
+  \code{"dperm.weight"}, \code{"fisher"}, 
+  \code{"fperm"}, \code{"whitlock"}, 
+  \code{"intersection"}, \code{"union"} or 
+  \code{"none"}. For the \code{"fisher"} and 
+  \code{"fperm"} methods, see the documentation
+  of the R package MADAM. For the \code{"whitlock"} 
+  method, see the documentation of the survcomp 
+  Bioconductor package. With the 
+  \code{"intersection"} option, the final p-value 
+  is the product of individual p-values derived 
+  from each method. However, the product is not 
+  used for the statistical cutoff to derive gene 
+  lists. In this case, the final gene list is 
+  derived from the common differentially expressed 
+  genes from all applied methods. Similarly, when 
+  \code{meta.p="union"}, the final list is derived 
+  from the union of individual methods and the 
+  final p-values are the sum of individual p-values. 
+  The latter can be used as a very lose statistical 
+  threshold to aggregate results from all methods 
+  regardless of their False Positive Rate. With 
+  the \code{"simes"} option, the method proposed by
+  Simes (Simes, R. J., 1986) is used. With the 
+  \code{"dperm.min"}, \code{"dperm.max"}, 
+  \code{"dperm.weight"} options, a permutation 
+  procedure is initialed, where \code{nperm} 
+  permutations are performed across the samples 
+  of the normalized counts matrix, producing \code{nperm} 
+  permuted instances of the initital dataset. Then, all 
+  the chosen statistical tests are re-executed for each 
+  permutation. The final p-value is the number of times 
+  that the p-value of the permuted datasets is smaller 
+  than the original dataset. The p-value of the original 
+  dataset is created based on the choice of one of 
+  \code{dperm.min}, \code{dperm.max} or 
+  \code{dperm.weight} options. In case of 
+  \code{dperm.min}, the intial p-value vector consists 
+  of the minimum p-value resulted from the applied 
+  statistical tests for each gene. The maximum p-value 
+  is used with the \code{dperm.max} option. With the 
+  \code{dperm.weight} option, the \code{weight} weighting 
+  vector for each statistical test is used to weight each 
+  p-value according to the power of statistical tests 
+  (some might work better for a specific dataset). Be 
+  careful as the permutation procedure usually requires 
+  a lot of time. However, it should be the most 
+  accurate. This method will NOT work when there are 
+  no replicated samples across biological conditions. 
+  In that case, use \code{meta.p="simes"} instead. 
+  Finally, there are the \code{"minp"}, \code{"maxp"} 
+  and \code{"weight"} options which correspond to
+  the latter three methods but without permutations.}
 
   \item{weight}{a vector of weights with the same length as
   the \code{statistics} vector containing a weight for each

@@ -259,6 +259,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			res <- topTable(fit,coef=1:ncol(fit$design),n=nrow(vom))
 		p[[con.name]] <- res[,"P.Value"]
 		names(p[[con.name]]) <- rownames(res)
+		p[[con.name]] <- p[[con.name]][rownames(dge)]
 		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
@@ -495,6 +496,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,lib
 		tmp <- topCounts(cd,group="DE",number=nrow(cd))
 		p[[con.name]] <- 1 - as.numeric(tmp[,"Likelihood"])
 		names(p[[con.name]]) <- rownames(tmp)
+		p[[con.name]] <- p[[con.name]][rownames(CD@data)]
 		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)

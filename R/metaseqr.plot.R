@@ -1846,6 +1846,231 @@ make.venn.colorscheme <- function(n) {
 	)
 }
 
+#' Create basic ROC curves
+#'
+#' This function creates basic ROC curves using a matrix of p-values (such a matrix can be derived for example from the result table
+#' of \code{\link{metaseqr}} by subsetting the table to get the p-values from several algorithms) given a ground truth vector for
+#' differential expression and a significance level.
+#'
+#' @param truth the ground truth differential expression vector. It should contain only zero and non-zero elements, with zero denoting
+#' non-differentially expressed genes and non-zero, differentially expressed genes. Such a vector can be obtained for example by using
+#' the \code{\link{make.sim.data.sd}} function, which creates simulated RNA-Seq read counts based on real data.
+#' @param p a p-value matrix whose rows correspond to each element in the \code{truth} vector. If the matrix has a \code{colnames}
+#' attribute, a legend will be added to the plot using these names, else a set of column names will be auto-generated. \code{p} can
+#' also be a list or a data frame.
+#' @param sig a significance level (0 < sig <=1).
+#' @param x what to plot on x-axis, can be one of \code{"FPR"}, \code{"FNR"}, \code{"TPR"}, \code{"TNR"} for False Positive Rate, False
+#' Negative Rate, True Positive Rate and True Negative Rate respectively.
+#' @param y what to plot on y-axis, same as \code{x} above.
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @return A named list with two members. The first member is a list containing the ROC statistics: \code{TP} (True Postives), \code{FP}
+#' (False Positives), \code{FN} (False Negatives), \code{TN} (True Negatives), \code{FPR} (False Positive Rate), \code{FNR} (False
+#' Negative Rate), \code{TPR} (True Positive Rate), \code{TNR} (True Negative Rate). The second is the path to the created figure graphic.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",path=NULL,...) {
+	check.text.args("x",x,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
+	check.text.args("y",y,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
+	if (is.list(p))
+		pmat <- do.call("cbind",p)
+	else if (is.data.frame(p))
+		pmat <- as.matrix(p)
+	else if (is.matrix(p))
+		pmat <- p
+	if (is.null(colnames(pmat)))
+		colnames(pmat) <- paste("p",1:ncol(pmat),sep="_")
+
+	ax.name <- list(
+		tpr="True Positive Rate",
+		tnr="True Negative Rate",
+		fpr="False Positive Rate",
+		fnr="False Negative Rate"
+	)
+
+	ROC <- vector("list",ncol(pmat))
+	names(ROC) <- colnames(pmat)
+
+	colspace.universe <- c("red","blue","green","orange","darkgrey","green4","black",
+		"pink","brown","magenta","yellowgreen","pink2","seagreen4","darkcyan")
+	colspace <- colspace.universe[1:ncol(pmat)]
+	names(colspace) <- colnames(pmat)
+	
+	for (n in colnames(pmat)) {
+		disp("Processing ",n)
+		gg <- which(pmat[,n]<sig)
+		psample <- pmat[gg,n]
+		size <- seq(1,length(gg))
+		cuts <- seq(min(psample),sig,length.out=length(gg))
+		local.truth <- truth[gg]
+				
+		TP <- FP <- FN <- TN <- FPR <- FNR <- TPR <- TNR <- numeric(length(size))
+		
+		for (i in 1:length(size)) {
+			TP[i] <- length(which(psample<cuts[i] & local.truth!=0))
+			FP[i] <- length(which(psample<cuts[i] & local.truth==0))
+			FN[i] <- length(which(psample>cuts[i] & local.truth!=0))
+			TN[i] <- length(which(psample>cuts[i] & local.truth==0))
+
+			if (FP[i]+TN[i] == 0)
+				FPR[i] <- 0
+			else
+				FPR[i] <- FP[i]/(FP[i]+TN[i])
+			FNR[i] <- FN[i]/(TP[i]+FN[i])
+			TPR[i] <- TP[i]/(TP[i]+FN[i])
+			if (TN[i]+FP[i] == 0)
+				TNR[i] <- 0
+			else
+				TNR[i] <- TN[i]/(TN[i]+FP[i])
+		}
+
+		ROC[[n]] <- list(TP=TP,FP=FP,FN=FN,TN=TN,FPR=FPR,FNR=FNR,TPR=TPR,TNR=TNR)
+	}
+
+	fil <- file.path(path,paste("ROC",output,sep="."))
+	if (output %in% c("pdf","ps","x11"))
+		graphics.open(output,fil,width=8,height=8)
+	else
+		graphics.open(output,fil,width=1024,height=1024,res=100)
+	
+	xlim <- c(0,1)
+	ylim <- c(0,1)
+	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lwd=1.5,lty=1)
+	plot.new()
+	plot.window(xlim,ylim)
+	axis(1,at=pretty(xlim,10))
+	axis(2,at=pretty(ylim,10))
+	for (n in names(ROC)) {
+		lines(ROC[[n]][[x]],ROC[[n]][[y]],col=colspace[n],...)
+	}
+	grid()
+	title(xlab=ax.name[[x]],ylab=ax.name[[y]])
+	legend(x="bottomright",legend=names(ROC),col=colspace,lty=1)
+
+	graphics.close(output)
+
+	return(list(ROC=ROC,path=fil))
+}
+
+#' Create False (or True) Discovery curves
+#'
+#' This function creates false (or true) discovery curves using a matrix of p-values (such a matrix can be derived for example from
+#' the result table of \code{\link{metaseqr}} by subsetting the table to get the p-values from several algorithms) given a ground
+#' truth vector for differential expression.
+#'
+#' @param truth the ground truth differential expression vector. It should contain only zero and non-zero elements, with zero denoting
+#' non-differentially expressed genes and non-zero, differentially expressed genes. Such a vector can be obtained for example by using
+#' the \code{\link{make.sim.data.sd}} function, which creates simulated RNA-Seq read counts based on real data. The elements of \code{truth}
+#' MUST be named (e.g. each gene's name).
+#' @param p a p-value matrix whose rows correspond to each element in the \code{truth} vector. If the matrix has a \code{colnames}
+#' attribute, a legend will be added to the plot using these names, else a set of column names will be auto-generated. \code{p} can
+#' also be a list or a data frame. The p-values MUST be named (e.g. each gene's name).
+#' @param type what to plot, can be \code{"fdc"} for False Discovery Curves (default) or \code{"tdc"} for True Discovery Curves.
+#' @param N create the curves based on the top \code{N} ranked genes (default: 2000).
+#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
+#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @return A named list with two members: the first member (\code{ftdr}) contains the values used to create the plot. The second member
+#' (\code{path}) contains the path to the created figure graphic.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
+	check.text.args("type",type,c("fdc","tdc"),multiarg=FALSE)
+	if (is.list(p))
+		pmat <- do.call("cbind",p)
+	else if (is.data.frame(p))
+		pmat <- as.matrix(p)
+	else if (is.matrix(p))
+		pmat <- p
+	if (is.null(colnames(pmat)))
+		colnames(pmat) <- paste("p",1:ncol(pmat),sep="_")
+
+	y.name <- list(
+		tdc="Number of True Discoveries",
+		fdc="Number of False Discoveries"
+	)
+
+	ftdr.list <- vector("list",ncol(pmat))
+	names(ftdr.list) <- colnames(pmat)
+
+	colspace.universe <- c("red","blue","green","orange","darkgrey","green4","black",
+		"pink","brown","magenta","yellowgreen","pink2","seagreen4","darkcyan")
+	colspace <- colspace.universe[1:ncol(pmat)]
+	names(colspace) <- colnames(pmat)
+
+	if (type=="fdc") {
+		for (n in colnames(pmat)) {
+			disp("Processing ",n)
+			z <- sort(pmat[,n])
+			for (i in 1:N) {
+				nn <- length(intersect(names(z[1:i]),names(which(truth==0))))
+				if (nn==0)
+					ftdr.list[[n]][i] <- 1
+				else
+					ftdr.list[[n]][i] <- nn
+			}
+		}
+	}
+	else if (type=="tdc") {
+		for (n in colnames(pmat)) {
+			disp("Processing ",n)
+			z <- sort(pmat[,n])
+			for (i in 1:N)
+				ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),names(which(truth!=0))))
+		}
+	}
+	disp("")
+
+	fil <- file.path(path,paste("FTDR",output,sep="."))
+	if (output %in% c("pdf","ps","x11"))
+		graphics.open(output,fil,width=8,height=8)
+	else
+		graphics.open(output,fil,width=1024,height=1024,res=100)
+
+	xlim <- c(1,N)
+	ylim <- c(1,length(which(truth!=0)))
+	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lwd=1.5,lty=1)
+	plot.new()
+
+	if (type=="fdc") {		
+		plot.window(xlim,ylim,log="y")
+		axis(1,at=pretty(xlim,10))
+		axis(2)
+		for (n in names(ftdr.list)) {
+			lines(ftdr.list[[n]],col=colspace[n])
+		}
+		grid()
+		title(main="Selected genes vs False Discoveries",xlab="Number of selected genes",ylab=y.name[[type]])
+		legend(x="topleft",legend=names(ftdr.list),col=colspace,lty=1)
+	}
+	else if (type=="tdc") {
+		plot.window(xlim,ylim)
+		axis(1,at=pretty(xlim,10))
+		axis(2,at=pretty(ylim,10))
+		for (n in names(ftdr.list)) {
+			lines(ftdr.list[[n]],col=colspace[n])
+		}
+		grid()
+		title(main="Selected genes vs True Discoveries",xlab="Number of selected genes",ylab=y.name[[type]])
+		legend(x="bottomright",legend=names(ftdr.list),col=colspace,lty=1)
+	}
+
+	graphics.close(output)
+
+	return(list(ftdr=ftdr.list,path=fil))
+}
+
 #' Open plotting device
 #'
 #' Wrapper function to open a plotting device. Internal use only.

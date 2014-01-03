@@ -1,7 +1,7 @@
 library(roxyPackage)
 library(knitr)
 
-VERSION <- "0.9.1"
+VERSION <- "0.91.0"
 
 roxy.package(
 	pck.source.dir="/media/HD4/Fleming/dev/metaseqR",

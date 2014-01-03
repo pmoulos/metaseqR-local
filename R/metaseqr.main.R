@@ -108,25 +108,27 @@
 #' @param adjust.method the multiple testing p-value adjustment method. It can be one of \code{\link{p.adjust.methods}} or \code{"qvalue"}
 #' from the qvalue Bioconductor package. Defaults to \code{"BH"} for Benjamini-Hochberg correction.
 #' @param meta.p the meta-analysis method to combine p-values from multiple statistical tests \strong{(experimental! see also the 
-#' second note below, regarding meta-analysis)}. It can be one of \code{"simes"} (default), \code{"bonferroni"}, \code{"dperm.min"}, \code{"dperm.max"},
-#' \code{"dperm.weight"}, \code{"fisher"}, \code{"fperm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or \code{"none"}.
-#' For the \code{"fisher"} and \code{"fperm"} methods, see the documentation of the R package MADAM. For the \code{"whitlock"} method,
-#' see the documentation of the survcomp Bioconductor package. With the \code{"intersection"} option, the final p-value is the product
-#' of individual p-values derived from each method. However, the product is not used for the statistical cutoff to derive gene lists. In
-#' this case, the final gene list is derived from the common differentially expressed genes from all applied methods. Similarly, when
-#' \code{meta.p="union"}, the final list is derived from the union of individual methods and the final p-values are the sum of individual
-#' p-values. The latter can be used as a very lose statistical threshold to aggregate results from all methods regardless of their
-#' False Positive Rate. With the \code{"simes"} option, the method proposed by Simes (Simes, R. J., 1986) is used. Finally, with the
-#' \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"} options, a permutation procedure is initialed, where \code{nperm} permutations
-#' are performed across the samples of the normalized counts matrix, producing \code{nperm} permuted instances of the initital dataset.
-#' Then, all the chosen statistical tests are re-executed for each permutation. The final p-value is the number of times that the p-value of the 
-#' permuted datasets is smaller than the original dataset. The p-value of the original dataset is created based on the choice of one
-#' of \code{dperm.min}, \code{dperm.max} or \code{dperm.weight} options. In case of \code{dperm.min}, the intial p-value vector is
-#' consists of the minimum p-value resulted from the applied statistical tests for each gene. The maximum p-value is used with the
-#' \code{dperm.max} option. With the \code{dperm.weight} option, the \code{weight} weighting vector for each statistical test is used
-#' to weight each p-value according to the power of statistical tests (some might work better for a specific dataset). Be careful as the
-#' permutation procedure usually requires a lot of time. However, it should be the most accurate. This method will NOT work when there 
-#' are no replicated samples across biological conditions. In that case, use \code{meta.p="simes"} instead.
+#' second note below, regarding meta-analysis)}. It can be one of \code{"simes"} (default), \code{"bonferroni"}, \code{"minp"}, \code{"maxp"},
+#' \code{"weight"}, \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"}, \code{"fisher"}, \code{"fperm"}, \code{"whitlock"},
+#' \code{"intersection"}, \code{"union"} or \code{"none"}. For the \code{"fisher"} and \code{"fperm"} methods, see the documentation
+#' of the R package MADAM. For the \code{"whitlock"} method, see the documentation of the survcomp Bioconductor package. With the
+#' \code{"intersection"} option, the final p-value is the product of individual p-values derived from each method. However, the product
+#' is not used for the statistical cutoff to derive gene lists. In this case, the final gene list is derived from the common differentially
+#' expressed genes from all applied methods. Similarly, when \code{meta.p="union"}, the final list is derived from the union of individual
+#' methods and the final p-values are the sum of individual p-values. The latter can be used as a very lose statistical threshold to
+#' aggregate results from all methods regardless of their False Positive Rate. With the \code{"simes"} option, the method proposed by
+#' Simes (Simes, R. J., 1986) is used. With the \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"} options, a permutation
+#' procedure is initialed, where \code{nperm} permutations are performed across the samples of the normalized counts matrix, producing
+#' \code{nperm} permuted instances of the initital dataset. Then, all the chosen statistical tests are re-executed for each permutation.
+#' The final p-value is the number of times that the p-value of the permuted datasets is smaller than the original dataset. The p-value
+#' of the original dataset is created based on the choice of one of \code{dperm.min}, \code{dperm.max} or \code{dperm.weight} options.
+#' In case of \code{dperm.min}, the intial p-value vector is consists of the minimum p-value resulted from the applied statistical
+#' tests for each gene. The maximum p-value is used with the \code{dperm.max} option. With the \code{dperm.weight} option, the \code{weight}
+#' weighting vector for each statistical test is used to weight each p-value according to the power of statistical tests (some might work
+#' better for a specific dataset). Be careful as the permutation procedure usually requires a lot of time. However, it should be the
+#' most accurate. This method will NOT work when there are no replicated samples across biological conditions. In that case, use
+#' \code{meta.p="simes"} instead. Finally, there are the \code{"minp"}, \code{"maxp"} and \code{"weight"} options which correspond to
+#' the latter three methods but without permutations.
 #' @param weight a vector of weights with the same length as the \code{statistics} vector containing a weight for each statistical test.
 #' It should sum to 1. \strong{Use with caution with the} \code{dperm.weight} \strong{parameter! Theoretical background is not yet}
 #' \strong{solid and only experience shows improved results!}
@@ -553,7 +555,8 @@ metaseqr <- function(
 	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
-	meta.p=if (length(statistics)>1) c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none") else "none",
+	meta.p=if (length(statistics)>1) c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock",
+		"intersection","union","minp","maxp","weight","none") else "none",
 	weight=rep(1/length(statistics),length(statistics)),
 	nperm=10000,
 	reprod=TRUE,
@@ -679,7 +682,7 @@ metaseqr <- function(
 	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq","nbpseq","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma","nbpseq"),multiarg=TRUE)
-	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),multiarg=FALSE)
+	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","minp","maxp","weight","none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("png","jpg","tiff","bmp","pdf","ps"),multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats","counts","flags"),multiarg=TRUE)
 	check.text.args("export.scale",export.scale,c("natural","log2","log10","vst"),multiarg=TRUE)

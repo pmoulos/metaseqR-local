@@ -1,4 +1,4 @@
-ChangeLog for package metaseqr mustaRd
+ChangeLog for package metaseqR
 
 changes in version 0.9.0 (2013-11-21)
 added:
@@ -11,4 +11,12 @@ added:
 fixed:
   - A bug in exon filters resulting in removing genes/transcripts with only one exon
   - A serious bug in exon filters causing wrong genes to be filtered out under circumstances
+
+changes in version 0.91.0 (2014-01-03)
+added:
+  - Functions to create simulated datasets
+  - Functions to create false discovery and ROC curves
+fixed:
+  - A bug in p-value vector naming causing unordered p-values for limma and baySeq when combining methods
+  - Smaller byg fixes
 

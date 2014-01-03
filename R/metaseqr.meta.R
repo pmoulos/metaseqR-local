@@ -29,10 +29,10 @@
 #' \dontrun{
 #' # Not yet available
 #'}
-meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"),
+meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","minp","maxp","weight","none"),
 	counts,sample.list,statistics,stat.args,libsize.list,nperm=10000,weight=rep(1/length(statistics),length(statistics)),
 	reprod=TRUE,multic=FALSE) {
-	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","none"))
+	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min","dperm.max","dperm.weight","fperm","whitlock","intersection","union","minp","maxp","weight","none"))
 	contrast <- names(cp.list)
 	disp("Performing meta-analysis with ",meta.p)
 	switch(meta.p,
@@ -64,12 +64,12 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 		whitlock = {
 			sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,combine.test,method="z.transform")))
 		},
-		#hommel = { # Returns a matrix of p-values, not summary
-		#	sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,p.adjust,"hommel")))
-		#},
 		simes = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
 				return(apply(x,1,function(p) {
+					ze <- which(p==0)
+					if (length(ze)>0)
+						x[ze] <- 0.1*min(p[-ze])
 					m <- length(p)
 					y <- sort(p)
 					s <- min(m*(y/(1:m)))
@@ -80,9 +80,36 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 		bonferroni = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
 				return(apply(x,1,function(p) {
+					ze <- which(p==0)
+					if (length(ze)>0)
+						x[ze] <- 0.1*min(p[-ze])
 					b <- length(p)*min(p)
 					return(min(c(1,b)))
 				}))
+			})
+		},
+		minp = {
+			sum.p.list <- wapply(multic,cp.list,function(x) {
+				return(apply(x,1,function(p) {
+					return(min(p))
+				}))
+			})
+		},
+		maxp = {
+			sum.p.list <- wapply(multic,cp.list,function(x) {
+				return(apply(x,1,function(p) {
+					return(max(p))
+				}))
+			})
+		},
+		weight = {
+			sum.p.list <- wapply(multic,cp.list,function(x) {
+				return(apply(x,1,function(p,w) {
+					ze <- which(p==0)
+					if (length(ze)>0)
+						p[ze] <- 0.1*min(p[-ze])
+					return(prod(p^w))
+				},weight))
 			})
 		},
 		dperm.min = {

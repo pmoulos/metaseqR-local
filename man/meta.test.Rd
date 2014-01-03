@@ -5,8 +5,8 @@
   meta.test(cp.list,
     meta.p = c("simes", "bonferroni", "fisher", "dperm.min", 
     "dperm.max", "dperm.weight", "fperm", "whitlock", 
-    "intersection", "union", "none"),
-    counts, sample.list, statistics, stat.args, 
+    "intersection", "union", "minp", "maxp", "weight",
+    "none"), counts, sample.list, statistics, stat.args, 
     libsize.list, nperm = 10000,
     weight = rep(1/length(statistics), length(statistics)),
     reprod=TRUE, multic = FALSE)

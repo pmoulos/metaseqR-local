@@ -1,0 +1,76 @@
+\name{diagplot.roc}
+\alias{diagplot.roc}
+\title{Create basic ROC curves}
+\usage{
+  diagplot.roc(truth, p, sig = 0.05, x = "FPR", 
+    y = "TPR", output = "x11", path = NULL, ...)
+}
+\arguments{
+  \item{truth}{the ground truth differential 
+  expression vector. It should contain only 
+  zero and non-zero elements, with zero denoting
+  non-differentially expressed genes and non-zero, 
+  differentially expressed genes. Such a vector 
+  can be obtained for example by using the 
+  \code{\link{make.sim.data.sd}} function, which 
+  creates simulated RNA-Seq read counts based on 
+  real data.}
+
+  \item{p}{a p-value matrix whose rows correspond 
+  to each element in the \code{truth} vector. If 
+  the matrix has a \code{colnames} attribute, a 
+  legend will be added to the plot using these 
+  names, else a set of column names will be 
+  auto-generated. \code{p} can also be a list or 
+  a data frame.}
+
+  \item{sig}{a significance level (0 < sig <=1).}
+
+  \item{x}{what to plot on x-axis, can be one of 
+  \code{"FPR"}, \code{"FNR"}, \code{"TPR"}, 
+  \code{"TNR"} for False Positive Rate, False
+  Negative Rate, True Positive Rate and True 
+  Negative Rate respectively.}
+
+  \item{y}{what to plot on y-axis, same as 
+  \code{x} above.}
+
+  \item{output}{one or more R plotting device to 
+  direct the plot result to. Supported mechanisms: 
+  \code{"x11"} (default), \code{"png"}, \code{"jpg"}, 
+  \code{"bmp"}, \code{"pdf"} or \code{"ps"}.}
+
+  \item{path}{the path to create output files.}
+
+  \item{...}{further arguments to be passed to plot
+  devices, such as parameter from \code{\link{par}}.}
+}
+\value{
+  A named list with two members. The first member is 
+  a list containing the ROC statistics: \code{TP} 
+  (True Postives), \code{FP} (False Positives), 
+  \code{FN} (False Negatives), \code{TN} 
+  (True Negatives), \code{FPR} (False Positive Rate), 
+  \code{FNR} (False Negative Rate), \code{TPR} (True 
+  Positive Rate), \code{TNR} (True Negative Rate). 
+  The second is the path to the created figure 
+  graphic.
+}
+\description{
+  This function creates basic ROC curves using a 
+  matrix of p-values (such a matrix can be 
+  derived for example from the result table of 
+  \code{\link{metaseqr}} by subsetting the table 
+  to get the p-values from several algorithms) 
+  given a ground truth vector for differential 
+  expression and a significance level.
+}
+\examples{
+\dontrun{
+# Not yet available
+}
+}
+\author{
+  Panagiotis Moulos
+}
+
