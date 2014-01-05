@@ -1258,12 +1258,12 @@ metaseqr <- function(
 				temp.matrix <- round(counts(norm.genes,normalized=TRUE))
 			},
 			DGEList = { # Has been normalized with edgeR
-				if (norm.args$main.method=="classic")
-					temp.matrix <- round(norm.genes$pseudo.counts)
-				else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+				#if (norm.args$main.method=="classic")
+				#	temp.matrix <- round(norm.genes$pseudo.counts)
+				#else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
 					scl <- norm.genes$samples$lib.size * norm.genes$samples$norm.factors
 					temp.matrix <- round(t(t(norm.genes$counts)/scl)*mean(scl))
-				}
+				#}
 			},
 			matrix = { # Has been normalized with EDASeq or NOISeq or nothing
 				temp.matrix <- norm.genes
@@ -1426,16 +1426,16 @@ metaseqr <- function(
 			norm.genes.expr <- round(counts(norm.genes.expr,normalized=TRUE))
 		},
 		DGEList = { # Has been processed with edgeR
-			if (norm.args$main.method=="classic") {
-				norm.genes <- round(norm.genes$pseudo.counts)
-				norm.genes.expr <- round(norm.genes.expr$pseudo.counts)
-			}
-			else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
+			#if (norm.args$main.method=="classic") {
+			#	norm.genes <- round(norm.genes$pseudo.counts)
+			#	norm.genes.expr <- round(norm.genes.expr$pseudo.counts)
+			#}
+			#else if (norm.args$main.method=="glm") { # Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
 				scl.r <- norm.genes$samples$lib.size * norm.genes$samples$norm.factors
 				norm.genes <- round(t(t(norm.genes$counts)/scl.r)*mean(scl.r))
 				scl.n <- norm.genes.expr$samples$lib.size * norm.genes.expr$samples$norm.factors
 				norm.genes.expr <- round(t(t(norm.genes.expr$counts)/scl.n)*mean(scl.n))
-			}
+			#}
 		},
 		list = {
 			norm.genes <- as.matrix(round(sweep(norm.genes$counts,2,norm.genes$norm.factors,"*")))
