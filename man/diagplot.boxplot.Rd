@@ -1,6 +1,6 @@
 \name{diagplot.boxplot}
 \alias{diagplot.boxplot}
-\title{Boxplots wrapper for the metaseqr package}
+\title{Boxplots wrapper for the metaseqR package}
 \usage{
   diagplot.boxplot(mat, name = NULL, log.it = "auto",
     y.lim = "default", is.norm = FALSE, output = "x11",

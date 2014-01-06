@@ -1,6 +1,6 @@
 \name{diagplot.metaseqr}
 \alias{diagplot.metaseqr}
-\title{Diagnostic plots for the metaseqr package}
+\title{Diagnostic plots for the metaseqR package}
 \usage{
   diagplot.metaseqr(object, sample.list, annotation = NULL,
     contrast.list = NULL, p.list = NULL,
@@ -14,7 +14,7 @@
 \arguments{
   \item{object}{a matrix or a data frame containing count
   data derived before or after the normalization procedure,
-  filtered or not by the metaseqr's filters and/or p-value.
+  filtered or not by the metaseqR's filters and/or p-value.
   The object can be fed to any of the
   \code{diagplot.metaseqr} plotting systems but not every
   plot is meaningful. For example, it's meaningless to
@@ -55,7 +55,7 @@
   cutoff when \code{diagplot.type="volcano"}.}
 
   \item{diagplot.type}{one or more of the diagnostic plots
-  supported in metaseqr package. Many of these plots
+  supported in metaseqR package. Many of these plots
   require the presence of additional package, something
   that is checked while running the main metaseqr function.
   The supported plots are \code{"mds"},
@@ -97,7 +97,7 @@
 \description{
   This is the main function for producing sructured quality
   control and informative graphs base on the results of the
-  various steps of the metaseqr package. The graphs
+  various steps of the metaseqR package. The graphs
   produced span a variety of issues like good sample
   reproducibility (Multi-Dimensional Scaling plot, biotype
   detection, heatmaps. diagplot.metaseqr, apart from

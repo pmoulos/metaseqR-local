@@ -726,21 +726,12 @@
   parameter values. You should check the documentation of
   the packages EDASeq, DESeq, edgeR, NOISeq and NBPSeq for
   the parameter names and parameter values. There are a few
-  two exceptions in parameter names: in case of
+  exceptions in parameter names: in case of
   \code{normalization="edaseq"} the only parameter names
   are \code{within.which} and \code{between.which},
   controlling the withing lane/sample and between
-  lanes/samples normalization algorithm. In case of
-  \code{normalization="edger"}, apart from the rest of the
-  edgeR normalization arguments, there is the argument
-  \code{main.method} which can be either \code{"classic"}
-  or \code{"glm"} (see the edgeR's manual for details,
-  briefly these are different algorithms for estimating
-  sample dispersion parameters and normalization factors),
-  and \code{norm.method} which controls the normalization
-  method and replaces the \code{method} parameter in
-  respective edgeR's calls (again see edgeR's manual). In
-  the case of \code{normalization="nbpseq"}, there is one
+  lanes/samples normalization algorithm. In the case 
+  of \code{normalization="nbpseq"}, there is one
   additional parameter called \code{main.method} which can
   take the calues \code{"nbpseq"} or \code{"nbsmyth"}.
   These values correspond to the two different workflows

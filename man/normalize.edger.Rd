@@ -33,7 +33,7 @@
   This function is a wrapper over edgeR normalization. It
   accepts a matrix of gene counts (e.g. produced by
   importing an externally generated table of counts to the
-  main metaseqr pipeline)
+  main metaseqr pipeline).
 }
 \examples{
 \dontrun{

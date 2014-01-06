@@ -1,17 +1,25 @@
 #' Normalization based on the EDASeq package
 #'
-#' This function is a wrapper over EDASeq normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
-#' generated table of counts to the main metaseqr pipeline)
+#' This function is a wrapper over EDASeq normalization. It accepts a matrix of
+#' gene counts (e.g. produced by importing an externally generated table of counts
+#' to the main metaseqr pipeline).
 #'
-#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
-#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param norm.args a list of EDASeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edaseq")} 
-#' for an example and how you can modify it.
-#' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation}) which contains the GC content
-#' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
-#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
-#' for the EDASeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable EDASeq methods.
+#' @param gene.counts a table where each row represents a gene and each column a
+#' sample. Each cell contains the read counts for each gene and sample. Such a
+#' table can be produced outside metaseqr and is imported during the basic metaseqr
+#' workflow.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param norm.args a list of EDASeq normalization parameters. See the result of
+#' \code{get.defaults("normalization",} \code{"edaseq")} for an example and how
+#' you can modify it.
+#' @param gene.data an optional annotation data frame (such the ones produced by
+#' \code{get.annotation}) which contains the GC content for each gene and from
+#' which the gene lengths can be inferred by chromosome coordinates.
+#' @param output the class of the output object. It can be \code{"matrix"} (default)
+#' for versatility with other tools or \code{"native"} for the EDASeq native S4
+#' object (SeqExpressionSet). In the latter case it should be handled with suitable
+#' EDASeq methods.
 #' @return A matrix or a SeqExpressionSet with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -33,7 +41,8 @@
 #' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data=gene.data)
 #' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
-normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,output=c("matrix","native")) {
+normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,
+	output=c("matrix","native")) {
 	if (is.null(norm.args))
 		norm.args <- get.defaults("normalization","edaseq")
 	if (!is.matrix(gene.counts))
@@ -59,7 +68,8 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 				)
 			)
 		)
-		seq.genes <- betweenLaneNormalization(withinLaneNormalization(seq.genes,"length",which=norm.args$within.which),which=norm.args$between.which)
+		seq.genes <- betweenLaneNormalization(withinLaneNormalization(seq.genes,
+			"length",which=norm.args$within.which),which=norm.args$between.which)
 	}
 	else {
 		seq.genes <- newSeqExpressionSet(
@@ -78,7 +88,8 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 				)
 			)
 		)
-		seq.genes <- betweenLaneNormalization(withinLaneNormalization(seq.genes,"gc",which=norm.args$within.which),which=norm.args$between.which)
+		seq.genes <- betweenLaneNormalization(withinLaneNormalization(seq.genes,
+			"gc",which=norm.args$within.which),which=norm.args$between.which)
 	}
 	if (output=="matrix")
 		return(exprs(seq.genes)) # Class: matrix
@@ -88,16 +99,23 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 
 #' Normalization based on the DESeq package
 #'
-#' This function is a wrapper over DESeq normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
-#' generated table of counts to the main metaseqr pipeline)
+#' This function is a wrapper over DESeq normalization. It accepts a matrix of
+#' gene counts (e.g. produced by importing an externally generated table of counts
+#' to the main metaseqr pipeline).
 #'
-#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
-#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param norm.args a list of DESeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"deseq")}
-#' for an example and how you can modify it.
-#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
-#' for the DESeq native S4 object (CountDataSet). In the latter case it should be handled with suitable DESeq methods.
+#' @param gene.counts a table where each row represents a gene and each column a
+#' sample. Each cell contains the read counts for each gene and sample. Such a
+#' table can be produced outside metaseqr and is imported during the basic metaseqr
+#' workflow.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param norm.args a list of DESeq normalization parameters. See the result of
+#' \code{get.defaults("normalization",} \code{"deseq")} for an example and how you
+#' can modify it.
+#' @param output the class of the output object. It can be \code{"matrix"} (default)
+#' for versatility with other tools or \code{"native"} for the DESeq native S4
+#' object (CountDataSet). In the latter case it should be handled with suitable
+#' DESeq methods.
 #' @return A matrix or a CountDataSet with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -111,7 +129,8 @@ normalize.edaseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' norm.data.matrix <- normalize.deseq(data.matrix,sample.list)
 #' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
-normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("matrix","native")) {
+normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,
+	output=c("matrix","native")) {
 	if (is.null(norm.args))
 		norm.args <- get.defaults("normalization","deseq")
 	output <- tolower(output[1])
@@ -127,16 +146,23 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 
 #' Normalization based on the edgeR package
 #'
-#' This function is a wrapper over edgeR normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
-#' generated table of counts to the main metaseqr pipeline)
+#' This function is a wrapper over edgeR normalization. It accepts a matrix of
+#' gene counts (e.g. produced by importing an externally generated table of counts
+#' to the main metaseqr pipeline).
 #'
-#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
-#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param norm.args a list of edgeR normalization parameters. See the result of \code{get.defaults("normalization",} \code{"edger")}
-#' for an example and how you can modify it.
-#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
-#' for the edgeR native S4 object (DGEList). In the latter case it should be handled with suitable edgeR methods.
+#' @param gene.counts a table where each row represents a gene and each column a
+#' sample. Each cell contains the read counts for each gene and sample. Such a
+#' table can be produced outside metaseqr and is imported during the basic metaseqr
+#' workflow.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param norm.args a list of edgeR normalization parameters. See the result of
+#' \code{get.defaults("normalization",} \code{"edger")} for an example and how
+#' you can modify it.
+#' @param output the class of the output object. It can be \code{"matrix"} (default)
+#' for versatility with other tools or \code{"native"} for the edgeR native S4
+#' object (DGEList). In the latter case it should be handled with suitable edgeR
+#' methods.
 #' @return A matrix or a DGEList with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -150,15 +176,17 @@ normalize.deseq <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' norm.data.matrix <- normalize.edger(data.matrix,sample.list)
 #' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
-normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("matrix","native")) {
+normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,
+	output=c("matrix","native")) {
 	if (is.null(norm.args))
 		norm.args <- get.defaults("normalization","edger")
 	output <- tolower(output[1])
 	check.text.args("output",output,c("matrix","native"))
 	classes <- as.class.vector(sample.list)
 	dge <- DGEList(counts=gene.counts,group=classes)
-	dge <- calcNormFactors(dge,method=norm.args$method,refColumn=norm.args$refColumn,logratioTrim=norm.args$logratioTrim,
-		sumTrim=norm.args$sumTrim,doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff,p=norm.args$p)
+	dge <- calcNormFactors(dge,method=norm.args$method,refColumn=norm.args$refColumn,
+		logratioTrim=norm.args$logratioTrim,sumTrim=norm.args$sumTrim,
+		doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff,p=norm.args$p)
 	if (output=="native")
 		return(dge) # Class: DGEList
 	else if (output=="matrix") {
@@ -170,19 +198,28 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 
 #' Normalization based on the NOISeq package
 #'
-#' This function is a wrapper over NOISeq normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
-#' generated table of counts to the main metaseqr pipeline)
+#' This function is a wrapper over NOISeq normalization. It accepts a matrix of
+#' gene counts (e.g. produced by importing an externally generated table of counts
+#' to the main metaseqr pipeline).
 #'
-#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
-#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param norm.args a list of NOISeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"noiseq")}
-#' for an example and how you can modify it.
-#' @param gene.data an optional annotation data frame (such the ones produced by \code{get.annotation} which contains the GC content
-#' for each gene and from which the gene lengths can be inferred by chromosome coordinates.
-#' @param log.offset an offset to use to avoid infinity in logarithmic data transformations.
-#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
-#' for the NOISeq native S4 object (SeqExpressionSet). In the latter case it should be handled with suitable NOISeq methods.
+#' @param gene.counts a table where each row represents a gene and each column a
+#' sample. Each cell contains the read counts for each gene and sample. Such a
+#' table can be produced outside metaseqr and is imported during the basic metaseqr
+#' workflow.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param norm.args a list of NOISeq normalization parameters. See the result of
+#' \code{get.defaults("normalization",} \code{"noiseq")} for an example and how
+#' you can modify it.
+#' @param gene.data an optional annotation data frame (such the ones produced by
+#' \code{get.annotation} which contains the GC content for each gene and from which
+#' the gene lengths can be inferred by chromosome coordinates.
+#' @param log.offset an offset to use to avoid infinity in logarithmic data
+#' transformations.
+#' @param output the class of the output object. It can be \code{"matrix"} (default)
+#' for versatility with other tools or \code{"native"} for the NOISeq native S4
+#' object (SeqExpressionSet). In the latter case it should be handled with suitable
+#' NOISeq methods.
 #' @return A matrix with normalized counts.
 #' @author Panagiotis Moulos
 #' @export
@@ -204,7 +241,8 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,output=c("mat
 #' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)
 #' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
-normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,log.offset=1,output=c("matrix","native")) {
+normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NULL,
+	log.offset=1,output=c("matrix","native")) {
 	if (is.null(norm.args))
 		norm.args <- get.defaults("normalization","noiseq")
 	output <- tolower(output[1])
@@ -220,7 +258,8 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 		gc.content <- gene.data$gc_content
 		gene.length <- attr(gene.data,"gene.length")
 		biotype <- as.character(gene.data$biotype)
-		names(gc.content) <- names(biotype) <- names(gene.length) <- rownames(gene.data)
+		names(gc.content) <- names(biotype) <- names(gene.length) <- 
+			rownames(gene.data)
 		ns.obj <- NOISeq::readData(
 			data=gene.counts,
 			length=gene.length,
@@ -234,14 +273,18 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 	norm.args$k=log.offset # Set the zero fixing constant
 	switch(norm.args$method,
 		rpkm = {
-			M <- NOISeq::rpkm(assayData(ns.obj)$exprs,long=norm.args$long,k=norm.args$k,lc=norm.args$lc)
+			M <- NOISeq::rpkm(assayData(ns.obj)$exprs,long=norm.args$long,
+				k=norm.args$k,lc=norm.args$lc)
 		},
 		uqua = {
-			M <- NOISeq::uqua(assayData(ns.obj)$exprs,long=norm.args$long,k=norm.args$k,lc=norm.args$lc)
+			M <- NOISeq::uqua(assayData(ns.obj)$exprs,long=norm.args$long,
+				k=norm.args$k,lc=norm.args$lc)
 		},
 		tmm = {
-			M <- NOISeq::tmm(assayData(ns.obj)$exprs,long=norm.args$long,k=norm.args$k,lc=norm.args$lc,refColumn=norm.args$refColumn,
-				logratioTrim=norm.args$logratioTrim,sumTrim=norm.args$sumTrim,doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff)
+			M <- NOISeq::tmm(assayData(ns.obj)$exprs,long=norm.args$long,k=norm.args$k,
+				lc=norm.args$lc,refColumn=norm.args$refColumn,
+				logratioTrim=norm.args$logratioTrim,sumTrim=norm.args$sumTrim,
+				doWeighting=norm.args$doWeighting,Acutoff=norm.args$Acutoff)
 		}
 	)
 	if (output=="native") {
@@ -266,20 +309,29 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 
 #' Normalization based on the NBPSeq package
 #'
-#' This function is a wrapper over DESeq normalization. It accepts a matrix of gene counts (e.g. produced by importing an externally
-#' generated table of counts to the main metaseqr pipeline)
+#' This function is a wrapper over DESeq normalization. It accepts a matrix of gene
+#' counts (e.g. produced by importing an externally generated table of counts to
+#' the main metaseqr pipeline).
 #'
-#' @param gene.counts a table where each row represents a gene and each column a sample. Each cell contains the read counts for each
-#' gene and sample. Such a table can be produced outside metaseqr and is imported during the basic metaseqr workflow.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param norm.args a list of NBPSeq normalization parameters. See the result of \code{get.defaults("normalization",} \code{"nbpseq")}
-#' for an example and how you can modify it.
-#' @param libsize.list an optional named list where names represent samples (MUST be the same as the samples in \code{sample.list}) and
-#' members are the library sizes (the sequencing depth) for each sample. If not provided, the default is the column sums of the
-#' \code{gene.counts} matrix.
-#' @param output the class of the output object. It can be \code{"matrix"} (default) for versatility with other tools or \code{"native"}
-#' for the NBPSeq native S4 object (a specific list). In the latter case it should be handled with suitable NBPSeq methods.
-#' @return A matrix with normalized counts or a list with the normalized counts and other NBPSeq specific parameters.
+#' @param gene.counts a table where each row represents a gene and each column a
+#' sample. Each cell contains the read counts for each gene and sample. Such a
+#' table can be produced outside metaseqr and is imported during the basic metaseqr
+#' workflow.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param norm.args a list of NBPSeq normalization parameters. See the result of
+#' \code{get.defaults("normalization",} \code{"nbpseq")} for an example and how
+#' you can modify it.
+#' @param libsize.list an optional named list where names represent samples (MUST
+#' be the same as the samples in \code{sample.list}) and members are the library
+#' sizes (the sequencing depth) for each sample. If not provided, the default is
+#' the column sums of the \code{gene.counts} matrix.
+#' @param output the class of the output object. It can be \code{"matrix"} (default)
+#' for versatility with other tools or \code{"native"} for the NBPSeq native S4
+#' object (a specific list). In the latter case it should be handled with suitable
+#' NBPSeq methods.
+#' @return A matrix with normalized counts or a list with the normalized counts
+#' and other NBPSeq specific parameters.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -292,7 +344,8 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 #' norm.data.matrix <- normalize.nbpseq(data.matrix,sample.list)
 #' diagplot.boxplot(norm.data.matrix,sample.list)
 #'}
-normalize.nbpseq <- function(gene.counts,sample.list,norm.args=NULL,libsize.list=NULL,output=c("matrix","native")) {
+normalize.nbpseq <- function(gene.counts,sample.list,norm.args=NULL,libsize.list=NULL,
+	output=c("matrix","native")) {
 	if (is.null(norm.args))
 		norm.args <- get.defaults("normalization","nbpseq")
 	output <- tolower(output[1])
@@ -305,11 +358,14 @@ normalize.nbpseq <- function(gene.counts,sample.list,norm.args=NULL,libsize.list
 			libsize.list[[n]] <- sum(gene.counts[,n])
 	}
 	lib.sizes <- unlist(libsize.list)
-	norm.factors <- estimate.norm.factors(gene.counts,lib.sizes=lib.sizes,method=norm.args$method)
+	norm.factors <- estimate.norm.factors(gene.counts,lib.sizes=lib.sizes,
+		method=norm.args$method)
 	#if (norm.args$main.method=="nbpseq")
-	#	nb.data <- prepare.nb.data(gene.counts,lib.sizes=lib.sizes,norm.factors=norm.factors)
+	#	nb.data <- prepare.nb.data(gene.counts,lib.sizes=lib.sizes,
+	#	norm.factors=norm.factors)
 	#else if (norm.args$main.method=="nbsmyth")
-		nb.data <- prepare.nbp(gene.counts,classes,lib.sizes=lib.sizes,norm.factors=norm.factors,thinning=norm.args$thinning)
+		nb.data <- prepare.nbp(gene.counts,classes,lib.sizes=lib.sizes,
+			norm.factors=norm.factors,thinning=norm.args$thinning)
 	if (output=="native")
 		return(nb.data) # Class: list or nbp
 	else if (output=="matrix") {

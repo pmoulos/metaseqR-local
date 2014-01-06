@@ -1,19 +1,26 @@
 #' Filter gene expression based on exon counts
 #'
-#' This function performs the gene expression filtering based on exon read counts and a set of exon filter rules. For more details
-#' see the main help pages of \code{\link{metaseqr}}.
+#' This function performs the gene expression filtering based on exon read counts 
+# and a set of exon filter rules. For more details see the main help pages of 
+#' \code{\link{metaseqr}}.
 #'
-#' @param the.counts a named list created with the \code{\link{construct.gene.model}} function. See its help page for details.
-#' @param gene.data an annotation data frame usually obtained with \code{\link{get.annotation}} containing the unique gene accession
-#' identifiers.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param exon.filters a named list with exon filters and their parameters. See the main help page of \code{\link{metaseqr}} for details.
-#' @param restrict.cores in case of parallel execution of several subfunctions, the fraction of the available cores to use. In some 
-#' cases if all available cores are used (\code{restrict.cores=1} and the system does not have sufficient RAM, the running machine 
-#' might significantly slow down.
-#' @return a named list with two members. The first member (\code{result} is a named list whose names are the exon filter names
-#' and its members are the filtered rownames of \code{gene.data}. The second member is a matrix of binary flags (0 for non-filtered, 1 
-#' for filtered) for each gene. The rownames of the flag matrix correspond to gene ids.
+#' @param the.counts a named list created with the \code{\link{construct.gene.model}} 
+#' function. See its help page for details.
+#' @param gene.data an annotation data frame usually obtained with 
+#' \code{\link{get.annotation}} containing the unique gene accession identifiers.
+#' @param sample.list the list containing condition names and the samples under 
+#' each condition.
+#' @param exon.filters a named list with exon filters and their parameters. See 
+#' the main help page of \code{\link{metaseqr}} for details.
+#' @param restrict.cores in case of parallel execution of several subfunctions, 
+#' the fraction of the available cores to use. In some cases if all available 
+#' cores are used (\code{restrict.cores=1} and the system does not have sufficient 
+#' RAM, the running machine might significantly slow down.
+#' @return a named list with two members. The first member (\code{result} is a 
+#' named list whose names are the exon filter names and its members are the filtered 
+#' rownames of \code{gene.data}. The second member is a matrix of binary flags 
+#' (0 for non-filtered, 1 for filtered) for each gene. The rownames of the flag 
+#' matrix correspond to gene ids.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -33,17 +40,14 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 	rownames(flags) <- rownames(gene.data)
 	colnames(flags) <- c("MAE")
 	the.genes <- as.character(gene.data$gene_id)
-	if (!is.null(exon.filters))
-	{
-		for (xf in names(exon.filters))
-		{
+	if (!is.null(exon.filters)) {
+		for (xf in names(exon.filters)) {
 			disp("Applying exon filter ",xf,"...")
 			switch(xf,
 				min.active.exons = {
 					pass <- vector("list",length(unlist(sample.list)))
 					names(pass) <- names(the.counts)
-					for (n in names(pass))
-					{
+					for (n in names(pass)) {
 						disp("  Checking read presence in exons for ",n,"...")
 						pass[[n]] <- the.genes
 						#names(pass[[n]]) <- names(the.gene.counts[[n]]) <- the.genes
@@ -68,7 +72,8 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 						pass[[n]] <- do.call("c",pass[[n]])
 					}
 					pass.matrix <- do.call("cbind",pass)
-					exon.filter.result[[xf]] <- the.genes[which(apply(pass.matrix,1,function(x) return(all(x))))]
+					exon.filter.result[[xf]] <- the.genes[which(apply(pass.matrix,1,
+						function(x) return(all(x))))]
 					flags[exon.filter.result[[xf]],"MAE"] <- 1
 				}
 				# More to come...
@@ -81,17 +86,23 @@ filter.exons <- function(the.counts,gene.data,sample.list,exon.filters,restrict.
 
 #' Filter gene expression based on gene counts
 #'
-#' This function performs the gene expression filtering based on gene read counts and a set of gene filter rules. For more details
-#' see the main help pages of \code{\link{metaseqr}}.
+#' This function performs the gene expression filtering based on gene read counts 
+#' and a set of gene filter rules. For more details see the main help pages of 
+#' \code{\link{metaseqr}}.
 #'
-#' @param gene.counts a matrix of gene counts, preferably after the normalization procedure.
-#' @param gene.data an annotation data frame usually obtained with \code{\link{get.annotation}} containing the unique gene accession
-#' identifiers.
-#' @param gene.filters a named list with gene filters and their parameters. See the main help page of \code{\link{metaseqr}} for details.
-#' @return a named list with three members. The first member (\code{result} is a named list whose names are the gene filter names
-#' and its members are the filtered rownames of \code{gene.data}. The second member (\code{cutoff} is a named list whose names are 
-#' the gene filter names and its members are the cutoff values corresponding to each filter. The third member is a matrix of binary
-#' flags (0 for non-filtered, 1 for filtered) for each gene. The rownames of the flag matrix correspond to gene ids.
+#' @param gene.counts a matrix of gene counts, preferably after the normalization 
+#' procedure.
+#' @param gene.data an annotation data frame usually obtained with 
+#' \code{\link{get.annotation}} containing the unique gene accession identifiers.
+#' @param gene.filters a named list with gene filters and their parameters. See 
+#' the main help page of \code{\link{metaseqr}} for details.
+#' @return a named list with three members. The first member (\code{result} is a 
+#' named list whose names are the gene filter names and its members are the 
+#' filtered rownames of \code{gene.data}. The second member (\code{cutoff} is a 
+#' named list whose names are the gene filter names and its members are the cutoff 
+#' values corresponding to each filter. The third member is a matrix of binary
+#' flags (0 for non-filtered, 1 for filtered) for each gene. The rownames of the 
+#' flag matrix correspond to gene ids.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -116,7 +127,8 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 		switch(gf,
 			length = { # This is real gene length independently of exons
 				if (!is.null(gene.filters$length)) {
-					gene.filter.result$length <- rownames(gene.data)[which(gene.data$end - gene.data$start < gene.filters$length$length)]
+					gene.filter.result$length <- rownames(gene.data)
+						[which(gene.data$end - gene.data$start < gene.filters$length$length)]
 					gene.filter.cutoff$length <- gene.filters$length$length
 					flags[gene.filter.result$length,"LN"] <- 1
 					disp("  Threshold below which ignored: ",gene.filters$length$length)
@@ -126,9 +138,11 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 			},
 			avg.reads = {
 				if (!is.null(gene.filters$avg.reads)) {
-					avg.mat <- sweep(gene.counts,1,attr(gene.data,"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
+					avg.mat <- sweep(gene.counts,1,attr(gene.data,
+						"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
 					q.t <- max(apply(avg.mat,2,quantile,gene.filters$avg.reads$quantile))
-					gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,1,filter.low,q.t))]
+					gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,
+						1,filter.low,q.t))]
 					gene.filter.cutoff$avg.reads <- q.t
 					flags[gene.filter.result$avg.reads,"AR"] <- 1
 					disp("  Threshold below which ignored: ",q.t)
@@ -140,31 +154,36 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 				if (!is.null(gene.filters$expression)) {
 					if (gene.filters$expression$median) {
 						md <- median(gene.counts)
-						the.dead.median <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,md))]
+						the.dead.median <- rownames(gene.data)[which(apply(gene.counts,
+							1,filter.low,md))]
 						disp("  Threshold below which ignored: ",md)
 					}
 					else
 						the.dead.median <- md <- NULL
 					if (gene.filters$expression$mean) {
 						mn <- mean(gene.counts)
-						the.dead.mean <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,mn))]
+						the.dead.mean <- rownames(gene.data)[which(apply(gene.counts,
+							1,filter.low,mn))]
 						disp("  Threshold below which ignored: ",mn)
 					}
 					else
 						the.dead.mean <- mn <- NULL
 					if (!is.na(gene.filters$expression$quantile)) {
 						qu <- quantile(gene.counts,gene.filters$expression$quantile)
-						the.dead.quantile <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,qu))]
+						the.dead.quantile <- rownames(gene.data)[which(apply(gene.counts,
+							1,filter.low,qu))]
 						disp("  Threshold below which ignored: ",qu)
 					}
 					else
 						the.dead.quantile <- qu <- NULL
 					if (!is.na(gene.filters$expression$known)) {
-						bio.cut <- match(gene.filters$expression$known,gene.data$gene_name) # Think about the case of embedded
+						# Think about the case of embedded
+						bio.cut <- match(gene.filters$expression$known,gene.data$gene_name) 
 						bio.cut <- bio.cut[-which(is.na(bio.cut))]
 						bio.cut.counts <- as.vector(gene.counts[bio.cut,])
 						the.bio.cut <- quantile(bio.cut.counts,0.9)
-						the.dead.known <- rownames(gene.data)[which(apply(gene.counts,1,filter.low,the.bio.cut))]
+						the.dead.known <- rownames(gene.data)[which(apply(gene.counts,
+							1,filter.low,the.bio.cut))]
 						disp("  Threshold below which ignored: ",the.bio.cut)
 					}
 					else
@@ -191,15 +210,18 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 					if (!is.null(the.dead.quantile)) flags[the.dead.quantile,"QN"] <- 1
 					if (!is.null(the.dead.known)) flags[the.dead.known,"KN"] <- 1
 					if (!is.null(the.dead.custom)) flags[the.dead.custom,"CM"] <- 1
-					#the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,the.dead.known,the.dead.custom)
+					#the.dead <- list(the.dead.median,the.dead.mean,the.dead.quantile,
+					#	the.dead.known,the.dead.custom)
 					#gene.filter.result$expression <- Reduce("union",the.dead)
 				}
 			},
 			biotype = {
 				if (!is.null(gene.filters$biotype)) {
 					filter.out <- names(which(unlist(gene.filters$biotype)))
-					if (length(grep("three_prime_overlapping_ncrna",filter.out))>0) # Necessary hack because of R naming system
-						filter.out <- sub("three_prime_overlapping_ncrna","3prime_overlapping_ncrna",filter.out)
+					# Necessary hack because of R naming system
+					if (length(grep("three_prime_overlapping_ncrna",filter.out))>0) 
+						filter.out <- sub("three_prime_overlapping_ncrna",
+							"3prime_overlapping_ncrna",filter.out)
 					filter.ind <- vector("list",length(filter.out))
 					names(filter.ind) <- filter.out
 					for (bt in filter.out)

@@ -1,58 +1,74 @@
 #' Text argument validator
 #'
-#' Checks if one or more given textual argument(s) is/are member(s) of a list of correct arguments. It's a more package-specific
-#' function similar to \code{\link{match.arg}}. Mostly for internal use.
+#' Checks if one or more given textual argument(s) is/are member(s) of a list of 
+#' correct arguments. It's a more package-specific function similar to 
+#' \code{\link{match.arg}}. Mostly for internal use.
 #' 
 #' @param arg.name the name of the argument that is checked (for display purposes).
 #' @param arg.value the value(s) of the argument to be checked.
-#' @param arg.list a vector of valid argument values for \code{arg.value} to be matched against.
-#' @param multiarg a logical scalar indicating whether \code{arg.name} accepts multiple arguments or not. In that case, all of the values
-#' in \code{arg.value} are checked against \code{arg.list}.
+#' @param arg.list a vector of valid argument values for \code{arg.value} to be 
+#' matched against.
+#' @param multiarg a logical scalar indicating whether \code{arg.name} accepts 
+#' multiple arguments or not. In that case, all of the values in \code{arg.value} 
+#' are checked against \code{arg.list}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
 #' \dontrun{
 #' check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
-#' check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq","limma"),
-#'   multiarg=TRUE)
+#' check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq",
+#'  "limma"), multiarg=TRUE)
 #'}
 check.text.args <- function(arg.name,arg.value,arg.list,multiarg=FALSE) {
 	if (multiarg) {
 		arg.value <- tolower(arg.value)
 		if (!all(arg.value %in% arg.list))
-			stopwrap("\"",arg.name,"\""," parameter must be one or more of ",paste(paste("\"",arg.list,sep=""),collapse="\", "),"\"!")
+			stopwrap("\"",arg.name,"\""," parameter must be one or more of ",
+				paste(paste("\"",arg.list,sep=""),collapse="\", "),"\"!")
 	}
 	else {
 		arg.save <- arg.value[1]
 		arg.value <- tolower(arg.value[1])
-		if (arg.name=="annotation") { # An exception must be added for annotation because it can be an external file too
+		# An exception must be added for annotation because it can be an external 
+		# file too
+		if (arg.name=="annotation") { 
 			if (!(arg.value %in% arg.list) && !file.exists(arg.save))
-				stopwrap("\"",arg.name,"\""," parameter must be one of ",paste(paste("\"",arg.list,sep=""),collapse="\", "),"\" or an existing file!")
+				stopwrap("\"",arg.name,"\""," parameter must be one of ",
+					paste(paste("\"",arg.list,sep=""),collapse="\", "),
+						"\" or an existing file!")
 		}
 		else {
 			if (!(arg.value %in% arg.list))
-				stopwrap("\"",arg.name,"\""," parameter must be one of ",paste(paste("\"",arg.list,sep=""),collapse="\", "),"\"!")
+				stopwrap("\"",arg.name,"\""," parameter must be one of ",
+					paste(paste("\"",arg.list,sep=""),collapse="\", "),"\"!")
 		}
 	}
 }
 
 #' Numeric argument validator
 #'
-#' Checks if one or more given numeric argument(s) satisfy several rules concerning numeric arguments, e.g. proper bounds or proper
-#' format (e.g. it must be a number and not a character). Mostly for internal use.
+#' Checks if one or more given numeric argument(s) satisfy several rules concerning 
+#' numeric arguments, e.g. proper bounds or proper format (e.g. it must be a number 
+#' and not a character). Mostly for internal use.
 #' 
 #' @param arg.name the name of the argument that is checked (for display purposes).
 #' @param arg.value the value(s) of the argument to be checked.
-#' @param arg.type either the string \code{"numeric"} to denote generic double-like R numerics or \code{"integer"} for integer values.
-#' @param arg.bounds a numeric or a vector with 2 elements, restraining \code{arg.value} to be within the bounds defined by the input vector
-#' or e.g. larger (smaller) than the numeric value. See examples.
-#' @param direction a string denoting to which direction the \code{arg.value} should be compared with \code{arg.bounds}. For example, 
-#' \code{"both"} should be given with a two element vector against which, \code{arg.value} will be checked to see whether it is smaller 
-#' than the low boundary or larger than the higher boundary. In that case, the function will throw an error. The direction parameter can 
-#' be one of: \code{"both"} (described above), \code{"botheq"} (as above, but the \code{arg.val} is also checked for equality -closed 
-#' intervals), \code{"gt"} or \code{"gte"} (check whether \code{arg.val} is smaller or smaller than or equal to the first value of 
-#' \code{arg.bounds}), \code{"lt"} or \code{"lte"} (check whether \code{arg.val} is larger or larger than or equal to the first value 
-#' of \code{arg.bounds}).
+#' @param arg.type either the string \code{"numeric"} to denote generic double-like 
+#' R numerics or \code{"integer"} for integer values.
+#' @param arg.bounds a numeric or a vector with 2 elements, restraining 
+#' \code{arg.value} to be within the bounds defined by the input vector or e.g. 
+#' larger (smaller) than the numeric value. See examples.
+#' @param direction a string denoting to which direction the \code{arg.value} 
+#' should be compared with \code{arg.bounds}. For example, \code{"both"} should 
+#' be given with a two element vector against which, \code{arg.value} will be 
+#' checked to see whether it is smaller than the low boundary or larger than the 
+#' higher boundary. In that case, the function will throw an error. The direction 
+#' parameter can be one of: \code{"both"} (described above), \code{"botheq"} (as 
+#' above, but the \code{arg.val} is also checked for equality -closed intervals), 
+#' \code{"gt"} or \code{"gte"} (check whether \code{arg.val} is smaller or smaller 
+#' than or equal to the first value of \code{arg.bounds}), \code{"lt"} or \code{"lte"} 
+#' (check whether \code{arg.val} is larger or larger than or equal to the first 
+#' value of \code{arg.bounds}).
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -75,27 +91,35 @@ check.num.args <- function(arg.name,arg.value,arg.type,arg.bounds,direction) {
 				switch(direction,
 					both = {
 						if (arg.value<=arg.bounds[1] || arg.value>=arg.bounds[2])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value larger than or equal to ",arg.bounds[1]," and smaller than or equal to ",arg.bounds[2],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value larger than or equal to ",arg.bounds[1],
+								" and smaller than or equal to ",arg.bounds[2],"!")
 					},
 					botheq = {
 						if (arg.value<arg.bounds[1] || arg.value>arg.bounds[2])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value larger than ",arg.bounds[1]," and smaller than ",arg.bounds[2],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value larger than ",arg.bounds[1]," and smaller than ",
+								arg.bounds[2],"!")
 					},
 					gt = {
 						if (arg.value<=arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value greater than ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value greater than ",arg.bounds[1],"!")
 					},
 					lt = {
 						if (arg.value>=arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value lower than ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value lower than ",arg.bounds[1],"!")
 					},
 					gte = {
 						if (arg.value<arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value greater than or equal to ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value greater than or equal to ",arg.bounds[1],"!")
 					},
 					lte = {
 						if (arg.value>arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be a numeric value lower than or equal to ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be a numeric ",
+								"value lower than or equal to ",arg.bounds[1],"!")
 					}
 				)
 			}
@@ -107,27 +131,35 @@ check.num.args <- function(arg.name,arg.value,arg.type,arg.bounds,direction) {
 				switch(direction,
 					both = {
 						if (arg.value<=arg.bounds[1] || arg.value>=arg.bounds[2])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer larger than or equal to ",arg.bounds[1]," and smaller than or equal to ",arg.bounds[2],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"larger than or equal to ",arg.bounds[1]," and smaller ",
+								"than or equal to ",arg.bounds[2],"!")
 					},
 					botheq = {
 						if (arg.value<arg.bounds[1] || arg.value>arg.bounds[2])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer larger than or equal to ",arg.bounds[1]," and smaller than or equal to ",arg.bounds[2],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"larger than or equal to ",arg.bounds[1]," and smaller ",
+								"than or equal to ",arg.bounds[2],"!")
 					},
 					gt = {
 						if (arg.value<=arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer greater than ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"greater than ",arg.bounds[1],"!")
 					},
 					lt = {
 						if (arg.value>=arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer lower than ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"lower than ",arg.bounds[1],"!")
 					},
 					gte = {
 						if (arg.value<arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer greater than or equal to ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"greater than or equal to ",arg.bounds[1],"!")
 					},
 					lte = {
 						if (arg.value>arg.bounds[1])
-							stopwrap("\"",arg.name,"\""," parameter must be an integer lower than or equal to ",arg.bounds[1],"!")
+							stopwrap("\"",arg.name,"\""," parameter must be an integer ",
+								"lower than or equal to ",arg.bounds[1],"!")
 					}
 				)
 			}
@@ -137,7 +169,8 @@ check.num.args <- function(arg.name,arg.value,arg.type,arg.bounds,direction) {
 
 #' File argument validator
 #'
-#' Checks if a file exists for specific arguments requiring a file input. Internal use only.
+#' Checks if a file exists for specific arguments requiring a file input. Internal 
+#' use only.
 #'
 #' @param arg.name argument name to display in a possible error.
 #' @param arg.value the filename to check.
@@ -177,12 +210,16 @@ check.parallel <- function(rc) {
 #' @author Panagiotis Moulos
 #' @export
 check.contrast.format <- function(cnt,sample.list) {
-	# This function will break cnt and check that all contrast counter parts are members of the names of the sample.list and 
-	# contain the string "_vs_" as many times as the names of the sample.list minus 1. If satisfied return TRUE else error.
+	# This function will break cnt and check that all contrast counter parts are 
+	# members of the names of the sample.list and contain the string "_vs_" as 
+	# many times as the names of the sample.list minus 1. If satisfied return 
+	# TRUE else error.
 	cnts <- strsplit(cnt,"_vs_")
 	#if (length(unique(unlist(cnts))) != length(names(sample.list)))
 	if (!any(unique(unlist(cnts)) %in% names(sample.list)))
-		stopwrap("Condition names in sample list and contrast list do not match! Check if the contrasts follow the appropriate format (e.g. \"_vs_\" separating contrasting conditions...")
+		stopwrap("Condition names in sample list and contrast list do not match! ",
+			"Check if the contrasts follow the appropriate format (e.g. \"_vs_\" ",
+			"separating contrasting conditions...")
 }
 
 #' Library size validator
@@ -195,8 +232,10 @@ check.contrast.format <- function(cnt,sample.list) {
 #' @export
 check.libsize <- function(libsize.list,sample.list) {
 	if (!is.null(libsize.list)) {
-		if (length(intersect(names(libsize.list),unlist(sample.list,use.names=FALSE)))!=length(unlist(sample.list,use.names=FALSE))) {
-			warnwrap("Sample names in \"libsize.list\" and \"sample.list\" do not match! Library sizes will be estimated from count data...")
+		if (length(intersect(names(libsize.list),unlist(sample.list,use.names=FALSE)))!=
+			length(unlist(sample.list,use.names=FALSE))) {
+			warnwrap("Sample names in \"libsize.list\" and \"sample.list\" do not match! ",
+				"Library sizes will be estimated from count data...")
 			return(NULL)
 		}
 		else return(libsize.list)
@@ -207,7 +246,8 @@ check.libsize <- function(libsize.list,sample.list) {
 
 ## Required packages validator
 ##
-## Checks if all the required packages are present according to metaseqr input options. Internal use only.
+## Checks if all the required packages are present according to metaseqr input 
+## options. Internal use only.
 ##
 ## @param n normalization method
 ## @param d statistics method
@@ -219,22 +259,29 @@ check.libsize <- function(libsize.list,sample.list) {
 ## @author Panagiotis Moulos
 ## @export
 #check.packages <- function(n,d,a,m,s,p,r) {
+#	# Commenting below to conform with CRAN/Bioconductor warnings/guidelines... 
+#	# Dangerous for testing without building though...
 #	# Check normalization
-#	switch(n, # Commenting below to conform with CRAN/Bioconductor warnings/guidelines... Dangerous for testing without building though...
+#	switch(n,
 #		edaseq = {
-#			if (!require(EDASeq)) stopwrap("Bioconductor package EDASeq is required for \"edaseq\" normalization!")
+#			if (!require(EDASeq)) stopwrap("Bioconductor package EDASeq is required ",
+#				"for \"edaseq\" normalization!")
 #		},
 #		deseq = {
-#			if (!require(DESeq)) stopwrap("Bioconductor package DESeq is required for \"deseq\" normalization!")
+#			if (!require(DESeq)) stopwrap("Bioconductor package DESeq is required ",
+#				"for \"deseq\" normalization!")
 #		},
 #		edger = {
-#			if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required for \"edger\" normalization!")
+#			if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required ",
+#				"for \"edger\" normalization!")
 #		},
 #		noiseq = {
-#			if (!require(NOISeq)) stopwrap("Bioconductor package NOISeq is required for \"noiseq\" normalization!")
+#			if (!require(NOISeq)) stopwrap("Bioconductor package NOISeq is required ",
+#				"for \"noiseq\" normalization!")
 #		},
 #		nbpseq = {
-#			if (!require(NBPSeq)) stopwrap("R package NBPSeq is required for \"nbpseq\" normalization!")
+#			if (!require(NBPSeq)) stopwrap("R package NBPSeq is required for ",
+#				"\"nbpseq\" normalization!")
 #		},
 #		none = {}
 #	)
@@ -243,43 +290,64 @@ check.libsize <- function(libsize.list,sample.list) {
 #	{
 #		switch(dd,
 #			deseq = {
-#				if (!require(DESeq)) stopwrap("Bioconductor package DESeq is required for \"deseq\" differential expression!")
+#				if (!require(DESeq)) 
+#					stopwrap("Bioconductor package DESeq is required for \"deseq\" ",
+#						"differential expression!")
 #			},
 #			edger = {
-#				if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required for \"edger\" differential expression!")
+#				if (!require(edgeR)) 
+#					stopwrap("Bioconductor package edgeR is required for \"edger\" ",
+#						"differential expression!")
 #			},
 #			noiseq = {
-#				if (!require(NOISeq)) stopwrap("Bioconductor package NOISeq is required for \"noiseq\" differential expression!")
+#				if (!require(NOISeq)) 
+#					stopwrap("Bioconductor package NOISeq is required for \"noiseq\" ",
+#						"differential expression!")
 #			},
 #			bayseq = {
-#				if (!require(baySeq)) stopwrap("Bioconductor package baySeq is required for \"bayseq\" differential expression!")
+#				if (!require(baySeq)) 
+#					stopwrap("Bioconductor package baySeq is required for \"bayseq\" ",
+#						"differential expression!")
 #			},
 #			limma = {
-#				if (!require(limma)) stopwrap("Bioconductor package limma is required for \"limma\" differential expression!")
-#				if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required for \"edger\" differential expression!")
+#				if (!require(limma)) 
+#					stopwrap("Bioconductor package limma is required for \"limma\" ",
+#						"differential expression!")
+#				if (!require(edgeR)) 
+#					stopwrap("Bioconductor package edgeR is required for \"edger\" ",
+#						"differential expression!")
 #			},
 #			nbpseq = {
-#				if (!require(NBPSeq)) stopwrap("R package NBPSeq is required for \"nbpseq\" differential expression!")
+#				if (!require(NBPSeq)) 
+#					stopwrap("R package NBPSeq is required for \"nbpseq\" ",
+#						"differential expression!")
 #			},
 #			none = {}
 #		)
 #	}
 #	# Check multiple testing correction
 #	if (a=="qvalue" && !require(qvalue))
-#		stopwrap("Bioconductor package qvalue is required for Storey-Tibshirani q-value correction!")
+#		stopwrap("Bioconductor package qvalue is required for Storey-Tibshirani ",
+#			"q-value correction!")
 #	# Check meta-analysis packages
 #	if (m %in% c("fisher","perm","sum") && !require(MADAM))
-#		stopwrap("R package MADAM is required for \"fisher\", \"perm\" or \"sum\" p-value meta analysis!")
+#		stopwrap("R package MADAM is required for \"fisher\", \"perm\" or \"sum\" ",
+#			"p-value meta analysis!")
 #	if (m=="whitlock" && !require(survcomp))
-#		stopwrap("Bioconductor package survcomp is required for \"whitlock\" p-value meta analysis!")
+#		stopwrap("Bioconductor package survcomp is required for \"whitlock\" ",
+#			"p-value meta analysis!")
 #	# Check VST
 #	if (("vst" %in% s) && !require(vsn))
-#		stopwrap("Bioconductor package vsn is required for \"vsn\" count data transformation!")
+#		stopwrap("Bioconductor package vsn is required for \"vsn\" count data "
+#			"transformation!")
 #	# Check plots
-#	if (any(p %in% c("biodetection","countsbio","saturation","rnacomp","biodist")) && !require(NOISeq))
-#		stopwrap("Bioconductor package NOISeq is required for some of the selected QC plots!")
+#	if (any(p %in% c("biodetection","countsbio","saturation","rnacomp","biodist")) 
+#		&& !require(NOISeq))
+#		stopwrap("Bioconductor package NOISeq is required for some of the selected ",
+#			"QC plots!")
 #	if (any(p %in% c("gcbias","lengthbias","meandiff","meanvar")) && !require(EDASeq))
-#		stopwrap("Bioconductor package EDASeq is required for some of the selected QC plots!")
+#		stopwrap("Bioconductor package EDASeq is required for some of the selected ",
+#			"QC plots!")
 #	if (any(p %in% c("deheatmap","correl")) && !require(gplots))
 #		stopwrap("R package gplots is required for some of the selected QC plots!")
 #	if ("correl" %in% p && !require(corrplot))

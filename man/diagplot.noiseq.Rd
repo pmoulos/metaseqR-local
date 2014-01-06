@@ -64,11 +64,10 @@
 }
 \description{
   A wrapper around the plotting functions availale in the
-  NOISeq RNA-Seq analysisBioconductor package. For
-  analytical explanation of each plot please see the
-  vignette of the NOISeq package. It is best to use this
-  function through the main plotting function
-  \code{\link{diagplot.metaseqr}}.
+  NOISeq Bioconductor package. For analytical explanation
+  of each plot please see the vignette of the NOISeq 
+  package. It is best to use this function through the 
+  main plotting function \code{\link{diagplot.metaseqr}}.
 }
 \note{
   Please note that in case of \code{"biodist"} plots, the

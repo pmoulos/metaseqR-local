@@ -7,7 +7,7 @@
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
-  normalization algorithm supported by metaseqr, containing
+  normalization algorithm supported by metaseqR, containing
   normalized counts. Apart from matrix (also for NOISeq),
   the object can be a SeqExpressionSet (EDASeq),
   CountDataSet (DESeq) or DGEList (edgeR).}
@@ -36,7 +36,7 @@
   This function is a wrapper over DESeq statistical
   testing. It accepts a matrix of normalized gene counts or
   an S4 object specific to each normalization algorithm
-  supported by metaseqr.
+  supported by metaseqR.
 }
 \examples{
 \dontrun{

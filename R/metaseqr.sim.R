@@ -1,17 +1,21 @@
 #' Create simulated counts using TCC package
 #'
-#' This function creates simulated RNA-Seq gene expression datasets using the \code{simulateReadCounts} function from the Bioconductor
-#' package TCC and it adds simulated annoation elements. For further information please consult the TCC package documentation. Note
-#' that the produced data are based in an Arabidopsis dataset.
+#' This function creates simulated RNA-Seq gene expression datasets using the
+#' \code{simulateReadCounts} function from the Bioconductor
+#' package TCC and it adds simulated annoation elements. For further information
+#' please consult the TCC package documentation. Note that the produced data are
+#' based in an Arabidopsis dataset.
 #'
 #' @param ... parameters to the \code{simulateReadCounts} function.
-#' @return A list with the following members: \code{simdata} holding the simulated dataset complying with metaseqr requirements, and
-#' \code{simparam} holding the simulation parameters (see TCC documentation).
+#' @return A list with the following members: \code{simdata} holding the simulated
+#' dataset complying with metaseqr requirements, and \code{simparam} holding the
+#' simulation parameters (see TCC documentation).
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
 #' \dontrun{
-#' dd <- make.sim.data(Ngene=10000,PDEG=0.2,DEG.assign=c(0.9,0.1),DEG.foldchange=c(5,5),replicates=c(3,3))
+#' dd <- make.sim.data(Ngene=10000,PDEG=0.2,DEG.assign=c(0.9,0.1),
+#'   DEG.foldchange=c(5,5),replicates=c(3,3))
 #' head(dd$simdata)
 #'}
 make.sim.data.tcc <- function(...) {
@@ -45,24 +49,32 @@ make.sim.data.tcc <- function(...) {
 
 #' Create simulated counts using the Soneson-Delorenzi method
 #'
-#' This function creates simulated RNA-Seq gene expression datasets using the method presented in (Soneson and Delorenzi, BMC
-#' Bioinformatics, 2013). For the time being, it creates only simulated datasets with two conditions.
+#' This function creates simulated RNA-Seq gene expression datasets using the
+#' method presented in (Soneson and Delorenzi, BMC Bioinformatics, 2013). For the
+#' time being, it creates only simulated datasets with two conditions.
 #'
 #' @param N the number of genes to produce.
-#' @param param a named list with negative binomial parameter sets to sample from. The first member is the mean parameter to sample
-#' from (\code{mu.hat}} and the second the dispersion (\code{phi.hat}). This list can be created with the \code{\link{estimate.sim.params}}
-#' function.
-#' @param samples a vector with 2 integers, which are the number of samples for each condition (two conditions currently supported).
-#' @param ndeg a vector with 2 integers, which are the number of differentially expressed genes to be produced. The first element is
-#' the number of up-regulated genes while the second is the number of down-regulated genes.
+#' @param param a named list with negative binomial parameter sets to sample from.
+#' The first member is the mean parameter to sample from (\code{mu.hat}} and the
+#' second the dispersion (\code{phi.hat}). This list can be created with the
+#' \code{\link{estimate.sim.params}} function.
+#' @param samples a vector with 2 integers, which are the number of samples for
+#' each condition (two conditions currently supported).
+#' @param ndeg a vector with 2 integers, which are the number of differentially
+#' expressed genes to be produced. The first element is the number of up-regulated
+#' genes while the second is the number of down-regulated genes.
 #' @param fc.basis the minimum fold-change for deregulation.
-#' @param libsize.range a vector with 2 numbers (generally small, see the default), as they are multiplied with \code{libsize.mag}.
+#' @param libsize.range a vector with 2 numbers (generally small, see the default),
+#' as they are multiplied with \code{libsize.mag}.
 #' These numbers control the library sized of the synthetic data to be produced.
-#' @param libsize.mag a (big) number to multiply the \code{libsize.range} to produce library sizes.
-#' @param model.org the organism from which the real data are derived from. It must be one of the supported organisms (see the main
-#' \code{\link{metaseqr}} help page). It is used to sample real values for GC content.
+#' @param libsize.mag a (big) number to multiply the \code{libsize.range} to
+#' produce library sizes.
+#' @param model.org the organism from which the real data are derived from. It
+#' must be one of the supported organisms (see the main \code{\link{metaseqr}}
+#' help page). It is used to sample real values for GC content.
 #' @param seed a seed to use with random number generation for reproducibility.
-#' @return A named list with two members. The first member (\code{simdata}) contains the synthetic dataset 
+#' @return A named list with two members. The first member (\code{simdata})
+#' contains the synthetic dataset 
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -74,11 +86,12 @@ make.sim.data.tcc <- function(...) {
 #' synth.data <- sim$simdata
 #' true.deg <- which(sim$truedeg!=0)
 #'}
-make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.basis=1.5,libsize.range=c(0.7,1.4),
-	libsize.mag=1e+7,model.org=NULL,seed=NULL) {
-
+make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
+	fc.basis=1.5,libsize.range=c(0.7,1.4),libsize.mag=1e+7,model.org=NULL,
+	seed=NULL) {
 	if (!is.null(model.org)) {
-		check.text.args("model.org",model.org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),multiarg=FALSE)
+		check.text.args("model.org",model.org,c("hg18","hg19","mm9","mm10",
+			"rno5","dm3","danRer7"),multiarg=FALSE)
 		ann <- get.annotation(model.org,"gene")
 		real.gc <- as.numeric(ann$gc_content)
 	}
@@ -153,22 +166,30 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 
 #' Estimate negative binomial parameters from real data
 #'
-#' This function reads a read counts table containing real RNA-Seq data (preferebly with more than 20 samples so as to get as much
-#' accurate as possible estimations) and calculates a population of count means and dispersion parameters which can be used to simulate
-#' an RNA-Seq dataset with synthetic genes by drawing from a negative binomial distribution. This function works in the same way as
-#' described in (Soneson and Delorenzi, BMC Bioinformatics, 2013) and (Robles et al., BMC Genomics, 2012).
+#' This function reads a read counts table containing real RNA-Seq data (preferebly
+#' with more than 20 samples so as to get as much accurate as possible estimations)
+#' and calculates a population of count means and dispersion parameters which can
+#' be used to simulate an RNA-Seq dataset with synthetic genes by drawing from a
+#' negative binomial distribution. This function works in the same way as described
+#' in (Soneson and Delorenzi, BMC Bioinformatics, 2013) and (Robles et al., BMC
+#' Genomics, 2012).
 #'
-#' @param real.counts a text tab-delimited file with real RNA-Seq data. The file should strictly contain a unique gene name (e.g.
-#' Ensembl accession) in the first column and all other columns should contain read counts for each gene. Each column must be named
-#' with a unique sample identifier. See examples in the ReCount database \link{http://bowtie-bio.sourceforge.net/recount/}.
-#' @param libsize.gt a library size below which samples are excluded from parameter estimation (default: 3000000).
-#' @param rowmeans.gt a row means (mean counts over samples for each gene) below which genes are excluded from parameter estimation
-#' (default: 5).
-#' @param eps the tolerance for the convergence of \code{\link{optimize}} function. Defaults to 1e-11.
-#' @param restrict.cores in case of parallel optimization, the fraction of the available cores to use.
+#' @param real.counts a text tab-delimited file with real RNA-Seq data. The file
+#' should strictly contain a unique gene name (e.g. Ensembl accession) in the
+#' first column and all other columns should contain read counts for each gene.
+#' Each column must be named with a unique sample identifier. See examples in the
+#' ReCount database \link{http://bowtie-bio.sourceforge.net/recount/}.
+#' @param libsize.gt a library size below which samples are excluded from parameter
+#' estimation (default: 3000000).
+#' @param rowmeans.gt a row means (mean counts over samples for each gene) below
+#' which genes are excluded from parameter estimation (default: 5).
+#' @param eps the tolerance for the convergence of \code{\link{optimize}} function.
+#' Defaults to 1e-11.
+#' @param restrict.cores in case of parallel optimization, the fraction of the
+#' available cores to use.
 #' @param seed a seed to use with random number generation for reproducibility.
-#' @return A named list with two members: \code{mu.hat} which contains negative binomial mean estimates and \code{phi.hat} which
-#' contains dispersion.
+#' @return A named list with two members: \code{mu.hat} which contains negative
+#' binomial mean estimates and \code{phi.hat} which contains dispersion.
 #' estimates
 #' @author Panagiotis Moulos
 #' @export
@@ -176,7 +197,8 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),fc.
 #' \dontrun{
 #' par.list <- estimate.sim.params("bottomly_read_counts.txt")
 #'}
-estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,eps=1e-11,restrict.cores=0.8,seed=42) {
+estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
+	eps=1e-11,restrict.cores=0.8,seed=42) {
 	multic <- check.parallel(restrict.cores)
 	if (is.data.frame(real.counts))
 		real.data <- real.counts
@@ -213,8 +235,9 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,eps=1e
 
 #' Downsample read counts
 #'
-#' This function downsamples the library sizes of a read counts table to the lowest library size, according to the methdology used
-#' in  (Soneson and Delorenzi, BMC Bioinformatics, 2013).
+#' This function downsamples the library sizes of a read counts table to the lowest
+#' library size, according to the methdology used in  (Soneson and Delorenzi,
+#' BMC Bioinformatics, 2013).
 #'
 #' @param counts the read counts table which is subjected to downsampling.
 #' @param seed random seed for reproducible downsampling.
@@ -254,8 +277,9 @@ downsample.counts <- function(counts,seed=42) {
 
 #' MLE dispersion estimate
 #'
-#' MLE function used to estimate negative binomial dispersions from real RNA-Seq data, as in (Soneson and Delorenzi, BMC Bioinformatics, 2013)
-#' and (Robles et al., BMC Genomics, 2012). Internal use.
+#' MLE function used to estimate negative binomial dispersions from real RNA-Seq
+#' data, as in (Soneson and Delorenzi, BMC Bioinformatics, 2013) and (Robles et al.,
+#' BMC Genomics, 2012). Internal use.
 #'
 #' @param phi the parameter to be optimized.
 #' @param y count samples used to perform the optimization.
@@ -268,21 +292,26 @@ downsample.counts <- function(counts,seed=42) {
 mlfo <- function(phi,y) {
 	N <- length(y)
 	mu <- mean(y)
-	-(sum(lgamma(y+1/phi)) - N*lgamma(1/phi) - sum(lgamma(y+1)) + sum(y*log(mu*phi/(1+mu*phi))) - (N/phi)*log(1+mu*phi))
+	-(sum(lgamma(y+1/phi)) - N*lgamma(1/phi) - sum(lgamma(y+1)) + 
+		sum(y*log(mu*phi/(1+mu*phi))) - (N/phi)*log(1+mu*phi))
 }
 
 #' Create counts matrix permutations
 #'
-#' This function creates a permuted read counts matrix based on the \code{contrast} argument (to define new virtual contrasts of the
-#' same number) and on the \code{sample.list} to derive the number of samples for each virtual condition.It is a helper for the
-#' \code{\link{meta.perm}} function.
+#' This function creates a permuted read counts matrix based on the \code{contrast}
+#' argument (to define new virtual contrasts of the same number) and on the
+#' \code{sample.list} to derive the number of samples for each virtual condition.
+#' It is a helper for the \code{\link{meta.perm}} function.
 #'
 #' @param counts the gene read counts matrix.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param contrast the contrasts vector. See the main \code{\link{metaseqr}} help page.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param contrast the contrasts vector. See the main \code{\link{metaseqr}} help
+#' page.
 #' @param repl the same as the replace argument in \code{\link{sample}} function.
-#' @return A list with three members: the matrix of permuted per sample read counts, the virtual sample list and the virtual contrast
-#' to be used with the \code{stat.*} functions.
+#' @return A list with three members: the matrix of permuted per sample read counts,
+#' the virtual sample list and the virtual contrast to be used with the \code{stat.*}
+#' functions.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -291,10 +320,12 @@ mlfo <- function(phi,y) {
 #'}
 make.permutation <- function(counts,sample.list,contrast,repl=FALSE) {
 	cnts <- strsplit(contrast,"_vs_")[[1]]
-	virtual.contrast <- paste(paste("VirtCond",1:length(cnts),sep=""),collapse="_vs_")
+	virtual.contrast <- paste(paste("VirtCond",1:length(cnts),sep=""),
+		collapse="_vs_")
 	virtual.sample.list <- vector("list",length(sample.list))
 	names(virtual.sample.list) <- paste("VirtCond",1:length(sample.list),sep="")
-	if (repl) { # Avoid the extreme case of returning a vector with all samples the same
+	# Avoid the extreme case of returning a vector with all samples the same
+	if (repl) {
 		resample <- rep(1,ncol(counts))
 		while(length(unique(resample))==1)
 			resample <- sample(1:ncol(counts),ncol(counts),replace=repl)
@@ -309,5 +340,6 @@ make.permutation <- function(counts,sample.list,contrast,repl=FALSE) {
 	names(virtual.samples) <- names(virtual.sample.list)
 	for (n in names(virtual.sample.list))
 		virtual.sample.list[[n]] <- virtual.samples[[n]]
-	return(list(counts=virtual.counts,sample.list=virtual.sample.list,contrast=virtual.contrast))
+	return(list(counts=virtual.counts,sample.list=virtual.sample.list,
+		contrast=virtual.contrast))
 }

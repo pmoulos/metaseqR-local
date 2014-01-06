@@ -14,7 +14,7 @@
   \code{\link{metaseqr}} help page.}
 
   \item{counts}{a normalized read counts table, one row for
-  each gene, one column for each sample}
+  each gene, one column for each sample.}
 
   \item{sample.list}{the list containing condition names
   and the samples under each condition. See the main
@@ -34,7 +34,7 @@
   simulations) to perform.}
 
   \item{weight}{a numeric vector of weights for each
-  statistical algorithm}
+  statistical algorithm.}
 
   \item{select}{how to select the initial vector of
   p-values. It can be \code{"min"} to select the minimum
@@ -48,7 +48,7 @@
   \code{\link{sample}} function. Implies bootstraping or
   simple resampling without replacement. It can also be
   \code{"auto"}, to determine bootstraping or not with the
-  following rule: if \code{ncol(counts)<=4}
+  following rule: if \code{ncol(counts)<=6}
   \code{replace=FALSE else} \code{replace=TRUE}. This
   protects from the case of having zero variability across
   resampled conditions. In such cases, most statistical

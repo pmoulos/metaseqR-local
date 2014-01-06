@@ -7,7 +7,7 @@
 }
 \arguments{
   \item{object}{a matrix or an object specific to each
-  normalization algorithm supported by metaseqr, containing
+  normalization algorithm supported by metaseqR, containing
   normalized counts. Apart from matrix (also for NOISeq),
   the object can be a SeqExpressionSet (EDASeq),
   CountDataSet (DESeq), DGEList (edgeR) or list (NBPSeq).}
@@ -42,7 +42,7 @@
   This function is a wrapper over NBPSeq statistical
   testing. It accepts a matrix of normalized gene counts or
   an S4 object specific to each normalization algorithm
-  supported by metaseqr.
+  supported by metaseqR.
 }
 \note{
   There is currently a problem with the NBPSeq package and

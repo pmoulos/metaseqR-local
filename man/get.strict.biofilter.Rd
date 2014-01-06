@@ -14,7 +14,7 @@
   Returns a list with TRUE/FALSE according to the biotypes
   that are going to be filtered in a more strict way than
   the defaults. This is a helper function for the analysis
-  presets of metaseqr. Internal use only.
+  presets of metaseqR. Internal use only.
 }
 \examples{
 \dontrun{

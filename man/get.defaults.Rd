@@ -30,7 +30,7 @@
 \description{
   This function returns a list with the default settings
   for each filtering, statistical and normalization
-  algorithm included in the metaseqr package. See the
+  algorithm included in the metaseqR package. See the
   documentation of the main function and the documentation
   of each statistical and normalization method for details.
 }

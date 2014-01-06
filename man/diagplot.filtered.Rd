@@ -7,7 +7,7 @@
 \arguments{
   \item{x}{an annotation data frame like the ones produced
   by \code{\link{get.annotation}}. \code{x} should be the
-  filtered annotation according to metaseqr's filters.}
+  filtered annotation according to metaseqR's filters.}
 
   \item{y}{an annotation data frame like the ones produced
   by \code{\link{get.annotation}}. \code{y} should contain

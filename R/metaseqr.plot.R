@@ -1,47 +1,70 @@
 #' Diagnostic plots for the metaseqr package
 #'
-#' This is the main function for producing sructured quality control and informative graphs base on the results of the various steps
-#' of the metaseqr package. The graphs produced span a variety of issues like good sample reproducibility (Multi-Dimensional Scaling
-#' plot, biotype detection, heatmaps. diagplot.metaseqr, apart from implementing certain package-specific plots, is a wrapper around several
-#' diagnostic plots present in other RNA-Seq analysis packages such as EDASeq and NOISeq.
+#' This is the main function for producing sructured quality control and informative
+#' graphs base on the results of the various steps of the metaseqR package. The
+#' graphs produced span a variety of issues like good sample reproducibility
+#' (Multi-Dimensional Scaling plot, biotype detection, heatmaps. diagplot.metaseqr,
+#' apart from implementing certain package-specific plots, is a wrapper around
+#' several diagnostic plots present in other RNA-Seq analysis packages such as
+#' EDASeq and NOISeq.
 #'
-#' @param object a matrix or a data frame containing count data derived before or after the normalization procedure, filtered or not
-#' by the metaseqr's filters and/or p-value. The object can be fed to any of the \code{diagplot.metaseqr} plotting systems but not 
-#' every plot is meaningful. For example, it's meaningless to create a \code{"biodist"} plot for a count matrix before normalization or 
+#' @param object a matrix or a data frame containing count data derived before or
+#' after the normalization procedure, filtered or not by the metaseqR's filters
+#' and/or p-value. The object can be fed to any of the \code{diagplot.metaseqr}
+#' plotting systems but not every plot is meaningful. For example, it's meaningless
+#' to create a \code{"biodist"} plot for a count matrix before normalization or 
 #' statistical testing.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param annotation a data frame containing annotation elements for each row in object. Usually, a subset of the annotation obtained
-#' by \code{\link{get.annotation}} or a subset of possibly embedded annotation with the input counts table. This parameter is optional
-#' and required only when diagplot.type is any of \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, 
-#' \code{"readnoise"}, \code{"biodist"}, \code{"gcbias"}, \code{"lengthbias"} or \code{"filtered"}.
-#' @param contrast.list a named structured list of contrasts as returned by \code{\link{make.contrast.list}} or just the vector of
-#' contrasts as defined in the main help page of \code{\link{metaseqr}}. This parameter is optional and required only when 
-#' \code{diagplot.type} is any of \code{"deheatmap"}, \code{"volcano"} or \code{"biodist"}.
-#' @param p.list a list of p-values for each contrast as obtained from any of the \code{stat.*} methods of the metaseqr package. This 
-#' parameter is optional and required only when \code{diagplot.type} is any of \code{"deheatmap"}, \code{"volcano"} or \code{"biodist"}.
-#' @param thresholds a list with the elements \code{"p"} and \code{"f"} which are the p-value and the fold change cutoff when 
-#' \code{diagplot.type="volcano"}.
-#' @param diagplot.type one or more of the diagnostic plots supported in metaseqr package. Many of these plots require the presence of
-#' additional package, something that is checked while running the main metaseqr function. The supported plots are \code{"mds"}, 
-#' \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, \code{"boxplot"}, \code{"gcbias"}, \code{"lengthbias"},
-#' \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"}, \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"},
-#' \code{"venn"}, \code{"correl"}, \code{"pairwise"}. For a brief description of these plots please see the main \code{\link{metaseqr}}
-#' help page.
-#' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
-#' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"png"},  \code{"jpg"}, \code{"bmp"},
-#' \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive volcano plots only when
-#' reporting the output, through the highcharts javascript library. The default plotting (\code{"x11"}) is not supported due to instability
-#' in certain devices.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param annotation a data frame containing annotation elements for each row in
+#' object. Usually, a subset of the annotation obtained by \code{\link{get.annotation}}
+#' or a subset of possibly embedded annotation with the input counts table. This
+#' parameter is optional and required only when diagplot.type is any of 
+#' \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"}, \code{"rnacomp"}, 
+#' \code{"readnoise"}, \code{"biodist"}, \code{"gcbias"}, \code{"lengthbias"} or
+#' \code{"filtered"}.
+#' @param contrast.list a named structured list of contrasts as returned by
+#' \code{\link{make.contrast.list}} or just the vector of contrasts as defined in
+#' the main help page of \code{\link{metaseqr}}. This parameter is optional and
+#' required only when \code{diagplot.type} is any of \code{"deheatmap"},
+#' \code{"volcano"} or \code{"biodist"}.
+#' @param p.list a list of p-values for each contrast as obtained from any of the
+#' \code{stat.*} methods of the metaseqr package. This parameter is optional and
+#' required only when \code{diagplot.type} is any of \code{"deheatmap"},
+#' \code{"volcano"} or \code{"biodist"}.
+#' @param thresholds a list with the elements \code{"p"} and \code{"f"} which are
+#' the p-value and the fold change cutoff when \code{diagplot.type="volcano"}.
+#' @param diagplot.type one or more of the diagnostic plots supported in metaseqR
+#' package. Many of these plots require the presence of additional package,
+#' something that is checked while running the main metaseqr function. The supported
+#' plots are \code{"mds"}, \code{"biodetection"}, \code{"countsbio"},
+#' \code{"saturation"}, \code{"rnacomp"}, \code{"boxplot"}, \code{"gcbias"},
+#' \code{"lengthbias"}, \code{"meandiff"}, \code{"meanvar"}, \code{"deheatmap"},
+#' \code{"volcano"}, \code{"biodist"}, \code{"filtered"}, \code{"readnoise"},
+#' \code{"venn"}, \code{"correl"}, \code{"pairwise"}. For a brief description of
+#' these plots please see the main \code{\link{metaseqr}} help page.
+#' @param is.norm a logical indicating whether object contains raw or normalized
+#' data. It is not essential and it serves only plot annotation purposes.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"png"},  \code{"jpg"}, \code{"bmp"}, \code{"pdf"},
+#' \code{"ps"} or \code{"json"}. The latter is currently available for the creation
+#' of interactive volcano plots only when reporting the output, through the
+#' highcharts javascript library. The default plotting (\code{"x11"}) is not
+#' supported due to instability in certain devices.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return A named list containing the file names of the produced plots. Each list member is names according to the selected plotting
-#' device and is also a named list, whose names are the plot types. The final contents are the file names in case the plots are written
-#' to a physical location (not meaningful for \code{"x11"}).
-#' @note In order to make the best out of this function, you should generally provide the annotation argument as most and also the
-#' most informative plots depend on this. If you don't know what is inside your counts table or how many annotation elements you can
-#' provide by embedding it, it's always best to set the annotation parameter of the main metaseqr function to \code{"download"} to 
-#' use predefined annotations that work better with the functions of the whole package.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return A named list containing the file names of the produced plots. Each list
+#' member is names according to the selected plotting device and is also a named
+#' list, whose names are the plot types. The final contents are the file names in
+#' case the plots are written to a physical location (not meaningful for \code{"x11"}).
+#' @note In order to make the best out of this function, you should generally
+#' provide the annotation argument as most and also the most informative plots
+#' depend on this. If you don't know what is inside your counts table or how many
+#' annotation elements you can provide by embedding it, it's always best to set
+#' the annotation parameter of the main metaseqr function to \code{"download"} to 
+#' use predefined annotations that work better with the functions of the whole
+#' package.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -56,33 +79,44 @@
 #' diagplot.metaseqr(object,sample.list,diagplot.type="boxplot")
 #'
 #' p <- stat.deseq(object)
-#' diagplot.metaseqr(object,sample.list,contrast.list=contrast,p.list=p,diagplot.type="volcano")
+#' diagplot.metaseqr(object,sample.list,contrast.list=contrast,p.list=p,
+#'   diagplot.type="volcano")
 #'}
-diagplot.metaseqr <- function(
-	object,sample.list,annotation=NULL,contrast.list=NULL,p.list=NULL,thresholds=list(p=0.05,f=1),
-	diagplot.type=c("mds","biodetection","countsbio","saturation","readnoise","rnacomp","correl","pairs","boxplot","gcbias",
-		"lengthbias","meandiff","meanvar","deheatmap","volcano","biodist","filtered","venn"),
-	is.norm=FALSE,output="x11",path=NULL,...
-) {
-	# annotation should have the format internally created here... This function can be used outside so it must be checked at some point...
+diagplot.metaseqr <- function(object,sample.list,annotation=NULL,contrast.list=NULL,
+	p.list=NULL,thresholds=list(p=0.05,f=1),diagplot.type=c("mds","biodetection",
+	"countsbio","saturation","readnoise","rnacomp","correl","pairs","boxplot",
+	"gcbias","lengthbias","meandiff","meanvar","deheatmap","volcano","biodist",
+	"filtered","venn"),is.norm=FALSE,output="x11",path=NULL,...) {
+	# annotation should have the format internally created here... This function
+	# can be used outside so it must be checked at some point...
 	if (!is.matrix(object) && !is.data.frame(object))
 		stopwrap("object argument must be a matrix or data frame!")
-	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","readnoise","biodist","gcbias","lengthbias","filtered")))
-		stopwrap("annotation argument is needed when diagplot.type is \"biodetection\",\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", \"gcbias\", \"lengthbias\", \"filtered\" or \"venn\"!")
+	if (is.null(annotation) && any(diagplot.type %in% c("biodetection","countsbio",
+		"saturation","rnacomp","readnoise","biodist","gcbias","lengthbias",
+		"filtered")))
+		stopwrap("annotation argument is needed when diagplot.type is \"biodetection\", ",
+			"\"countsbio\",\"saturation\",\"rnacomp\", \"readnoise\", \"biodist\", ",
+			"\"gcbias\", \"lengthbias\", \"filtered\" or \"venn\"!")
 	if (any(diagplot.type %in% c("deheatmap","volcano","biodist","venn"))) {
 		if (is.null(contrast.list))
-			stopwrap("contrast.list argument is needed when diagplot.type is \"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
+			stopwrap("contrast.list argument is needed when diagplot.type is ",
+				"\"deheatmap\",\"volcano\", \"biodist\" or \"venn\"!")
 		if (is.null(p.list))
-			stopwrap("The p argument which is a list of p-values for each contrast is needed when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\"!")
+			stopwrap("The p argument which is a list of p-values for each contrast ",
+				"is needed when diagplot.type is \"deheatmap\", \"volcano\", ",
+				"\"biodist\" or \"venn\"!")
 		if (is.na(thresholds$p) || is.null(thresholds$p) || thresholds$p==1) {
-			warnwrap(paste("The p-value threshold when diagplot.type is \"deheatmap\", \"volcano\", \"biodist\" or \"venn\" must allow the normal plotting of DEG diagnostic plots!",
-				"Setting to 0.05..."))
+			warnwrap(paste("The p-value threshold when diagplot.type is \"deheatmap\", ",
+				"\"volcano\", \"biodist\" or \"venn\" must allow the normal plotting ",
+				"of DEG diagnostic plots! Setting to 0.05..."))
 			thresholds$p <- 0.05
 		}
 	}
 	if (is.null(path)) path <- getwd()
-	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) object <- as.matrix(object)
-	if (any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp","biodist","readnoise")))
+	if (is.data.frame(object) && !("filtered" %in% diagplot.type)) 
+		object <- as.matrix(object)
+	if (any(diagplot.type %in% c("biodetection","countsbio","saturation","rnacomp",
+		"biodist","readnoise")))
 		covars <- list(
 			data=object,
 			length=annotation$end - annotation$start,
@@ -92,7 +126,8 @@ diagplot.metaseqr <- function(
 			biotype=annotation$biotype
 		)
 
-	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise","correl","pairwise")
+	raw.plots <- c("mds","biodetection","countsbio","saturation","readnoise",
+		"correl","pairwise")
 	norm.plots <- c("boxplot","gcbias","lengthbias","meandiff","meanvar","rnacomp")
 	stat.plots <- c("deheatmap","volcano","biodist")
 	other.plots <- c("filtered")
@@ -104,25 +139,32 @@ diagplot.metaseqr <- function(
 		if (p %in% raw.plots && !is.norm) {
 			switch(p,
 				mds = {
-					files$mds <- diagplot.mds(object,sample.list,output=output,path=path)
+					files$mds <- diagplot.mds(object,sample.list,output=output,
+						path=path)
 				},
 				biodetection = {
-					files$biodetection <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$biodetection <- diagplot.noiseq(object,sample.list,covars,
+						which.plot=p,output=output,path=path,...)
 				},
 				countsbio = {
-					files$countsbio <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$countsbio <- diagplot.noiseq(object,sample.list,covars,
+						which.plot=p,output=output,path=path,...)
 				},
 				saturation = {
-					fil <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.noiseq(object,sample.list,covars,which.plot=p,
+						output=output,path=path,...)
 					files$saturation$biotype <- fil[["biotype"]]
 					files$saturation$sample <- fil[["sample"]]
 				},
 				readnoise = {
-					files$readnoise <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,path=path,...)
+					files$readnoise <- diagplot.noiseq(object,sample.list,covars,
+						which.plot=p,output=output,path=path,...)
 				},
 				correl = {
-					files$correl$heatmap <- diagplot.cor(object,type="heatmap",output=output,path=path,...)
-					files$correl$correlogram <- diagplot.cor(object,type="correlogram",output=output,path=path,...)
+					files$correl$heatmap <- diagplot.cor(object,type="heatmap",
+						output=output,path=path,...)
+					files$correl$correlogram <- diagplot.cor(object,type="correlogram",
+						output=output,path=path,...)
 				},
 				pairwise = {
 					files$pairwise <- diagplot.pairs(object,output=output,path=path)
@@ -132,26 +174,34 @@ diagplot.metaseqr <- function(
 		if (p %in% norm.plots) {
 			switch(p,
 				boxplot = {
-					files$boxplot <- diagplot.boxplot(object,name=sample.list,is.norm=is.norm,output=output,path=path,...)
+					files$boxplot <- diagplot.boxplot(object,name=sample.list,
+						is.norm=is.norm,output=output,path=path,...)
 				},
 				gcbias = {
-					files$gcbias <- diagplot.edaseq(object,sample.list,covar=annotation$gc_content,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					files$gcbias <- diagplot.edaseq(object,sample.list,
+						covar=annotation$gc_content,is.norm=is.norm,which.plot=p,
+						output=output,path=path,...)
 				},
 				lengthbias = {
-					files$lengthbias <- diagplot.edaseq(object,sample.list,covar=annotation$end-annotation$start,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					files$lengthbias <- diagplot.edaseq(object,sample.list,
+						covar=annotation$end-annotation$start,is.norm=is.norm,
+						which.plot=p,output=output,path=path,...)
 				},
 				meandiff = {
-					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,
+						which.plot=p,output=output,path=path,...)
 					for (n in names(fil))
 						files$meandiff[[n]] <- unlist(fil[[n]])
 				},
 				meanvar = {
-					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,which.plot=p,output=output,path=path,...)
+					fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,
+						which.plot=p,output=output,path=path,...)
 					for (n in names(fil))
 						files$meanvar[[n]] <- unlist(fil[[n]])
 				},
 				rnacomp = {
-					files$rnacomp <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,is.norm=is.norm,path=path,...)
+					files$rnacomp <- diagplot.noiseq(object,sample.list,covars,
+						which.plot=p,output=output,is.norm=is.norm,path=path,...)
 				}
 			)
 		}
@@ -162,16 +212,22 @@ diagplot.metaseqr <- function(
 				mat <- as.matrix(object[,match(samples,colnames(object))])
 				switch(p,
 					deheatmap = {
-						files$deheatmap[[cnt]] <- diagplot.de.heatmap(mat,cnt,output=output,path=path)
+						files$deheatmap[[cnt]] <- diagplot.de.heatmap(mat,cnt,
+							output=output,path=path)
 					},
 					volcano = {
 						fc <- log2(make.fold.change(cnt,sample.list,object,1))
 						for (contrast in colnames(fc)) {
-							files$volcano[[contrast]] <- diagplot.volcano(fc[,contrast],p.list[[cnt]],contrast,fcut=thresholds$f,pcut=thresholds$p,output=output,path=path)
+							files$volcano[[contrast]] <- diagplot.volcano(fc[,contrast],
+								p.list[[cnt]],contrast,fcut=thresholds$f,
+								pcut=thresholds$p,output=output,path=path)
 						}
 					},
 					biodist = {
-						files$biodist[[cnt]] <- diagplot.noiseq(object,sample.list,covars,which.plot=p,output=output,biodist.opts=list(p=p.list[[cnt]],pcut=thresholds$p,name=cnt),path=path,...)
+						files$biodist[[cnt]] <- diagplot.noiseq(object,sample.list,
+							covars,which.plot=p,output=output,
+							biodist.opts=list(p=p.list[[cnt]],
+							pcut=thresholds$p,name=cnt),path=path,...)
 					}
 				)
 			}
@@ -179,7 +235,8 @@ diagplot.metaseqr <- function(
 		if (p %in% other.plots) {
 			switch(p,
 				filtered = {
-					files$filtered <- diagplot.filtered(object,annotation,output=output,path=path)
+					files$filtered <- diagplot.filtered(object,annotation,
+						output=output,path=path)
 				}
 			)
 		}
@@ -194,7 +251,9 @@ diagplot.metaseqr <- function(
 						}
 						else
 							alt.names <- NULL
-						files$venn[[cnt]] <- diagplot.venn(p.list[[cnt]],pcut=thresholds$p,nam=cnt,output=output,path=path,alt.names=alt.names)
+						files$venn[[cnt]] <- diagplot.venn(p.list[[cnt]],
+							pcut=thresholds$p,nam=cnt,output=output,path=path,
+							alt.names=alt.names)
 					}
 				}
 			)
@@ -204,25 +263,35 @@ diagplot.metaseqr <- function(
 	return(files)
 }
 
-#' Boxplots wrapper for the metaseqr package
+#' Boxplots wrapper for the metaseqR package
 #'
-#' A wrapper over the general boxplot function, suitable for matrices produced and processed with the metaseqr package. Intended for
-#' internal use but can be easily used as stand-alone. It can colors boxes based on group depending on the name argument.
+#' A wrapper over the general boxplot function, suitable for matrices produced
+#' and processed with the metaseqr package. Intended for internal use but can be
+#' easily used as stand-alone. It can colors boxes based on group depending on
+#' the name argument.
 #'
 #' @param mat the count data matrix.
-#' @param name the names of the samples plotted on the boxdiagplot. If \code{NULL}, the function check the column names of mat. If they 
-#' are also \code{NULL}, sample names are autogenerated. If \code{name="none"}, no sample names are plotted. If name is a list, it should 
-#' be the sample.list argument provided to the manin metaseqr function. In that case, the boxes are colored per group.
-#' @param log.it whether to log transform the values of mat or not. It can be \code{TRUE}, \code{FALSE} or \code{"auto"} for auto-detection. 
-#' Auto-detection log transforms by default so that the boxplots are smooth and visible.
-#' @param y.lim custom y-axis limits. Leave the string \code{"default"} for default behavior.
-#' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
-#' annotation purposes.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"}, 
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive 
-#' volcano plots only when reporting the output, through the highcharts javascript library (JSON for boxplots not yet available).
+#' @param name the names of the samples plotted on the boxdiagplot. If \code{NULL},
+#' the function check the column names of mat. If they are also \code{NULL}, sample
+#' names are autogenerated. If \code{name="none"}, no sample names are plotted.
+#' If name is a list, it should be the sample.list argument provided to the manin
+#' metaseqr function. In that case, the boxes are colored per group.
+#' @param log.it whether to log transform the values of mat or not. It can be
+#' \code{TRUE}, \code{FALSE} or \code{"auto"} for auto-detection. Auto-detection
+#' log transforms by default so that the boxplots are smooth and visible.
+#' @param y.lim custom y-axis limits. Leave the string \code{"default"} for default
+#' behavior.
+#' @param is.norm a logical indicating whether object contains raw or normalized
+#' data. It is not essential and it serves only plot annotation purposes.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is
+#' currently available for the creation of interactive volcano plots only when
+#' reporting the output, through the highcharts javascript library (JSON for
+#' boxplots not yet available).
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
 #' @return The filename of the boxplot produced if it's a file.
 #' @export
 #' @author Panagiotis Moulos
@@ -237,7 +306,8 @@ diagplot.metaseqr <- function(
 #' object <- normalize.deseq(data.matrix,sample.list,norm.args)
 #' diagplot.boxplot(object,sample.list)
 #'}
-diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm=FALSE,output="x11",path=NULL,...) {
+diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",
+	is.norm=FALSE,output="x11",path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	if (is.norm)
 		status<- "normalized"
@@ -284,27 +354,36 @@ diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm
 	fil <- file.path(path,paste("boxplot_",status,".",output,sep=""))
 	graphics.open(output,fil)
 	if (!is.numeric(y.lim) && y.lim=="default")
-		boxplot(mat.list,names=nams,col=b.cols,las=2,main=paste("Boxplot ",status,sep=""),...)
+		boxplot(mat.list,names=nams,col=b.cols,las=2,main=paste("Boxplot ",
+			status,sep=""),...)
 	else
-		boxplot(mat.list,names=nams,col=b.cols,ylim=c(min.y,max.y),las=2,main=paste("Boxplot ",status,sep=""),...)
+		boxplot(mat.list,names=nams,col=b.cols,ylim=c(min.y,max.y),las=2,
+			main=paste("Boxplot ",status,sep=""),...)
 	graphics.close(output)
 	return(fil)
 }
 
 #' Multi-Dimensinal Scale plots or RNA-Seq samples
 #'
-#' Creates a Multi-Dimensional Scale plot for the given samples based on the count data matrix. MDS plots are very useful for quality
-#' control as you can easily see of samples of the same groups are clustered together based on the whole dataset.
+#' Creates a Multi-Dimensional Scale plot for the given samples based on the count
+#' data matrix. MDS plots are very useful for quality control as you can easily
+#' see of samples of the same groups are clustered together based on the whole
+#' dataset.
 #'
 #' @param x the count data matrix.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param method which correlation method to use. Same as the method parameter in \code{\link{cor}} function.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param method which correlation method to use. Same as the method parameter in
+#' \code{\link{cor}} function.
 #' @param log.it whether to log transform the values of x or not.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of interactive 
-#' volcano plots only when reporting the output, through the highcharts javascript library.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is
+#' currently available for the creation of interactive volcano plots only when
+#' reporting the output, through the highcharts javascript library.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
 #' @return The filename of the MDS plot produced if it's a file.
 #' @export
 #' @author Panagiotis Moulos
@@ -315,7 +394,8 @@ diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",is.norm
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' diagplot.mds(data.matrix,sample.list)
 #'}
-diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",path=NULL,...) {
+diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11",
+	path=NULL,...) {
 	if (is.null(path)) path <- getwd()
 	classes <- as.factor(as.class.vector(sample.list))
 	design <- as.numeric(classes)
@@ -351,15 +431,19 @@ diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11
 
 #' Massive X-Y, M-D correlation plots
 #'
-#' This function uses the read counts matrix to create pairwise correlation plots. The upper diagonal of the final image contains
-#' simple scatterplots of each sample against each other (log2 scale) while the lower diagonal contains mean-difference plots for
-#' the same samples (log2 scale). This type of diagnostic plot may not be interpretable for more than 10 samples.
+#' This function uses the read counts matrix to create pairwise correlation plots.
+#' The upper diagonal of the final image contains simple scatterplots of each
+#' sample against each other (log2 scale) while the lower diagonal contains
+#' mean-difference plots for the same samples (log2 scale). This type of diagnostic
+#' plot may not be interpretable for more than 10 samples.
 #'
 #' @param x the read counts matrix or data frame.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
 #' @return The filename of the pairwise comparisons plot produced if it's a file.
 #' @export
 #' @author Panagiotis Moulos
@@ -392,7 +476,8 @@ diagplot.pairs <- function(x,output="x11",path=NULL,...) {
 	}
 		
 	# Setup the grid
-	par(mfrow=c(n,n),mar=c(1,1,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0),cex.axis=0.6,cex.lab=0.6)
+	par(mfrow=c(n,n),mar=c(1,1,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0),cex.axis=0.6,
+		cex.lab=0.6)
 
 	# Plot
 	for (i in 1:n)
@@ -402,13 +487,15 @@ diagplot.pairs <- function(x,output="x11",path=NULL,...) {
 			if (i==j)
 			{
 				plot(0:10,0:10,type="n",xaxt="n",yaxt="n",xlab="",ylab="") # Diagonal
-				text(c(3,5,3),c(9.5,5,1),c("X-Y plots",nams[i],"M-D plots"),cex=c(0.8,1,0.8))
+				text(c(3,5,3),c(9.5,5,1),c("X-Y plots",nams[i],"M-D plots"),
+					cex=c(0.8,1,0.8))
 				arrows(6,9.5,9.5,9.5,angle=20,length=0.1,lwd=0.8,cex=0.8)
 				arrows(0.2,3.2,0.2,0.2,angle=20,length=0.1,lwd=0.8,cex=0.8)
 			}
 			else if (i<j) # XY plot
 			{
-				plot(x[,i],x[,j],pch=20,col="blue",cex=0.4,xlab=nams[i],ylab=nams[j],...)
+				plot(x[,i],x[,j],pch=20,col="blue",cex=0.4,xlab=nams[i],
+					ylab=nams[j],...)
 				lines(lowess(x[,i],x[,j]),col="red")
 				cc <- paste("cor:",formatC(cor(x[,i],x[,j]),digits=3))
 				text(3,max(x[,j]-1),labels=cc,cex=0.7,)
@@ -429,14 +516,17 @@ diagplot.pairs <- function(x,output="x11",path=NULL,...) {
 
 #' Summarized correlation plots
 #'
-#' This function uses the read counts matrix to create heatmap or correlogram correlation plots.
+#' This function uses the read counts matrix to create heatmap or correlogram
+#' correlation plots.
 #'
 #' @param mat the read counts matrix or data frame.
 #' @param type create heatmap of correlogram plots.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
 #' @return The filename of the pairwise comparisons plot produced if it's a file.
 #' @export
 #' @author Panagiotis Moulos
@@ -447,8 +537,8 @@ diagplot.pairs <- function(x,output="x11",path=NULL,...) {
 #' diagplot.cor(data.matrix,type="heatmap")
 #' diagplot.cor(data.matrix,type="correlogram")
 #'}
-diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=NULL,...)
-{
+diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",
+	path=NULL,...) {
 	x <- as.matrix(mat)
 	type <- tolower(type[1])
 	check.text.args("type",type,c("heatmap","correlogram"))
@@ -479,8 +569,10 @@ diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=N
 			notecex <- 0.9
 		else
 			notecex <- 0.7
-		heatmap.2(cor.mat,col=colorRampPalette(c("yellow","grey","blue")),revC=TRUE,trace="none",symm=TRUE,Colv=TRUE,
-			cellnote=labs,keysize=1,density.info="density",notecex=notecex,cexCol=0.9,cexRow=0.9,font.lab=2)
+		heatmap.2(cor.mat,col=colorRampPalette(c("yellow","grey","blue")),
+			revC=TRUE,trace="none",symm=TRUE,Colv=TRUE,cellnote=labs,keysize=1,
+			density.info="density",notecex=notecex,cexCol=0.9,cexRow=0.9,
+			font.lab=2)
 	}
 	graphics.close(output)
 	return(fil)
@@ -488,26 +580,32 @@ diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=N
 
 #' Diagnostic plots based on the EDASeq package
 #'
-#' A wrapper around the plotting functions availale in the EDASeq normalization Bioconductor package. For analytical explanation of
-#' each plot please see the vignette of the EDASeq package. It is best to use this function through the main plotting function
-#' \code{\link{diagplot.metaseqr}}.
+#' A wrapper around the plotting functions availale in the EDASeq normalization
+#' Bioconductor package. For analytical explanation of each plot please see the
+#' vignette of the EDASeq package. It is best to use this function through the
+#' main plotting function \code{\link{diagplot.metaseqr}}.
 #'
 #' @param x the count data matrix.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param covar The covariate to plot counts against. Usually \code{"gc"} or \code{"length"}.
-#' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
-#' annotation purposes.
-#' @param which.plot the EDASeq package plot to generate. It can be one or more of \code{"meanvar"}, \code{"meandiff"}, \code{"gcbias"}
-#' or \code{"lengthbias"}.
-#' Please refer to the documentation of the EDASeq package for details on the use of these plots. The \code{which.plot="lengthbias"} case
-#' is not covered by EDASeq documentation, however it is similar to the GC-bias plot when the covariate is the gene length instead
-#' of the GC content.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param covar The covariate to plot counts against. Usually \code{"gc"} or
+#' \code{"length"}.
+#' @param is.norm a logical indicating whether object contains raw or normalized
+#' data. It is not essential and it serves only plot annotation purposes.
+#' @param which.plot the EDASeq package plot to generate. It can be one or more
+#' of \code{"meanvar"}, \code{"meandiff"}, \code{"gcbias"} or \code{"lengthbias"}.
+#' Please refer to the documentation of the EDASeq package for details on the use
+#' of these plots. The \code{which.plot="lengthbias"} case is not covered by
+#' EDASeq documentation, however it is similar to the GC-bias plot when the
+#' covariate is the gene length instead of the GC content.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plot produced in a named list with names the which.plot argument. If \code{output="x11"}, no output 
-#' filenames are produced.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plot produced in a named list with names the
+#' which.plot argument. If \code{output="x11"}, no output filenames are produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -516,27 +614,35 @@ diagplot.cor <- function(mat,type=c("heatmap","correlogram"),output="x11",path=N
 #' data.matrix <- counts(makeExampleCountDataSet())
 #' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 #' gc <- runif(nrow(data.matrix))
-#' diagplot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar","meandiff","gcbias"))
+#' diagplot.edaseq(data.matrix,sample.list,covar=gc,which.plot=c("meanvar",
+#'   "meandiff","gcbias"))
 #'}
-diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c("meanvar","meandiff","gcbias","lengthbias"),output="x11",path=NULL,...) {
+diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,
+	which.plot=c("meanvar","meandiff","gcbias","lengthbias"),output="x11",
+	path=NULL,...) {
 	if (is.null(path)) path <- getwd()
-	check.text.args("which.plot",which.plot,c("meanvar","meandiff","gcbias","lengthbias"),multiarg=TRUE)
+	check.text.args("which.plot",which.plot,c("meanvar","meandiff","gcbias",
+		"lengthbias"),multiarg=TRUE)
 	if (is.null(covar) && which.plot %in% c("gcbias","lengthbias"))
-		stopwrap("\"covar\" argument is required when \"which.plot\" is \"gcbias\" or \"lengthbias\"!")
+		stopwrap("\"covar\" argument is required when \"which.plot\" is \"gcbias\" ",
+			"or \"lengthbias\"!")
 	if (is.norm)
 		status <- "normalized"
 	else
 		status <- "raw"
 	if (is.null(covar)) covar <- rep(NA,nrow(x))
-	s <- newSeqExpressionSet(x,phenoData=AnnotatedDataFrame(data.frame(conditions=as.class.vector(sample.list),row.names=colnames(x))),
-		featureData=AnnotatedDataFrame(data.frame(gc=covar,length=covar,row.names=rownames(x))))
+	s <- newSeqExpressionSet(x,phenoData=AnnotatedDataFrame(
+		data.frame(conditions=as.class.vector(sample.list),row.names=colnames(x))),
+		featureData=AnnotatedDataFrame(data.frame(gc=covar,length=covar,
+		row.names=rownames(x))))
 	switch(which.plot,
 		meandiff = {
 			fil <- vector("list",length(sample.list))
 			names(fil) <- names(sample.list)
 			for (n in names(sample.list)) {
 				if (length(sample.list[[n]])==1) {
-					warnwrap("Cannot create a mean-difference plot with one sample per condition! Skipping...")
+					warnwrap("Cannot create a mean-difference plot with one sample ",
+						"per condition! Skipping...")
 					next
 				}
 				pair.matrix <- combn(1:length(sample.list[[n]]),2)
@@ -544,10 +650,12 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 				for (i in ncol(pair.matrix)) {
 					s1 <- sample.list[[n]][pair.matrix[1,i]]
 					s2 <- sample.list[[n]][pair.matrix[2,i]]
-					fil[[n]][[i]] <- file.path(path,paste(which.plot,"_",status,"_",n,"_",s1,"_",s2,".",output,sep=""))
+					fil[[n]][[i]] <- file.path(path,paste(which.plot,"_",status,
+						"_",n,"_",s1,"_",s2,".",output,sep=""))
 					names(fil[[n]][i]) <- paste(s1,"vs",s2,sep="_")
 					graphics.open(output,fil[[n]][[i]])
-					MDPlot(s,y=pair.matrix[,i],main=paste("MD plot for ",n," ",status," samples ",s1," and ",s2,sep=""),cex.main=0.9)
+					MDPlot(s,y=pair.matrix[,i],main=paste("MD plot for ",n," ",
+						status," samples ",s1," and ",s2,sep=""),cex.main=0.9)
 					graphics.close(output)
 				}
 			}
@@ -557,7 +665,8 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 			names(fil) <- names(sample.list)
 			for (n in names(sample.list)) {	
 				if (length(sample.list[[n]])==1) {
-					warnwrap("Cannot create a mean-variance plot with one sample per condition! Skipping...")
+					warnwrap("Cannot create a mean-variance plot with one sample ",
+						"per condition! Skipping...")
 					next
 				}
 				pair.matrix <- combn(1:length(sample.list[[n]]),2)
@@ -565,10 +674,12 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 				for (i in ncol(pair.matrix)) {
 					s1 <- sample.list[[n]][pair.matrix[1,i]]
 					s2 <- sample.list[[n]][pair.matrix[2,i]]
-					fil[[n]][[i]] <- file.path(path,paste(which.plot,"_",status,"_",n,"_",s1,"_",s2,".",output,sep=""))
+					fil[[n]][[i]] <- file.path(path,paste(which.plot,"_",status,
+						"_",n,"_",s1,"_",s2,".",output,sep=""))
 					names(fil[[n]][i]) <- paste(s1,"vs",s2,sep="_")
 					graphics.open(output,fil[[n]][[i]])
-					suppressWarnings(meanVarPlot(s,main=paste("MV plot for ",n," ",status," samples ",s1," and ",s2,sep=""),cex.main=0.9))
+					suppressWarnings(meanVarPlot(s,main=paste("MV plot for ",n," ",
+						status," samples ",s1," and ",s2,sep=""),cex.main=0.9))
 					graphics.close(output)
 				}
 			}
@@ -576,14 +687,16 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 		gcbias = {
 			fil <- file.path(path,paste(which.plot,"_",status,".",output,sep=""))
 			graphics.open(output,fil)
-			biasPlot(s,"gc",xlim=c(0.1,0.9),log=TRUE,ylim=c(0,15),main=paste("Expression - GC content ",status,sep=""))
+			biasPlot(s,"gc",xlim=c(0.1,0.9),log=TRUE,ylim=c(0,15),
+				main=paste("Expression - GC content ",status,sep=""))
 			grid()
 			graphics.close(output)
 		},
 		lengthbias = {
 			fil <- file.path(path,paste(which.plot,"_",status,".",output,sep=""))
 			graphics.open(output,fil)
-			biasPlot(s,"length",log=TRUE,ylim=c(0,10),main=paste("Expression - Gene length ",status,sep=""))
+			biasPlot(s,"length",log=TRUE,ylim=c(0,10),
+				main=paste("Expression - Gene length ",status,sep=""))
 			grid()
 			graphics.close(output)
 		}
@@ -593,34 +706,47 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 
 #' Diagnostic plots based on the NOISeq package
 #'
-#' A wrapper around the plotting functions availale in the NOISeq RNA-Seq analysisBioconductor package. For analytical explanation
-#' of each plot please see the vignette of the NOISeq package. It is best to use this function through the main plotting function
-#' \code{\link{diagplot.metaseqr}}.
+#' A wrapper around the plotting functions availale in the NOISeq Bioconductor
+#' package. For analytical explanation of each plot please see the vignette of 
+#' the NOISeq package. It is best to use this function through the main plotting
+#' function \code{\link{diagplot.metaseqr}}.
 #'
 #' @param x the count data matrix.
-#' @param sample.list the list containing condition names and the samples under each condition.
-#' @param covars a list (whose annotation elements are ideally a subset of an annotation data frame produced by \code{\link{get.annotation}})
-#' with the following members: data (the data matrix), length (gene length), gc (the gene gc_content), chromosome (a data frame with
-#' chromosome name and co-ordinates), factors (a factor with the experimental condition names replicated by the number of samples in
-#' each experimental condition) and biotype (each gene's biotype as depicted in Ensembl-like annotations).
-#' @param which.plot the NOISeq package plot to generate. It can be one or more of \code{"biodetection"}, \code{"countsbio"}, 
-#' \code{"saturation"}, \code{"rnacomp"}, \code{"readnoise"} or \code{"biodist"}. Please refer to the documentation of the EDASeq 
-#' package for details on the use of these plots. The \code{which.plot="saturation"} case is modified to be more informative by 
+#' @param sample.list the list containing condition names and the samples under
+#' each condition.
+#' @param covars a list (whose annotation elements are ideally a subset of an
+#' annotation data frame produced by \code{\link{get.annotation}})
+#' with the following members: data (the data matrix), length (gene length), gc
+#' (the gene gc_content), chromosome (a data frame with chromosome name and
+#' co-ordinates), factors (a factor with the experimental condition names
+#' replicated by the number of samples in each experimental condition) and biotype
+#' (each gene's biotype as depicted in Ensembl-like annotations).
+#' @param which.plot the NOISeq package plot to generate. It can be one or more
+#' of \code{"biodetection"}, \code{"countsbio"}, \code{"saturation"},
+#' \code{"rnacomp"}, \code{"readnoise"} or \code{"biodist"}. Please refer to the
+#' documentation of the EDASeq package for details on the use of these plots. The
+#' \code{which.plot="saturation"} case is modified to be more informative by 
 #' producing two kinds of plots. See \code{\link{diagplot.noiseq.saturation}}.
-#' @param biodist.opts a list with the following members: p (a vector of p-values, e.g. the p-values of a contrast), pcut (a unique
-#' number depicting a p-value cutoff, required for the \code{"biodist"} case), name (a name for the \code{"biodist"} plot, e.g. the 
-#' name of the contrast.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param biodist.opts a list with the following members: p (a vector of p-values,
+#' e.g. the p-values of a contrast), pcut (a unique number depicting a p-value
+#' cutoff, required for the \code{"biodist"} case), name (a name for the 
+#' \code{"biodist"} plot, e.g. the name of the contrast.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param is.norm a logical indicating whether object contains raw or normalized data. It is not essential and it serves only plot
-#' annotation purposes.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
-#' output filenames are produced.
-#' @note Please note that in case of \code{"biodist"} plots, the behavior of the function is unstable, mostly due to the very specific 
-#' inputs this plotting function accepts in the NOISeq package. We have tried to predict unstable behavior and avoid exceptions through 
-#' the use of tryCatch but it's still possible that you might run onto an error.
+#' @param is.norm a logical indicating whether object contains raw or normalized
+#' data. It is not essential and it serves only plot annotation purposes.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If \code{output="x11"}, no output filenames are
+#' produced.
+#' @note Please note that in case of \code{"biodist"} plots, the behavior of the
+#' function is unstable, mostly due to the very specific inputs this plotting
+#' function accepts in the NOISeq package. We have tried to predict unstable
+#' behavior and avoid exceptions through the use of tryCatch but it's still
+#' possible that you might run onto an error.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -641,27 +767,34 @@ diagplot.edaseq <- function(x,sample.list,covar=NULL,is.norm=FALSE,which.plot=c(
 #'     end=ends
 #'   ),
 #'   factors=data.frame(class=as.class.vector(sample.list)),
-#'   biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",nrow(data.matrix)/2))
+#'   biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",
+#'     nrow(data.matrix)/2))
 #' )
 #' p <- runif(nrow(data.matrix))
-#' diagplot.noiseq(data.matrix,sample.list,covars=covars,biodist.opts=list(p=p,pcut=0.1,name="A_vs_B"))
+#' diagplot.noiseq(data.matrix,sample.list,covars=covars,
+#'   biodist.opts=list(p=p,pcut=0.1,name="A_vs_B"))
 #'}
-diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "countsbio", "saturation", "rnacomp", "biodist"),output="x11",
+diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection",
+	"countsbio", "saturation", "rnacomp", "biodist"),output="x11",
 	biodist.opts=list(p=NULL,pcut=NULL,name=NULL),path=NULL,is.norm=FALSE,...) {
 	if (is.null(path)) path <- getwd()
-	# covars is a list of gc-content, factors, length, biotype, chromosomes, factors, basically copy of the noiseq object
+	# covars is a list of gc-content, factors, length, biotype, chromosomes, 
+	# factors, basically copy of the noiseq object
 	which.plot <- tolower(which.plot[1])
-	check.text.args("which.plot",which.plot,c("biodetection","countsbio","saturation","readnoise","rnacomp","biodist"),multiarg=FALSE)
+	check.text.args("which.plot",which.plot,c("biodetection","countsbio",
+		"saturation","readnoise","rnacomp","biodist"),multiarg=FALSE)
 	if (missing(covars))
 		stopwrap("\"covars\" argument is required with NOISeq specific plots!")
 	else {
 		covars$biotype <- as.character(covars$biotype)
-		names(covars$length) <- names(covars$gc) <- rownames(covars$chromosome) <- names(covars$biotype) <- rownames(x)
+		names(covars$length) <- names(covars$gc) <- rownames(covars$chromosome) <- 
+			names(covars$biotype) <- rownames(x)
 	}
 	if (which.plot=="biodist") {
 		if (is.null(biodist.opts$p))
 			stopwrap("A p-value must be provided for the \"biodist\" plot!")
-		if (is.null(biodist.opts$pcut) || is.na(biodist.opts$pcut)) biodist.opts$pcut=0.05
+		if (is.null(biodist.opts$pcut) || is.na(biodist.opts$pcut)) 
+			biodist.opts$pcut=0.05
 	}
 	if (is.norm)
 		status<- "normalized"
@@ -687,7 +820,8 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 			fil <- character(length(samples))
 			names(fil) <- samples
 			for (i in 1:length(samples)) {
-				fil[samples[i]] <- file.path(path,paste(which.plot,"_",samples[i],".",output,sep=""))
+				fil[samples[i]] <- file.path(path,paste(which.plot,"_",samples[i],
+					".",output,sep=""))
 				if (output %in% c("pdf","ps","x11"))
 					graphics.open(output,fil[samples[i]],width=9,height=7)
 				else
@@ -702,7 +836,8 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 			fil <- character(length(samples))
 			names(fil) <- samples
 			for (i in 1:length(samples)) {
-				fil[samples[i]] <- file.path(path,paste(which.plot,"_",samples[i],".",output,sep=""))
+				fil[samples[i]] <- file.path(path,paste(which.plot,"_",samples[i],
+					".",output,sep=""))
 				if (output %in% c("pdf","ps","x11"))
 					graphics.open(output,fil[samples[i]],width=9,height=7)
 				else
@@ -711,8 +846,9 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 				graphics.close(output)
 			}
 		},
-		saturation = { # Up to 12 samples... Hmmm... I have to improvise
-			diagplot.data <- NOISeq::dat(local.obj,k=0,ndepth=9,type=which.plot) # For 10 saturation points
+		saturation = {
+			# For 10 saturation points
+			diagplot.data <- NOISeq::dat(local.obj,k=0,ndepth=9,type=which.plot)
 			d2s <- dat2save(diagplot.data)
 			fil <- diagplot.noiseq.saturation(d2s,output,covars$biotype,path=path)
 		},
@@ -763,7 +899,8 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 				v=0.02
 			)
 			if (!is.null(biodist.opts$name))
-				fil <- file.path(path,paste(which.plot,"_",biodist.opts$name,".",output,sep=""))
+				fil <- file.path(path,paste(which.plot,"_",biodist.opts$name,".",
+					output,sep=""))
 			else
 				fil <- file.path(path,paste(which.plot,".",output,sep=""))
 			if (output %in% c("pdf","ps","x11"))
@@ -773,12 +910,16 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 			tryCatch( # A lot of times, there is a problem with this function
 				DE.plot(dummy,chromosomes=NULL,q=biodist.opts$pcut,graphic="distr"),
 				error=function(e) {
-					disp("      Known problem with NOISeq and external p-values detected! Trying to make a plot with alternative p-values (median of p-value distribution)...")
+					disp("      Known problem with NOISeq and external p-values ",
+						"detected! Trying to make a plot with alternative p-values ",
+						"(median of p-value distribution)...")
 					fil="error"
 					tryCatch(
-						DE.plot(dummy,chromosomes=NULL,q=quantile(biodist.opts$p,0.5),graphic="distr"),
+						DE.plot(dummy,chromosomes=NULL,q=quantile(biodist.opts$p,0.5),
+							graphic="distr"),
 						error=function(e) {
-							disp("      Cannot create DEG biotype plot! This is not related to a problem with the results. Excluding...")
+							disp("      Cannot create DEG biotype plot! This is not ",
+								"related to a problem with the results. Excluding...")
 							fil="error"
 						},
 						finally=""
@@ -794,26 +935,31 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection", "c
 
 #' Simpler implementation of saturation plots inspired from NOISeq package
 #'
-#' Helper function for \code{\link{diagplot.noiseq}} to plot feature detection saturation as presented in the NOISeq package vignette.
-#' It has two main outputs: a set of figures, one for each input sample depicting the saturation for each biotype and one single
-#' multiplot which depicts the saturation of all samples for each biotype. It expands the saturation plots of NOISeq by allowing
-#' more samples to be examined in a simpler way. Don't use this function directly. Use either \code{\link{diagplot.metaseqr}} or 
-#' \code{\link{diagplot.noiseq}}.
+#' Helper function for \code{\link{diagplot.noiseq}} to plot feature detection
+#' saturation as presented in the NOISeq package vignette. It has two main outputs:
+#' a set of figures, one for each input sample depicting the saturation for each
+#' biotype and one single multiplot which depicts the saturation of all samples
+#' for each biotype. It expands the saturation plots of NOISeq by allowing more
+#' samples to be examined in a simpler way. Don't use this function directly. Use
+#' either \code{\link{diagplot.metaseqr}} or \code{\link{diagplot.noiseq}}.
 #'
 #' @param x the count data matrix.
-#' @param o one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"}, 
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param o one or more R plotting device to direct the plot result to. Supported
+#' mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"}, \code{"bmp"},
+#' \code{"pdf"} or \code{"ps"}.
 #' @param tb the vector of biotypes, one for each row of x.
 #' @param path the path to create output files.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
-#' output filenames are produced.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If \code{output="x11"}, no output filenames are
+#' produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
 #' require(DESeq)
 #' data.matrix <- counts(makeExampleCountDataSet())
-#' biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",nrow(data.matrix)/2))
+#' biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",
+#'   nrow(data.matrix)/2))
 #' diagplot.noiseq.saturation(data.matrix,"x11",biotype)
 #'}
 diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
@@ -845,12 +991,14 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		xlim <- range(y[,"depth"])
 		ylim.ab <- range(yab[,2:ncol(yab)])
 		ylim.nab <- range(ynab[,2:ncol(ynab)])
-		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lty=2,lwd=1.5,mfrow=c(1,2))
+		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+			lty=2,lwd=1.5,mfrow=c(1,2))
 		plot.new()
 		plot.window(xlim,ylim.nab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.nab,10))
-		title(main="Non abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
+		title(main="Non abundant biotype detection saturation",
+			xlab="Depth in millions of reads",ylab="Detected features")
 		co <- 0
 		for (b in biotypes) {
 			co <- co + 1
@@ -859,7 +1007,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 			}
 			else {
 				lines(ynab[,"depth"],ynab[,b],col=colspace[co])
-				points(ynab[,"depth"],ynab[,b],pch=pchspace[co],col=colspace[co],cex=1)
+				points(ynab[,"depth"],ynab[,b],pch=pchspace[co],
+					col=colspace[co],cex=1)
 			}
 		}
 		grid()
@@ -872,7 +1021,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		plot.window(xlim,ylim.ab)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)/1e+6))
 		axis(2,at=pretty(ylim.ab,10))
-		title(main="Abundant biotype detection saturation",xlab="Depth in millions of reads",ylab="Detected features")
+		title(main="Abundant biotype detection saturation",
+			xlab="Depth in millions of reads",ylab="Detected features")
 		co <- 0
 		for (b in c("global","protein_coding")) {
 			co <- co + 1
@@ -896,7 +1046,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		graphics.open(o,f.all,width=14,height=14)
 	else
 		graphics.open(o,f.all,width=1600,height=1600,res=150)
-	par(cex.axis=0.8,cex.main=0.9,cex.lab=0.8,pty="m",lty=2,lwd=1.5,mfrow=g,mar=c(3,3,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0))
+	par(cex.axis=0.8,cex.main=0.9,cex.lab=0.8,pty="m",lty=2,lwd=1.5,mfrow=g,
+		mar=c(3,3,1,1),oma=c(1,1,0,0),mgp=c(2,0.5,0))
 	for (b in biotypes) {
 		y <- depth <- vector("list",length(x))
 		names(y) <- names(depth) <- names(x)
@@ -909,7 +1060,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 		ylim <- range(y)
 		plot.new()
 		plot.window(xlim,ylim)
-		axis(1,at=pretty(xlim,5),labels=as.character(pretty(xlim,5)/1e+6),line=0.5)
+		axis(1,at=pretty(xlim,5),labels=as.character(pretty(xlim,5)/1e+6),
+			line=0.5)
 		axis(2,at=pretty(ylim,5),line=0.5)
 		title(main=b,xlab="Depth in millions of reads",ylab="Detected features")
 		co <- 0
@@ -932,22 +1084,32 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 
 #' (Interactive) volcano plots of differentially expressed genes
 #'
-#' This function plots a volcano plot or returns a JSON string which is used to render aninteractive in case of HTML reporting.
+#' This function plots a volcano plot or returns a JSON string which is used to
+#' render aninteractive in case of HTML reporting.
 #'
 #' @param f the fold changes which are to be plotted on the x-axis.
-#' @param p the p-values whose -log10 transformation is going to be plotted on the y-axis.
-#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano diagplot.
-#' @param fcut a fold change cutoff so as to draw two vertical lines indicating the cutoff threshold for biological significance.
-#' @param pcut a p-value cutoff so as to draw a horizontal line indicating the cutoff threshold for statistical significance.
-#' @param alt.names an optional vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique names of \code{f}
-#' or \code{p} (one of them must be named!). It is used only in JSON output.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently available for the creation of 
-#' interactive volcano plots only when reporting the output, through the highcharts javascript library.
+#' @param p the p-values whose -log10 transformation is going to be plotted on
+#' the y-axis.
+#' @param con an optional string depicting a name (e.g. the contrast name) to
+#' appear in the title of the volcano diagplot.
+#' @param fcut a fold change cutoff so as to draw two vertical lines indicating
+#' the cutoff threshold for biological significance.
+#' @param pcut a p-value cutoff so as to draw a horizontal line indicating the
+#' cutoff threshold for statistical significance.
+#' @param alt.names an optional vector of names, e.g. HUGO gene symbols, alternative
+#' or complementary to the unique names of \code{f} or \code{p} (one of them must
+#' be named!). It is used only in JSON output.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"}, \code{"ps"} or \code{"json"}. The latter is currently
+#' available for the creation of interactive volcano plots only when reporting the
+#' output, through the highcharts javascript library.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no
-#' output filenames are produced.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If \code{output="x11"}, no output filenames are
+#' produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -964,7 +1126,8 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #' diagplot.volcano(f,p,con=contrast)
 #' j <- diagplot.volcano(f,p,con=contrast,output="json")
 #'}
-diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output="x11",path=NULL,...) { # output can be json here...
+diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,
+	output="x11",path=NULL,...) { # output can be json here...
 	if (is.null(path)) path <- getwd()
 	if (is.null(con))
 		con <- conn <- ""
@@ -986,8 +1149,9 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 		if (!is.null(alt.names))
 			alt.names <- alt.names[-rem]
 	}
+	# Fix problem with extremely low p-values, only for display purposes though
 	p.zero <- which(p==0)
-	if (length(p.zero)>0) # Fix problem with extremely low p-values, only for display purposes though
+	if (length(p.zero)>0)
 		p[p.zero] <- runif(length(p.zero),0,1e-256)
 	xlim <- c(-max(abs(f)),max(abs(f)))
 	ylim <- c(0,ceiling(-log10(min(p))))
@@ -1008,12 +1172,14 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 			alt.names.neutral <- alt.names
 	}
 	if (output!="json") {
-		par(cex.main=1.1,cex.lab=1.1,cex.axis=1.1,font.lab=2,font.axis=2,pty="m",lwd=1.5)
+		par(cex.main=1.1,cex.lab=1.1,cex.axis=1.1,font.lab=2,font.axis=2,
+			pty="m",lwd=1.5)
 		plot.new()
 		plot.window(xlim,ylim)
 		axis(1,at=pretty(xlim,10),labels=as.character(pretty(xlim,10)))
 		axis(2,at=pretty(ylim,10))
-		title(paste(main="Volcano plot",con),xlab="Fold change",ylab="-log10(p-value)")
+		title(paste(main="Volcano plot",con),
+			xlab="Fold change",ylab="-log10(p-value)")
 		points(ff,-log10(pp),pch=20,col="blue2",cex=0.9)
 		points(f[down],-log10(p[down]),pch=20,col="green3",cex=0.9)
 		points(f[up],-log10(p[up]),pch=20,col="red2",cex=0.9)
@@ -1023,7 +1189,8 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 		grid()
 		legend(
 			x="topleft",
-			legend=c("up-regulated","down-regulated","unregulated","p-value threshold","fold change threshold"),
+			legend=c("up-regulated","down-regulated","unregulated",
+				"p-value threshold","fold change threshold"),
 			col=c("red2","green3","blue1","black","black"),
 			pch=c(20,20,20,NA,NA),lty=c(NA,NA,NA,4,2),
 			xjust=1,yjust=0,box.lty=0,x.intersp=0.5,cex=0.8,text.font=2
@@ -1033,9 +1200,12 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 	}
 	else {
 		if (is.null(alt.names))
-			point.format="<b>id: </b>{point.name}<br><b>fold change: </b>{point.x}<br><b>significance: </b>{point.y}"
+			point.format=paste("<b>id: </b>{point.name}<br><b>fold change:",
+				"</b>{point.x}<br><b>significance: </b>{point.y}")
 		else
-			point.format="<b>name: </b>{point.alt_name}<br><b>id: </b>{point.name}<br><b>fold change: </b>{point.x}<br><b>significance: </b>{point.y}"
+			point.format=paste("<b>name: </b>{point.alt_name}<br><b>id:",
+				"</b>{point.name}<br><b>fold change:",
+				"</b>{point.x}<br><b>significance: </b>{point.y}")
 		json <- toJSON(
 			list(
 					chart=list(
@@ -1097,8 +1267,11 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 							)
 						),
 						tooltip=list(
-							headerFormat="<span style=\"font-size:12px; color:{series.color}\">{series.name}<br>",
-							#pointFormat="<b>name: </b>{point.name}<br><b>fold change: </b>{point.x}<br><b>significance: </b>{point.y}"
+							headerFormat=paste("<span style=\"font-size:12px;",
+								"color:{series.color}\">{series.name}<br>"),
+							#pointFormat=paste("<b>name: </b>{point.name}<br><b>fold",
+							#	"change: </b>{point.x}<br><b>significance:",
+							#	"</b>{point.y}")
 							pointFormat=point.format
 						),
 						turboThreshold=50000
@@ -1159,17 +1332,22 @@ diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,output
 
 #' Diagnostic heatmap of differentially expressed genes
 #'
-#' This function plots a heatmap of the differentially expressed genes produced by the metaseqr workflow, useful for quality control,
-#' e.g. whether samples belonging to the same group cluster together.
+#' This function plots a heatmap of the differentially expressed genes produced
+#' by the metaseqr workflow, useful for quality control, e.g. whether samples
+#' belonging to the same group cluster together.
 #'
 #' @param x the data matrix to create a heatmap for.
-#' @param con an optional string depicting a name (e.g. the contrast name) to appear in the title of the volcano plot.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
+#' @param con an optional string depicting a name (e.g. the contrast name) to
+#' appear in the title of the volcano plot.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"}, \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If \code{output="x11"}, no 
-#' output filenames are produced.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If \code{output="x11"}, no output filenames are
+#' produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1197,7 +1375,8 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 		graphics.open(output,fil,width=10,height=10)
 	else
 		graphics.open(output,fil,width=800,height=800)
-	heatmap.2(y,trace="none",col=bluered(16),labRow="",cexCol=0.9,keysize=1,font.lab=2,main=paste("DEG heatmap",con),cex.main=0.9)
+	heatmap.2(y,trace="none",col=bluered(16),labRow="",cexCol=0.9,keysize=1,
+		font.lab=2,main=paste("DEG heatmap",con),cex.main=0.9)
 	graphics.close(output)
 	## Then the "interactive" using sendplot
 	#xy.labels <- list(normalized_counts=x,log2_normalized_counts=y)
@@ -1231,20 +1410,27 @@ diagplot.de.heatmap <- function(x,con=NULL,output="x11",path=NULL,...) {
 
 #' Diagnostic plot for filtered genes
 #'
-#' This function plots a grid of four graphs depicting: in the first row, the numbers of filtered genes per chromosome in the first
-#' column and per biotype in the second column. In the second row, the percentages of filtered genes  per chromosome related to the
-#' whole genome in the first columns and per biotype in the second column.
+#' This function plots a grid of four graphs depicting: in the first row, the
+#' numbers of filtered genes per chromosome in the first column and per biotype
+#' in the second column. In the second row, the percentages of filtered genes 
+#' per chromosome related to the whole genome in the first columns and per biotype
+#' in the second column.
 #'
-#' @param x an annotation data frame like the ones produced by \code{\link{get.annotation}}. \code{x} should be the filtered annotation
-#' according to metaseqr's filters.
-#' @param y an annotation data frame like the ones produced by \code{\link{get.annotation}}. \code{y} should contain the total annotation
+#' @param x an annotation data frame like the ones produced by 
+#' \code{\link{get.annotation}}. \code{x} should be the filtered annotation
+#' according to metaseqR's filters.
+#' @param y an annotation data frame like the ones produced by
+#' \code{\link{get.annotation}}. \code{y} should contain the total annotation
 #' without the application of any metaseqr filter.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If output=\code{"x11"}, no 
-#' output filenames are produced.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If output=\code{"x11"}, no output filenames are
+#' produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1272,60 +1458,84 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 	per.chr[per.chr>1] <- 1
 	per.bt[per.bt>1] <- 1
 	#
-	suppressWarnings(per.chr.lab <- paste(formatC(100*per.chr,digits=1,format="f"),"%",sep=""))
-	suppressWarnings(per.bt.lab <- paste(formatC(100*per.bt,digits=1,format="f"),"%",sep=""))
+	suppressWarnings(per.chr.lab <- paste(formatC(100*per.chr,digits=1,
+		format="f"),"%",sep=""))
+	suppressWarnings(per.bt.lab <- paste(formatC(100*per.bt,digits=1,
+		format="f"),"%",sep=""))
 
 	par(mfrow=c(2,2),mar=c(1,4,2,1),oma=c(1,1,1,1))
 
 	# Chromosomes
-	barx.chr <- barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),yaxt="n",xaxt="n",plot=FALSE)
+	barx.chr <- barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),
+		yaxt="n",xaxt="n",plot=FALSE)
 	plot.new()
-	plot.window(xlim=c(0,ceiling(max(barx.chr))),ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
+	plot.window(xlim=c(0,ceiling(max(barx.chr))),
+		ylim=c(0,max(chr)+ceiling(max(chr)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(chr)+ceiling(max(chr)/10))),cex.axis=0.9,padj=1,font=2)
-	text(x=barx.chr,y=chr,label=barlab.chr,cex=0.7,font=2,col="green3",adj=c(0.5,-1.3))
+	text(x=barx.chr,y=chr,label=barlab.chr,cex=0.7,font=2,col="green3",
+		adj=c(0.5,-1.3))
 	title(main="Filtered genes per chromosome",cex.main=1.1)
 	mtext(side=2,text="Number of genes",line=2,cex=0.9,font=2)
 	grid()
-	barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),col="blue3",border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
+	barplot(chr,space=0.5,ylim=c(0,max(chr)+ceiling(max(chr)/10)),col="blue3",
+		border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
 
 	# Biotypes
-	barx.bt <- barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),yaxt="n",xaxt="n",plot=FALSE)
+	barx.bt <- barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),
+		yaxt="n",xaxt="n",plot=FALSE)
 	plot.new()
-	plot.window(xlim=c(0,ceiling(max(barx.bt))),ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
+	plot.window(xlim=c(0,ceiling(max(barx.bt))),
+		ylim=c(0,max(bt)+ceiling(max(bt)/10)),mar=c(1,4,1,1))
 	axis(2,at=pretty(0:(max(bt)+ceiling(max(bt)/10))),cex.axis=0.9,padj=1,font=2)
-	text(x=barx.bt,y=bt,label=barlab.bt,cex=0.7,font=2,col="blue",adj=c(0.5,-1.3),xpd=TRUE)
+	text(x=barx.bt,y=bt,label=barlab.bt,cex=0.7,font=2,col="blue",
+		adj=c(0.5,-1.3),xpd=TRUE)
 	title(main="Filtered genes per biotype",cex.main=1.1)
 	mtext(side=2,text="Number of genes",line=2,cex=0.9,font=2)
 	grid()
-	barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),col="red3",border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
+	barplot(bt,space=0.5,ylim=c(0,max(bt)+ceiling(max(bt)/10)),col="red3",
+		border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
 
 	# Chromosome percentage
-	barx.per.chr <- barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),yaxt="n",xaxt="n",plot=FALSE)
+	barx.per.chr <- barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),yaxt="n",
+		xaxt="n",plot=FALSE)
 	plot.new()
 	par(mar=c(9,4,1,1))
 	plot.window(xlim=c(0,max(barx.per.chr)),ylim=c(0,max(per.chr)))
-	#axis(1,at=barx.per.chr,labels=names(per.chr),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
+	#axis(1,at=barx.per.chr,labels=names(per.chr),cex.axis=0.9,font=2,tcl=-0.3,
+	#	col="lightgrey",las=2)
 	axis(1,at=barx.per.chr,labels=FALSE,tcl=-0.3,col="lightgrey")
-	axis(2,at=seq(0,max(per.chr),length.out=5),labels=formatC(seq(0,max(per.chr),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
-	text(barx.per.chr,par("usr")[3]-max(per.chr)/17,labels=names(per.chr),srt=45,adj=c(1,1.1),xpd=TRUE,cex=0.9,font=2)
-	text(x=barx.per.chr,y=per.chr,label=per.chr.lab,cex=0.7,font=2,col="green3",adj=c(0.5,-1.3),xpd=TRUE)
+	axis(2,at=seq(0,max(per.chr),length.out=5),labels=formatC(seq(0,max(per.chr),
+		length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
+	text(barx.per.chr,par("usr")[3]-max(per.chr)/17,labels=names(per.chr),srt=45,
+		adj=c(1,1.1),xpd=TRUE,cex=0.9,font=2)
+	text(x=barx.per.chr,y=per.chr,label=per.chr.lab,cex=0.7,font=2,col="green3",
+		adj=c(0.5,-1.3),xpd=TRUE)
 	mtext(side=2,text="fraction of total genes",line=2,cex=0.9,font=2)
 	grid()
-	barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),col="blue3",border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
+	barplot(per.chr,space=0.5,ylim=c(0,max(per.chr)),col="blue3",border="yellow3",
+		yaxt="n",xaxt="n",font=2,add=TRUE)
 
 	# Biotype percentage
-	barx.per.bt <- barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),yaxt="n",xaxt="n",plot=FALSE)
+	barx.per.bt <- barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),yaxt="n",
+		xaxt="n",plot=FALSE)
 	plot.new()
 	par(mar=c(9,4,1,1))
 	plot.window(xlim=c(0,max(barx.per.bt)),ylim=c(0,max(per.bt)))
-	#axis(1,at=barx.per.bt,labels=names(per.bt),cex.axis=0.9,font=2,tcl=-0.3,col="lightgrey",las=2)
+	#axis(1,at=barx.per.bt,labels=names(per.bt),cex.axis=0.9,font=2,tcl=-0.3,
+	#	col="lightgrey",las=2)
 	axis(1,at=barx.per.bt,labels=FALSE,tcl=-0.3,col="lightgrey")
-	axis(2,at=seq(0,max(per.bt),length.out=5),labels=formatC(seq(0,max(per.bt),length.out=5),digits=2,format="f"),cex.axis=0.9,padj=1,font=2)
-	text(barx.per.bt,par("usr")[3]-max(per.bt)/17,labels=gsub("prime","'",names(per.bt)),srt=45,adj=c(1,1.1),xpd=TRUE,cex=0.9,font=2)
-	text(x=barx.per.bt,y=per.bt,label=per.bt.lab,cex=0.7,font=2,col="blue",adj=c(0.5,-1.3),xpd=TRUE)
+	axis(2,at=seq(0,max(per.bt),length.out=5),
+		labels=formatC(seq(0,max(per.bt),length.out=5),digits=2,format="f"),
+		cex.axis=0.9,padj=1,font=2)
+	text(barx.per.bt,par("usr")[3]-max(per.bt)/17,
+		labels=gsub("prime","'",names(per.bt)),srt=45,adj=c(1,1.1),
+		xpd=TRUE,cex=0.9,font=2)
+	text(x=barx.per.bt,y=per.bt,label=per.bt.lab,cex=0.7,font=2,col="blue",
+		adj=c(0.5,-1.3),xpd=TRUE)
 	mtext(side=2,text="fraction of total genes",line=2,cex=0.9,font=2)
 	grid()
-	barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),col="red3",border="yellow3",yaxt="n",xaxt="n",font=2,add=TRUE)
+	barplot(per.bt,space=0.5,ylim=c(0,max(per.bt)),col="red3",border="yellow3",
+		yaxt="n",xaxt="n",font=2,add=TRUE)
 	
 	graphics.close(output)
 
@@ -1334,39 +1544,51 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 
 #' Venn diagrams when performing meta-analysis
 #'
-#' This function uses the R package VennDiagram and plots an up to 5-way Venn diagram depicting the common and specific to each statistical
-#' algorithm genes, for each contrast. Mostly for internal use because of its main argument which is difficult to construct, but can be
-#' used independently if the user grasps the logic.
+#' This function uses the R package VennDiagram and plots an up to 5-way Venn
+#' diagram depicting the common and specific to each statistical algorithm genes,
+#' for each contrast. Mostly for internal use because of its main argument which
+#' is difficult to construct, but can be used independently if the user grasps
+#' the logic.
 #'
-#' @param pmat a matrix with p-values corresponding to the application of each statistical algorithm. The p-value matrix must have
-#' the colnames attribute and the colnames should correspond to the name of the algorithm used to fill the specific column (e.g. if
-#' \code{"statistics"=c("deseq","edger","nbpseq")} then \code{colnames(pmat) <-} \code{c("deseq","edger","nbpseq")}.
-#' @param pcut a p-value cutoff for statistical significance. Defaults to \code{0.05}.
-#' @param nam a name to be appended to the output graphics file (if \code{"output"} is not \code{"x11"}).
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param pmat a matrix with p-values corresponding to the application of each
+#' statistical algorithm. The p-value matrix must have the colnames attribute and
+#' the colnames should correspond to the name of the algorithm used to fill the
+#' specific column (e.g. if \code{"statistics"=c("deseq","edger","nbpseq")} then
+#' \code{colnames(pmat) <-} \code{c("deseq","edger","nbpseq")}.
+#' @param pcut a p-value cutoff for statistical significance. Defaults to
+#' \code{0.05}.
+#' @param nam a name to be appended to the output graphics file (if \code{"output"}
+#' is not \code{"x11"}).
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param alt.names an optional named vector of names, e.g. HUGO gene symbols, alternative or complementary to the unique gene names
-#' which are the rownames of \code{pmat}. The names of the vector must be the rownames of \code{pmat}.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return The filenames of the plots produced in a named list with names the \code{which.plot} argument. If output=\code{"x11"}, no 
-#' output filenames are produced.
+#' @param alt.names an optional named vector of names, e.g. HUGO gene symbols,
+#' alternative or complementary to the unique gene names which are the rownames
+#' of \code{pmat}. The names of the vector must be the rownames of \code{pmat}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return The filenames of the plots produced in a named list with names the
+#' \code{which.plot} argument. If output=\code{"x11"}, no output filenames are
+#' produced.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
 #' # Not yet available...
 #'}
-diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),output="x11",path=NULL,alt.names=NULL,...) {
+diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
+	output="x11",path=NULL,alt.names=NULL,...) {
 	if (is.na(pcut) || is.null(pcut) || pcut==1)
 		warnwrap("Illegal pcut argument! Using the default (0.05)")
 	algs <- colnames(pmat)
 	if (is.null(algs))
-		stopwrap("The p-value matrices must have the colnames attribute (names of statistical algorithms)!")
+		stopwrap("The p-value matrices must have the colnames attribute (names of ",
+			"statistical algorithms)!")
 	nalg <- length(algs)
 	if(nalg>5) {
-		warnwrap(paste("Cannot create a Venn diagram for more than 5 result sets!",nalg,
-			"found, only the first 5 will be used..."))
+		warnwrap(paste("Cannot create a Venn diagram for more than 5 result sets!",
+			nalg,"found, only the first 5 will be used..."))
 		algs <- algs[1:5]
 		nalg <- 5
 	}
@@ -1377,7 +1599,8 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 	pairs <- make.venn.pairs(algs)
 	areas <- make.venn.areas(length(algs))
 	counts <- make.venn.counts(length(algs))
-	# Initially populate the results and counts lists so they can be used to create the rest of the intersections
+	# Initially populate the results and counts lists so they can be used to create
+	# the rest of the intersections
 	results <- vector("list",nalg+length(pairs))
 	names(results)[1:nalg] <- aliases
 	names(results)[(nalg+1):length(results)] <- names(pairs)
@@ -1529,7 +1752,8 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 		}
 	}
 	results.ex <- do.call("cbind",results.ex)
-	write.table(results.ex,file=file.path(path,"..","..","lists",paste0("venn_categories_",nam,".txt")),sep="\t",
+	write.table(results.ex,file=file.path(path,"..","..","lists",
+		paste0("venn_categories_",nam,".txt")),sep="\t",
 		row.names=FALSE,quote=FALSE,na="")
 	
 	return(fil)
@@ -1537,12 +1761,15 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 
 #' Helper for Venn diagrams
 #'
-#' This function creates a list of pairwise comparisons to be performed in order to create an up to 5-way Venn diagram using the R
-#' package VennDiagram. Internal use mostly.
+#' This function creates a list of pairwise comparisons to be performed in order
+#' to create an up to 5-way Venn diagram using the R package VennDiagram. Internal
+#' use mostly.
 #'
-#' @param algs a vector with the names of the sets (up to length 5, if larger, it will be truncated with a warning).
-#' @return A list with as many pairs as the comparisons to be made for the construction of the Venn diagram. The pairs are encoded
-#' with the uppercase letters A through E, each one corresponding to order of the input sets.
+#' @param algs a vector with the names of the sets (up to length 5, if larger, it
+#' will be truncated with a warning).
+#' @return A list with as many pairs as the comparisons to be made for the
+#' construction of the Venn diagram. The pairs are encoded with the uppercase
+#' letters A through E, each one corresponding to order of the input sets.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -1617,9 +1844,11 @@ make.venn.pairs <- function(algs)
 
 #' Helper for Venn diagrams
 #'
-#' This function creates a list with names the arguments of the Venn diagram construction functions of the R package VennDiagram and
-#' list members the internal encoding (uppercase letters A to E and combinations among then) used to encode the pairwise comparisons
-#' to create the intersections needed for the Venn diagrams. Internal use mostly.
+#' This function creates a list with names the arguments of the Venn diagram
+#' construction functions of the R package VennDiagram and list members the
+#' internal encoding (uppercase letters A to E and combinations among then) used
+#' to encode the pairwise comparisons to create the intersections needed for the
+#' Venn diagrams. Internal use mostly.
 #'
 #' @param n the number of the sets used for the Venn diagram.
 #' @return A named list, see descritpion.
@@ -1712,8 +1941,10 @@ make.venn.areas <- function(n)
 
 #' Helper for Venn diagrams
 #'
-#' This function creates a list with names the arguments of the Venn diagram construction functions of the R package VennDiagram and
-#' list members are initially \code{NULL}. They are filled by the \code{\link{diagplot.venn}} function. Internal use mostly.
+#' This function creates a list with names the arguments of the Venn diagram
+#' construction functions of the R package VennDiagram and list members are
+#' initially \code{NULL}. They are filled by the \code{\link{diagplot.venn}}
+#' function. Internal use mostly.
 #'
 #' @param n the number of the sets used for the Venn diagram.
 #' @return A named list, see descritpion.
@@ -1805,7 +2036,8 @@ make.venn.counts <- function(n)
 
 #' Helper for Venn diagrams
 #'
-#' This function returns a list of colorschemes accroding to the number of sets. Internal use.
+#' This function returns a list of colorschemes accroding to the number of sets.
+#' Internal use.
 #'
 #' @param n the number of the sets used for the Venn diagram.
 #' @return A list with colors for fill and font.
@@ -1840,7 +2072,8 @@ make.venn.colorscheme <- function(n) {
 		five = {
 			return(list(
 				fill=c("red","green","blue","mediumpurple","orange2"),
-				font=c("darkred","darkgreen","darkblue","mediumpurple4","orange4")
+				font=c("darkred","darkgreen","darkblue","mediumpurple4",
+					"orange4")
 			))
 		}
 	)
@@ -1848,34 +2081,45 @@ make.venn.colorscheme <- function(n) {
 
 #' Create basic ROC curves
 #'
-#' This function creates basic ROC curves using a matrix of p-values (such a matrix can be derived for example from the result table
-#' of \code{\link{metaseqr}} by subsetting the table to get the p-values from several algorithms) given a ground truth vector for
-#' differential expression and a significance level.
+#' This function creates basic ROC curves using a matrix of p-values (such a matrix
+#' can be derived for example from the result table of \code{\link{metaseqr}} by
+#' subsetting the table to get the p-values from several algorithms) given a ground
+#' truth vector for differential expression and a significance level.
 #'
-#' @param truth the ground truth differential expression vector. It should contain only zero and non-zero elements, with zero denoting
-#' non-differentially expressed genes and non-zero, differentially expressed genes. Such a vector can be obtained for example by using
-#' the \code{\link{make.sim.data.sd}} function, which creates simulated RNA-Seq read counts based on real data.
-#' @param p a p-value matrix whose rows correspond to each element in the \code{truth} vector. If the matrix has a \code{colnames}
-#' attribute, a legend will be added to the plot using these names, else a set of column names will be auto-generated. \code{p} can
-#' also be a list or a data frame.
+#' @param truth the ground truth differential expression vector. It should contain
+#' only zero and non-zero elements, with zero denoting non-differentially expressed
+#' genes and non-zero, differentially expressed genes. Such a vector can be obtained
+#' for example by using the \code{\link{make.sim.data.sd}} function, which creates
+#' simulated RNA-Seq read counts based on real data.
+#' @param p a p-value matrix whose rows correspond to each element in the
+#' \code{truth} vector. If the matrix has a \code{colnames} attribute, a legend
+#' will be added to the plot using these names, else a set of column names will
+#' be auto-generated. \code{p} can also be a list or a data frame.
 #' @param sig a significance level (0 < sig <=1).
-#' @param x what to plot on x-axis, can be one of \code{"FPR"}, \code{"FNR"}, \code{"TPR"}, \code{"TNR"} for False Positive Rate, False
-#' Negative Rate, True Positive Rate and True Negative Rate respectively.
+#' @param x what to plot on x-axis, can be one of \code{"FPR"}, \code{"FNR"},
+#' \code{"TPR"}, \code{"TNR"} for False Positive Rate, False Negative Rate, True
+#' Positive Rate and True Negative Rate respectively.
 #' @param y what to plot on y-axis, same as \code{x} above.
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return A named list with two members. The first member is a list containing the ROC statistics: \code{TP} (True Postives), \code{FP}
-#' (False Positives), \code{FN} (False Negatives), \code{TN} (True Negatives), \code{FPR} (False Positive Rate), \code{FNR} (False
-#' Negative Rate), \code{TPR} (True Positive Rate), \code{TNR} (True Negative Rate). The second is the path to the created figure graphic.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return A named list with two members. The first member is a list containing
+#' the ROC statistics: \code{TP} (True Postives), \code{FP} (False Positives),
+#' \code{FN} (False Negatives), \code{TN} (True Negatives), \code{FPR} (False
+#' Positive Rate), \code{FNR} (False Negative Rate), \code{TPR} (True Positive
+#' Rate), \code{TNR} (True Negative Rate). The second is the path to the created
+#' figure graphic.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
 #' # Not yet available
 #'}
-diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",path=NULL,...) {
+diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
+	path=NULL,...) {
 	check.text.args("x",x,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
 	check.text.args("y",y,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
 	if (is.list(p))
@@ -1897,8 +2141,9 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",path=NULL
 	ROC <- vector("list",ncol(pmat))
 	names(ROC) <- colnames(pmat)
 
-	colspace.universe <- c("red","blue","green","orange","darkgrey","green4","black",
-		"pink","brown","magenta","yellowgreen","pink2","seagreen4","darkcyan")
+	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
+		"black","pink","brown","magenta","yellowgreen","pink2","seagreen4",
+		"darkcyan")
 	colspace <- colspace.universe[1:ncol(pmat)]
 	names(colspace) <- colnames(pmat)
 	
@@ -1941,7 +2186,8 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",path=NULL
 	
 	xlim <- c(0,1)
 	ylim <- c(0,1)
-	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lwd=1.5,lty=1)
+	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+		lwd=1.5,lty=1)
 	plot.new()
 	plot.window(xlim,ylim)
 	axis(1,at=pretty(xlim,10))
@@ -1960,25 +2206,34 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",path=NULL
 
 #' Create False (or True) Discovery curves
 #'
-#' This function creates false (or true) discovery curves using a matrix of p-values (such a matrix can be derived for example from
-#' the result table of \code{\link{metaseqr}} by subsetting the table to get the p-values from several algorithms) given a ground
-#' truth vector for differential expression.
+#' This function creates false (or true) discovery curves using a matrix of
+#' p-values (such a matrix can be derived for example from the result table of
+#' \code{\link{metaseqr}} by subsetting the table to get the p-values from several
+#' algorithms) given a ground truth vector for differential expression.
 #'
-#' @param truth the ground truth differential expression vector. It should contain only zero and non-zero elements, with zero denoting
-#' non-differentially expressed genes and non-zero, differentially expressed genes. Such a vector can be obtained for example by using
-#' the \code{\link{make.sim.data.sd}} function, which creates simulated RNA-Seq read counts based on real data. The elements of \code{truth}
+#' @param truth the ground truth differential expression vector. It should contain
+#' only zero and non-zero elements, with zero denoting non-differentially expressed
+#' genes and non-zero, differentially expressed genes. Such a vector can be obtained
+#' for example by using the \code{\link{make.sim.data.sd}} function, which creates
+#' simulated RNA-Seq read counts based on real data. The elements of \code{truth}
 #' MUST be named (e.g. each gene's name).
-#' @param p a p-value matrix whose rows correspond to each element in the \code{truth} vector. If the matrix has a \code{colnames}
-#' attribute, a legend will be added to the plot using these names, else a set of column names will be auto-generated. \code{p} can
-#' also be a list or a data frame. The p-values MUST be named (e.g. each gene's name).
-#' @param type what to plot, can be \code{"fdc"} for False Discovery Curves (default) or \code{"tdc"} for True Discovery Curves.
+#' @param p a p-value matrix whose rows correspond to each element in the
+#' \code{truth} vector. If the matrix has a \code{colnames} attribute, a legend
+#' will be added to the plot using these names, else a set of column names will
+#' be auto-generated. \code{p} can also be a list or a data frame. The p-values
+#' MUST be named (e.g. each gene's name).
+#' @param type what to plot, can be \code{"fdc"} for False Discovery Curves
+#' (default) or \code{"tdc"} for True Discovery Curves.
 #' @param N create the curves based on the top \code{N} ranked genes (default: 2000).
-#' @param output one or more R plotting device to direct the plot result to. Supported mechanisms: \code{"x11"} (default), \code{"png"},
-#' \code{"jpg"}, \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
-#' @return A named list with two members: the first member (\code{ftdr}) contains the values used to create the plot. The second member
-#' (\code{path}) contains the path to the created figure graphic.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return A named list with two members: the first member (\code{ftdr}) contains
+#' the values used to create the plot. The second member (\code{path}) contains
+#' the path to the created figure graphic.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -2004,8 +2259,9 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 	ftdr.list <- vector("list",ncol(pmat))
 	names(ftdr.list) <- colnames(pmat)
 
-	colspace.universe <- c("red","blue","green","orange","darkgrey","green4","black",
-		"pink","brown","magenta","yellowgreen","pink2","seagreen4","darkcyan")
+	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
+		"black","pink","brown","magenta","yellowgreen","pink2","seagreen4",
+		"darkcyan")
 	colspace <- colspace.universe[1:ncol(pmat)]
 	names(colspace) <- colnames(pmat)
 
@@ -2027,7 +2283,8 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 			disp("Processing ",n)
 			z <- sort(pmat[,n])
 			for (i in 1:N)
-				ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),names(which(truth!=0))))
+				ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),
+					names(which(truth!=0))))
 		}
 	}
 	disp("")
@@ -2040,7 +2297,8 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 
 	xlim <- c(1,N)
 	ylim <- c(1,length(which(truth!=0)))
-	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",lwd=1.5,lty=1)
+	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+		lwd=1.5,lty=1)
 	plot.new()
 
 	if (type=="fdc") {		
@@ -2051,7 +2309,8 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 			lines(ftdr.list[[n]],col=colspace[n])
 		}
 		grid()
-		title(main="Selected genes vs False Discoveries",xlab="Number of selected genes",ylab=y.name[[type]])
+		title(main="Selected genes vs False Discoveries",
+			xlab="Number of selected genes",ylab=y.name[[type]])
 		legend(x="topleft",legend=names(ftdr.list),col=colspace,lty=1)
 	}
 	else if (type=="tdc") {
@@ -2062,7 +2321,8 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 			lines(ftdr.list[[n]],col=colspace[n])
 		}
 		grid()
-		title(main="Selected genes vs True Discoveries",xlab="Number of selected genes",ylab=y.name[[type]])
+		title(main="Selected genes vs True Discoveries",
+			xlab="Number of selected genes",ylab=y.name[[type]])
 		legend(x="bottomright",legend=names(ftdr.list),col=colspace,lty=1)
 	}
 
@@ -2077,7 +2337,8 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 #'
 #' @param o the plotting device, see main metaseqr function
 #' @param f a filename, if the plotting device requires it (e.g. \code{"pdf"})
-#' @param ... further arguments to be passed to plot devices, such as parameter from \code{\link{par}}.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
@@ -2179,7 +2440,8 @@ nat2log <- function(x,base=2,off=1) {
 
 #' Old functions from NOISeq
 #'
-#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
+#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use
+#' only.
 #'
 #' @param input input to cddat.
 #' @return a list with data to plot.
@@ -2213,7 +2475,8 @@ cddat <- function (input) {
 	for (i in 1:(ncol(datos)-1)) {
 		for (j in (i+1):ncol(datos)) {      
 			mostres = c(mostres, paste(colnames(datos)[c(i,j)], collapse = "_"))
-			KSpval = c(KSpval, suppressWarnings(ks.test(datos[,i], datos[,j], alternative = "two.sided"))$"p.value")
+			KSpval = c(KSpval, suppressWarnings(ks.test(datos[,i], datos[,j],
+				alternative = "two.sided"))$"p.value")
 		}
 	}	
 	KSpval = p.adjust(KSpval, method = "fdr")
@@ -2226,7 +2489,8 @@ cddat <- function (input) {
 
 #' Old functions from NOISeq
 #'
-#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use only.
+#' Old functions from NOISeq to create the \code{"readnoise"} plots. Internal use
+#' only.
 #' @param dat the returned list from \code{\link{cddat}}.
 #' @param samples the samples to plot.
 #' @param ... further arguments passed to e.g. \code{\link{par}}.
@@ -2237,15 +2501,19 @@ cdplot <- function (dat,samples=NULL,...) {
 	dat = dat$data2plot
 	if (is.null(samples)) samples <- 1:(ncol(dat)-1)
 	if (is.numeric(samples)) samples = colnames(dat)[samples+1]
-	colspace <- c("red","blue","yellowgreen","orange","aquamarine2","pink2","seagreen4","brown","purple","chocolate",
-		"gray10","gray30","darkblue","darkgreen","firebrick2","darkorange4","darkorchid","darkcyan","gold4","deeppink3")
+	colspace <- c("red","blue","yellowgreen","orange","aquamarine2","pink2",
+		"seagreen4","brown","purple","chocolate","gray10","gray30","darkblue",
+		"darkgreen","firebrick2","darkorange4","darkorchid","darkcyan","gold4",
+		"deeppink3")
 	if (length(samples)>length(colspace))
 		miscolores <- sample(colspace,length(samples),replace=TRUE)
 	else
 		miscolores <- sample(colspace,length(samples))
-	plot(dat[,1],dat[,samples[1]],xlab="% features",ylab="% reads",type="l",col=miscolores[1],...)
+	plot(dat[,1],dat[,samples[1]],xlab="% features",ylab="% reads",type="l",
+		col=miscolores[1],...)
 	for (i in 2:length(samples))
 		lines(dat[,1],dat[,samples[i]],col=miscolores[i])
 
-	legend("bottom",legend=samples,text.col=miscolores[1:length(samples)],bty="n",lty=1,lwd=2,col=miscolores[1:length(samples)])
+	legend("bottom",legend=samples,text.col=miscolores[1:length(samples)],
+		bty="n",lty=1,lwd=2,col=miscolores[1:length(samples)])
 }
