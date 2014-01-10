@@ -2104,14 +2104,17 @@ make.venn.colorscheme <- function(n) {
 #' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
 #' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
+#' @param draw boolean to determine whether to plot the curves or just return the
+#' calculated values (in cases where the user wants the output for later averaging
+#' for example). Defaults to \code{TRUE} (make plots).
 #' @param ... further arguments to be passed to plot devices, such as parameter
 #' from \code{\link{par}}.
 #' @return A named list with two members. The first member is a list containing
 #' the ROC statistics: \code{TP} (True Postives), \code{FP} (False Positives),
 #' \code{FN} (False Negatives), \code{TN} (True Negatives), \code{FPR} (False
 #' Positive Rate), \code{FNR} (False Negative Rate), \code{TPR} (True Positive
-#' Rate), \code{TNR} (True Negative Rate). The second is the path to the created
-#' figure graphic.
+#' Rate), \code{TNR} (True Negative Rate), \code{AUC} (Area Under the Curve). The
+#' second is the path to the created figure graphic.
 #' @export
 #' @author Panagiotis Moulos
 #' @examples
@@ -2119,9 +2122,9 @@ make.venn.colorscheme <- function(n) {
 #' # Not yet available
 #'}
 diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
-	path=NULL,...) {
-	check.text.args("x",x,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
-	check.text.args("y",y,c("fpr","fnr","tpr","tnr"),multiarg=FALSE)
+	path=NULL,draw=TRUE,...) {
+	check.text.args("x",x,c("fpr","fnr","tpr","tnr","scrx"),multiarg=FALSE)
+	check.text.args("y",y,c("fpr","fnr","tpr","tnr","scry"),multiarg=FALSE)
 	if (is.list(p))
 		pmat <- do.call("cbind",p)
 	else if (is.data.frame(p))
@@ -2135,14 +2138,16 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 		tpr="True Positive Rate",
 		tnr="True Negative Rate",
 		fpr="False Positive Rate",
-		fnr="False Negative Rate"
+		fnr="False Negative Rate",
+		scrx="Ratio of selected",
+		scry="Evaluation Score"
 	)
 
 	ROC <- vector("list",ncol(pmat))
 	names(ROC) <- colnames(pmat)
 
 	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
-		"black","pink","brown","magenta","yellowgreen","pink2","seagreen4",
+		"black","pink","brown","magenta","yellowgreen","pink4","seagreen4",
 		"darkcyan")
 	colspace <- colspace.universe[1:ncol(pmat)]
 	names(colspace) <- colnames(pmat)
@@ -2154,14 +2159,19 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 		size <- seq(1,length(gg))
 		cuts <- seq(min(psample),sig,length.out=length(gg))
 		local.truth <- truth[gg]
+		S <- length(size)
 				
-		TP <- FP <- FN <- TN <- FPR <- FNR <- TPR <- TNR <- numeric(length(size))
+		TP <- FP <- FN <- TN <- FPR <- FNR <- TPR <- TNR <-
+			SCRX <- SCRY <- numeric(S)
 		
-		for (i in 1:length(size)) {
+		for (i in 1:S) {
 			TP[i] <- length(which(psample<cuts[i] & local.truth!=0))
 			FP[i] <- length(which(psample<cuts[i] & local.truth==0))
 			FN[i] <- length(which(psample>cuts[i] & local.truth!=0))
 			TN[i] <- length(which(psample>cuts[i] & local.truth==0))
+
+			SCRX[i] <- i/S
+			SCRY[i] <- TP[i]/(FN[i]+FP[i])
 
 			if (FP[i]+TN[i] == 0)
 				FPR[i] <- 0
@@ -2174,37 +2184,149 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 			else
 				TNR[i] <- TN[i]/(TN[i]+FP[i])
 		}
+		# There are some extreme cases...
+		if (all(FPR==0))
+			FPR[length(FPR)] <- 1
+		if (all(TNR==0))
+			TNR[1] <- 1
 
-		ROC[[n]] <- list(TP=TP,FP=FP,FN=FN,TN=TN,FPR=FPR,FNR=FNR,TPR=TPR,TNR=TNR)
+		ROC[[n]] <- list(TP=TP,FP=FP,FN=FN,TN=TN,
+			FPR=FPR,FNR=FNR,TPR=TPR,TNR=TNR,SCRX=SCRX,SCRY=SCRY/max(SCRY),
+			AUC=NULL)
 	}
-
-	fil <- file.path(path,paste("ROC",output,sep="."))
-	if (output %in% c("pdf","ps","x11"))
-		graphics.open(output,fil,width=8,height=8)
-	else
-		graphics.open(output,fil,width=1024,height=1024,res=100)
 	
-	xlim <- c(0,1)
-	ylim <- c(0,1)
-	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
-		lwd=1.5,lty=1)
-	plot.new()
-	plot.window(xlim,ylim)
-	axis(1,at=pretty(xlim,10))
-	axis(2,at=pretty(ylim,10))
-	for (n in names(ROC)) {
-		lines(ROC[[n]][[x]],ROC[[n]][[y]],col=colspace[n],...)
+	for (n in colnames(pmat)) {
+		disp("Calculating AUC for ",n)
+		auc <- 0
+		for (i in 2:length(ROC[[n]][[toupper(y)]])) {
+			auc <- auc + 0.5*(ROC[[n]][[toupper(x)]][i]-ROC[[n]][[toupper(x)]][i-1])*
+				(ROC[[n]][[toupper(y)]][i]+ROC[[n]][[toupper(y)]][i-1])
+		}
+		ROC[[n]]$AUC <- auc
 	}
-	grid()
-	title(xlab=ax.name[[x]],ylab=ax.name[[y]])
-	legend(x="bottomright",legend=names(ROC),col=colspace,lty=1)
+	disp("")
 
-	graphics.close(output)
+	if (draw) {
+		fil <- file.path(path,paste("ROC",output,sep="."))
+		if (output %in% c("pdf","ps","x11"))
+			graphics.open(output,fil,width=8,height=8)
+		else
+			graphics.open(output,fil,width=1024,height=1024,res=100)
 
-	return(list(ROC=ROC,path=fil))
+		xlim <- c(0,1)
+		ylim <- c(0,1)
+		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+			lwd=1.5,lty=1)
+		plot.new()
+		plot.window(xlim,ylim)
+		axis(1,at=pretty(xlim,10))
+		axis(2,at=pretty(ylim,10))
+		for (n in names(ROC))
+			lines(ROC[[n]][[toupper(x)]],ROC[[n]][[toupper(y)]],col=colspace[n],...)
+		grid()
+		title(xlab=ax.name[[x]],ylab=ax.name[[y]])
+		legend(x="bottomright",legend=names(ROC),col=colspace,lty=1)
+
+		graphics.close(output)
+	}
+	else
+		fil <- NULL
+
+	return(list(ROC=ROC,truth=truth,sig.level=sig,x.axis=x,y.axis=y,path=fil))
 }
 
-#' Create False (or True) Discovery curves
+## Create averaged basic ROC curves
+##
+## This function creates averaged basic ROC curves using a list of objects returned
+## from the \code{\link{diagplot.roc}} function.
+##
+## @param roc.obj a list containing several lists returned from the application
+## of \code{\link{diagplot.roc}} function.
+## @param output one or more R plotting device to direct the plot result to.
+## Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+## \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+## @param path the path to create output files.
+## @param ... further arguments to be passed to plot devices, such as parameter
+## from \code{\link{par}}.
+## @return A named list with two members. The first member is a list containing
+## the mean and standard deviation of ROC statistics. The second is the path to 
+## the created figure graphic.
+## @export
+## @author Panagiotis Moulos
+## @examples
+## \dontrun{
+## # Not yet available
+##}
+#diagplot.avg.roc <- function(roc.obj,output="x11",path=NULL,...) {
+#	ax.name <- list(
+#		tpr="True Positive Rate",
+#		tnr="True Negative Rate",
+#		fpr="False Positive Rate",
+#		fnr="False Negative Rate"
+#	)
+
+#	stats <- names(roc.obj[[1]]$ROC)
+#	x <- toupper(roc.obj[[1]]$x.axis)
+#	y <- toupper(roc.obj[[1]]$y.axis)
+	
+#	avg.ROC <- vector("list",length(stats))
+#	avg.ROC <- lapply(avg.ROC,function(x) {
+#		return(list(TP=NULL,FP=NULL,FN=NULL,TN=NULL,
+#			FPR=NULL,FNR=NULL,TPR=NULL,TNR=NULL,AUC=NULL))
+#	})
+#	names(avg.ROC) <- stats
+
+#	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
+#		"black","pink","brown","yellowgreen","magenta","pink2","seagreen4",
+#		"darkcyan")
+#	colspace <- colspace.universe[1:length(stats)]
+#	names(colspace) <- stats
+
+#	for (s in stats) {
+#		disp("Retrieving ",s)
+#		for (r in names(avg.ROC[[s]])) {
+#			if (r != "AUC") {
+#				#avg.ROC[[s]][[r]] <- do.call("cbind",lapply(roc.obj,
+#				#	function(x,s,r) x$ROC[[s]][[r]],s,r))
+#				lapply(roc.obj,function(x,s,r) print(length(x$ROC[[s]][[r]])),s,r)
+#				mn <- apply(avg.ROC[[s]][[r]],1,mean)
+#				st <- apply(avg.ROC[[s]][[r]],1,sd)
+#				avg.ROC[[s]][[r]] <- list(mean=mn,sd=st)
+#			}
+#		}
+#	}
+#	disp("")
+	
+#	means <- do.call("cbind",lapply(avg.ROC,function(x) x$mean))
+#	stds <- do.call("cbind",lapply(avg.ROC,function(x) x$sd))
+	
+#	fil <- file.path(path,paste("ROC",output,sep="."))
+#	if (output %in% c("pdf","ps","x11"))
+#		graphics.open(output,fil,width=8,height=8)
+#	else
+#		graphics.open(output,fil,width=1024,height=1024,res=100)
+	
+#	xlim <- c(0,1)
+#	ylim <- c(0,1)
+#	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+#		lwd=1.5,lty=1)
+#	plot.new()
+#	plot.window(xlim,ylim)
+#	axis(1,at=pretty(xlim,10))
+#	axis(2,at=pretty(ylim,10))
+#	for (n in names(ROC)) {
+#		lines(ROC[[n]][[x]],ROC[[n]][[y]],col=colspace[n],...)
+#	}
+#	grid()
+#	title(xlab=ax.name[[x]],ylab=ax.name[[y]])
+#	legend(x="bottomright",legend=names(ROC),col=colspace,lty=1)
+
+#	graphics.close(output)
+
+#	return(list(ROC=ROC,path=fil))
+#}
+
+#' Create False (or True) Positive (or Negative) curves
 #'
 #' This function creates false (or true) discovery curves using a matrix of
 #' p-values (such a matrix can be derived for example from the result table of
@@ -2222,13 +2344,18 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 #' will be added to the plot using these names, else a set of column names will
 #' be auto-generated. \code{p} can also be a list or a data frame. The p-values
 #' MUST be named (e.g. each gene's name).
-#' @param type what to plot, can be \code{"fdc"} for False Discovery Curves
-#' (default) or \code{"tdc"} for True Discovery Curves.
-#' @param N create the curves based on the top \code{N} ranked genes (default: 2000).
+#' @param type what to plot, can be \code{"fpc"} for False Positive Curves
+#' (default), \code{"tpc"} for True Positive Curves, \code{"fnc"} for False
+#' Negative Curves or \code{"tnc"} for True Negative Curves.
+#' @param N create the curves based on the top (or bottom) \code{N} ranked genes
+#' (default is 2000) to be used with \code{type="fpc"} or \code{type="tpc"}.
 #' @param output one or more R plotting device to direct the plot result to.
 #' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
 #' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
+#' @param draw boolean to determine whether to plot the curves or just return the
+#' calculated values (in cases where the user wants the output for later averaging
+#' for example). Defaults to \code{TRUE} (make plots).
 #' @param ... further arguments to be passed to plot devices, such as parameter
 #' from \code{\link{par}}.
 #' @return A named list with two members: the first member (\code{ftdr}) contains
@@ -2240,8 +2367,9 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 #' \dontrun{
 #' # Not yet available
 #'}
-diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
-	check.text.args("type",type,c("fdc","tdc"),multiarg=FALSE)
+diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,
+	draw=TRUE,...) {
+	check.text.args("type",type,c("fpc","tpc","fnc","tnc"),multiarg=FALSE)
 	if (is.list(p))
 		pmat <- do.call("cbind",p)
 	else if (is.data.frame(p))
@@ -2252,83 +2380,270 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,...) {
 		colnames(pmat) <- paste("p",1:ncol(pmat),sep="_")
 
 	y.name <- list(
-		tdc="Number of True Discoveries",
-		fdc="Number of False Discoveries"
+		tpc="Number of True Positives",
+		fpc="Number of False Positives",
+		tnc="Number of True Negatives",
+		fnc="Number of False Negatives"
 	)
 
 	ftdr.list <- vector("list",ncol(pmat))
 	names(ftdr.list) <- colnames(pmat)
 
 	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
-		"black","pink","brown","magenta","yellowgreen","pink2","seagreen4",
+		"black","pink","brown","magenta","yellowgreen","pink4","seagreen4",
 		"darkcyan")
 	colspace <- colspace.universe[1:ncol(pmat)]
 	names(colspace) <- colnames(pmat)
 
-	if (type=="fdc") {
-		for (n in colnames(pmat)) {
-			disp("Processing ",n)
-			z <- sort(pmat[,n])
-			for (i in 1:N) {
-				nn <- length(intersect(names(z[1:i]),names(which(truth==0))))
-				if (nn==0)
-					ftdr.list[[n]][i] <- 1
-				else
-					ftdr.list[[n]][i] <- nn
+	switch(type,
+		fpc = {
+			for (n in colnames(pmat)) {
+				disp("Processing ",n)
+				z <- sort(pmat[,n])
+				for (i in 1:N) {
+					nn <- length(intersect(names(z[1:i]),names(which(truth==0))))
+					if (nn==0)
+						ftdr.list[[n]][i] <- 1
+					else
+						ftdr.list[[n]][i] <- nn
+				}
 			}
-		}
+		},
+		tpc = {
+			for (n in colnames(pmat)) {
+				disp("Processing ",n)
+				z <- sort(pmat[,n])
+				for (i in 1:N)
+					ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),
+						names(which(truth!=0))))
+			}
+		},
+		fnc = {
+			for (n in colnames(pmat)) {
+				disp("Processing ",n)
+				z <- sort(pmat[,n],decreasing=TRUE)
+				for (i in 1:N) {
+					nn <- length(intersect(names(z[1:i]),names(which(truth!=0))))
+					if (nn==0)
+						ftdr.list[[n]][i] <- 1
+					else
+						ftdr.list[[n]][i] <- nn
+				}
+			}
+		},
+		tnc = {
+			for (n in colnames(pmat)) {
+				disp("Processing ",n)
+				z <- sort(pmat[,n],decreasing=TRUE)
+				for (i in 1:N)
+					ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),
+						names(which(truth==0))))
+			}
+		}	
+	)
+	disp("")
+
+	if (draw) {
+		fil <- file.path(path,paste("FTDR_",type,".",output,sep=""))
+		if (output %in% c("pdf","ps","x11"))
+			graphics.open(output,fil,width=8,height=8)
+		else
+			graphics.open(output,fil,width=1024,height=1024,res=100)
+
+		xlim <- ylim <- c(1,N)
+		#ylim <- c(1,length(which(truth!=0)))
+		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+			lwd=1.5,lty=1)
+		plot.new()
+
+		switch(type,
+			fpc = {
+				plot.window(xlim,ylim,log="y")
+				axis(1,at=pretty(xlim,10))
+				axis(2)
+				for (n in names(ftdr.list)) {
+					lines(ftdr.list[[n]],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs False Positives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="topleft",legend=names(ftdr.list),col=colspace,lty=1)
+			},
+			tpc = {
+				plot.window(xlim,ylim)
+				axis(1,at=pretty(xlim,10))
+				axis(2,at=pretty(ylim,10))
+				for (n in names(ftdr.list)) {
+					lines(ftdr.list[[n]],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs True Positives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="bottomright",legend=names(ftdr.list),col=colspace,lty=1)
+			},
+			fnc = {
+				plot.window(xlim,ylim,log="y")
+				axis(1,at=pretty(xlim,10))
+				axis(2)
+				for (n in names(ftdr.list)) {
+					lines(ftdr.list[[n]],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs False Negatives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="topleft",legend=names(ftdr.list),col=colspace,lty=1)
+			},
+			tnc = {
+				plot.window(xlim,ylim)
+				axis(1,at=pretty(xlim,10))
+				axis(2,at=pretty(ylim,10))
+				for (n in names(ftdr.list)) {
+					lines(ftdr.list[[n]],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs True Negatives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="bottomright",legend=names(ftdr.list),col=colspace,lty=1)
+			}	
+		)
+
+		graphics.close(output)
 	}
-	else if (type=="tdc") {
-		for (n in colnames(pmat)) {
-			disp("Processing ",n)
-			z <- sort(pmat[,n])
-			for (i in 1:N)
-				ftdr.list[[n]][i] <- length(intersect(names(z[1:i]),
-					names(which(truth!=0))))
-		}
+	else
+		fil <- NULL
+
+	return(list(ftdr=ftdr.list,truth=truth,type=type,N=N,path=fil))
+}
+
+#' Create average False (or True) Discovery curves
+#'
+#' This function creates false (or true) discovery curves using a list containing
+#' several outputs from \code{\link{diagplot.ftd}}.
+#'
+#' @param ftdr.obj a list with outputs from \code{\link{diagplot.ftd}}.
+#' @param output one or more R plotting device to direct the plot result to.
+#' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
+#' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
+#' @param path the path to create output files.
+#' @param ... further arguments to be passed to plot devices, such as parameter
+#' from \code{\link{par}}.
+#' @return A named list with two members: the first member (\code{avg.ftdr})
+#' contains a list with the means and the standard deviations of the averaged
+#' \code{ftdr.obj} and are used to create the plot. The second member (\code{path})
+#' contains the path to the created figure graphic.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
+	y.name <- list(
+		tpc="Number of True Positives",
+		fpc="Number of False Positives",
+		tnc="Number of True Negatives",
+		fnc="Number of False Negatives"
+	)
+
+	stats <- names(ftdr.obj[[1]]$ftdr)
+	type <- ftdr.obj[[1]]$type
+	truth <- ftdr.obj[[1]]$truth
+	N <- ftdr.obj[[1]]$N
+	avg.ftdr.obj <- vector("list",length(stats))
+	names(avg.ftdr.obj) <- stats
+	colspace.universe <- c("red","blue","green","orange","darkgrey","green4",
+		"black","pink","brown","magenta","yellowgreen","pink4","seagreen4",
+		"darkcyan")
+	colspace <- colspace.universe[1:length(stats)]
+	names(colspace) <- stats
+	
+	for (s in stats) {
+		disp("Retrieving ",s)
+		avg.ftdr.obj[[s]] <- do.call("cbind",lapply(ftdr.obj,
+			function(x) x$ftdr[[s]]))
 	}
 	disp("")
 
-	fil <- file.path(path,paste("FTDR",output,sep="."))
+	avg.ftdr.obj <- lapply(avg.ftdr.obj,function(x) {
+		mn <- apply(x,1,mean)
+		st <- apply(x,1,sd)
+		return(list(mean=mn,sd=st))
+	})
+
+	means <- do.call("cbind",lapply(avg.ftdr.obj,function(x) x$mean))
+	stds <- do.call("cbind",lapply(avg.ftdr.obj,function(x) x$sd))
+
+	fil <- file.path(path,paste("AVG_FTDR_",type,".",output,sep=""))
 	if (output %in% c("pdf","ps","x11"))
 		graphics.open(output,fil,width=8,height=8)
 	else
 		graphics.open(output,fil,width=1024,height=1024,res=100)
 
-	xlim <- c(1,N)
-	ylim <- c(1,length(which(truth!=0)))
+	xlim <- ylim <- c(1,N)
+	#par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+	#	lwd=1.5,lty=1)
+	###
 	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
-		lwd=1.5,lty=1)
+		lwd=1.5)
+	lty=c(rep(2,6),rep(1,5))
+	names(lty) <- colnames(means)
+	###
 	plot.new()
 
-	if (type=="fdc") {		
-		plot.window(xlim,ylim,log="y")
-		axis(1,at=pretty(xlim,10))
-		axis(2)
-		for (n in names(ftdr.list)) {
-			lines(ftdr.list[[n]],col=colspace[n])
+	switch(type,
+		fpc = {
+			plot.window(xlim,ylim,log="y")
+			axis(1,at=pretty(xlim,10))
+			axis(2)
+			for (n in colnames(means)) {
+				lines(means[,n],col=colspace[n],lty=lty[n],...)
+			}
+			grid()
+			title(main="Selected genes vs False Positives",
+				xlab="Number of selected genes",ylab=y.name[[type]])
+			legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
+		},
+		tpc = {
+			plot.window(xlim,ylim)
+			axis(1,at=pretty(xlim,10))
+			axis(2,at=pretty(ylim,10))
+			for (n in colnames(means)) {
+				lines(means[,n],col=colspace[n],...)
+			}
+			grid()
+			title(main="Selected genes vs True Positives",
+				xlab="Number of selected genes",ylab=y.name[[type]])
+			legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
+		},
+		fnc = {
+			plot.window(xlim,ylim,log="y")
+			axis(1,at=pretty(xlim,10))
+			axis(2)
+			for (n in colnames(means)) {
+				lines(means[,n],col=colspace[n],lty=lty[n],...)
+			}
+			grid()
+			title(main="Selected genes vs False Negatives",
+				xlab="Number of selected genes",ylab=y.name[[type]])
+			legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
+		},
+		tnc = {
+			plot.window(xlim,ylim)
+			axis(1,at=pretty(xlim,10))
+			axis(2,at=pretty(ylim,10))
+			for (n in colnames(means)) {
+				lines(means[,n],col=colspace[n],...)
+			}
+			grid()
+			title(main="Selected genes vs True Negatives",
+				xlab="Number of selected genes",ylab=y.name[[type]])
+			legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
 		}
-		grid()
-		title(main="Selected genes vs False Discoveries",
-			xlab="Number of selected genes",ylab=y.name[[type]])
-		legend(x="topleft",legend=names(ftdr.list),col=colspace,lty=1)
-	}
-	else if (type=="tdc") {
-		plot.window(xlim,ylim)
-		axis(1,at=pretty(xlim,10))
-		axis(2,at=pretty(ylim,10))
-		for (n in names(ftdr.list)) {
-			lines(ftdr.list[[n]],col=colspace[n])
-		}
-		grid()
-		title(main="Selected genes vs True Discoveries",
-			xlab="Number of selected genes",ylab=y.name[[type]])
-		legend(x="bottomright",legend=names(ftdr.list),col=colspace,lty=1)
-	}
-
+	)
+	
 	graphics.close(output)
 
-	return(list(ftdr=ftdr.list,path=fil))
+	return(list(avg.ftdr=list(means=means,stds=stds),path=fil))
 }
 
 #' Open plotting device

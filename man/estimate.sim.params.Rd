@@ -16,7 +16,7 @@
   gene. Each column must be named with a unique 
   sample identifier. See examples in the ReCount 
   database 
-  \link{http://bowtie-bio.sourceforge.net/recount/}.}
+  \url{http://bowtie-bio.sourceforge.net/recount/}.}
 
   \item{libsize.gt}{a library size below which 
   samples are excluded from parameter estimation 

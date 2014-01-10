@@ -3,17 +3,17 @@
 \title{Create simulated counts using the 
   Soneson-Delorenzi method}
 \usage{
-  make.sim.data.sd(N,param,samples=c(5,5),
-    ndeg=rep(round(0.1*N)),fc.basis=1.5,
-	libsize.range=c(0.7,1.4),libsize.mag=1e+7,
-    seed=NULL)
+  make.sim.data.sd(N, param, samples = c(5, 5),
+    ndeg = rep(round(0.1*N), 2), fc.basis = 1.5,
+	libsize.range = c(0.7, 1.4), libsize.mag = 1e+7,
+    model.org = NULL, seed = NULL)
 }
 \arguments{
   \item{N}{the number of genes to produce.}
 
   \item{param}{a named list with negative binomial 
   parameter sets to sample from. The first member is
-  the mean parameter to sample from (\code{mu.hat}} 
+  the mean parameter to sample from (\code{mu.hat}) 
   and the second the dispersion (\code{phi.hat}). 
   This list can be created with the 
   \code{\link{estimate.sim.params}} function.}

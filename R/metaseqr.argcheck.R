@@ -193,7 +193,7 @@ check.parallel <- function(rc) {
 		multi <- FALSE
 	else {
 		multi <- TRUE
-		ncores <- parallel:::detectCores()
+		ncores <- parallel::detectCores()
 		if (!missing(rc) || !is.na(rc) || !is.null(rc))
 			ncores <- ceiling(rc*ncores)
 		options(cores=ncores)

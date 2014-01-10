@@ -1,9 +1,10 @@
 \name{diagplot.ftd}
 \alias{diagplot.ftd}
-\title{Create False (or True) Discovery curves}
+\title{Create False (or True) Positive (or
+  Negative) curves}
 \usage{
   diagplot.ftd(truth, p, type = "fdc", N = 2000,
-    output = "x11", path = NULL, ...)
+    output = "x11", path = NULL, draw = TRUE, ...)
 }
 \arguments{
   \item{truth}{the ground truth differential 
@@ -26,12 +27,16 @@
   a data frame. The p-values MUST be named (e.g. 
   each gene's name).}
 
-  \item{type}{what to plot, can be \code{"fdc"} 
-  for False Discovery Curves (default) or 
-  \code{"tdc"} for True Discovery Curves.}
+  \item{type}{what to plot, can be \code{"fpc"} 
+  for False Positive Curves (default), 
+  \code{"tpc"} for True Positive Curves, 
+  \code{"fnc"} for False Negative Curves or 
+  \code{"tnc"} for True Negative Curves.}
 
   \item{N}{create the curves based on the 
-  top \code{N} ranked genes (default: 2000).}
+  top (or bottom) \code{N} ranked genes 
+  (default is 2000) to be used with
+  \code{type="fpc"} or \code{type="tpc"}.}
 
   \item{output}{one or more R plotting device to 
   direct the plot result to. Supported mechanisms: 
@@ -39,6 +44,12 @@
   \code{"bmp"}, \code{"pdf"} or \code{"ps"}.}
 
   \item{path}{the path to create output files.}
+
+  \item{draw}{boolean to determine whether to
+  plot the curves or just return the calculated
+  values (in cases where the user wants the
+  output for later averaging for example). 
+  Defaults to \code{TRUE} (make plots).}
 
   \item{...}{further arguments to be passed to plot
   devices, such as parameter from \code{\link{par}}.}

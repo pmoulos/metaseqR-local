@@ -127,8 +127,9 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 		switch(gf,
 			length = { # This is real gene length independently of exons
 				if (!is.null(gene.filters$length)) {
-					gene.filter.result$length <- rownames(gene.data)
-						[which(gene.data$end - gene.data$start < gene.filters$length$length)]
+					gene.filter.result$length <- rownames(gene.data)[which(
+						gene.data$end - gene.data$start < gene.filters$length$length
+					)]
 					gene.filter.cutoff$length <- gene.filters$length$length
 					flags[gene.filter.result$length,"LN"] <- 1
 					disp("  Threshold below which ignored: ",gene.filters$length$length)
@@ -140,9 +141,10 @@ filter.genes <- function(gene.counts,gene.data,gene.filters)
 				if (!is.null(gene.filters$avg.reads)) {
 					avg.mat <- sweep(gene.counts,1,attr(gene.data,
 						"gene.length")/gene.filters$avg.reads$average.per.bp,"/")
-					q.t <- max(apply(avg.mat,2,quantile,gene.filters$avg.reads$quantile))
-					gene.filter.result$avg.reads <- rownames(gene.data)[which(apply(avg.mat,
-						1,filter.low,q.t))]
+					q.t <- max(apply(avg.mat,2,quantile,
+						gene.filters$avg.reads$quantile))
+					gene.filter.result$avg.reads <- rownames(gene.data)[which(
+						apply(avg.mat,1,filter.low,q.t))]
 					gene.filter.cutoff$avg.reads <- q.t
 					flags[gene.filter.result$avg.reads,"AR"] <- 1
 					disp("  Threshold below which ignored: ",q.t)

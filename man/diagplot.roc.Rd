@@ -2,8 +2,9 @@
 \alias{diagplot.roc}
 \title{Create basic ROC curves}
 \usage{
-  diagplot.roc(truth, p, sig = 0.05, x = "FPR", 
-    y = "TPR", output = "x11", path = NULL, ...)
+  diagplot.roc(truth, p, sig = 0.05, x = "fpr", 
+    y = "tpr", output = "x11", path = NULL,
+    draw = TRUE, ...)
 }
 \arguments{
   \item{truth}{the ground truth differential 
@@ -27,8 +28,8 @@
   \item{sig}{a significance level (0 < sig <=1).}
 
   \item{x}{what to plot on x-axis, can be one of 
-  \code{"FPR"}, \code{"FNR"}, \code{"TPR"}, 
-  \code{"TNR"} for False Positive Rate, False
+  \code{"fpr"}, \code{"fnr"}, \code{"tpr"}, 
+  \code{"tnr"} for False Positive Rate, False
   Negative Rate, True Positive Rate and True 
   Negative Rate respectively.}
 
@@ -42,6 +43,12 @@
 
   \item{path}{the path to create output files.}
 
+  \item{draw}{boolean to determine whether to
+  plot the curves or just return the calculated
+  values (in cases where the user wants the
+  output for later averaging for example). 
+  Defaults to \code{TRUE} (make plots).}
+
   \item{...}{further arguments to be passed to plot
   devices, such as parameter from \code{\link{par}}.}
 }
@@ -52,9 +59,9 @@
   \code{FN} (False Negatives), \code{TN} 
   (True Negatives), \code{FPR} (False Positive Rate), 
   \code{FNR} (False Negative Rate), \code{TPR} (True 
-  Positive Rate), \code{TNR} (True Negative Rate). 
-  The second is the path to the created figure 
-  graphic.
+  Positive Rate), \code{TNR} (True Negative Rate), 
+  \code{AUC} (Area Under the Curve). The second is 
+  the path to the created figure graphic.
 }
 \description{
   This function creates basic ROC curves using a 

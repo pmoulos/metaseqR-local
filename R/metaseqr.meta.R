@@ -83,50 +83,27 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 		},
 		simes = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p) {
-					ze <- which(p==0)
-					if (length(ze)>0)
-						x[ze] <- 0.1*min(p[-ze])
-					m <- length(p)
-					y <- sort(p)
-					s <- min(m*(y/(1:m)))
-					return(min(c(s,1)))
-				}))
+				return(apply(x,1,combine.simes))
 			})
 		},
 		bonferroni = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p) {
-					ze <- which(p==0)
-					if (length(ze)>0)
-						x[ze] <- 0.1*min(p[-ze])
-					b <- length(p)*min(p)
-					return(min(c(1,b)))
-				}))
+				return(apply(x,1,combine.bonferroni))
 			})
 		},
 		minp = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p) {
-					return(min(p))
-				}))
+				return(apply(x,1,combine.minp))
 			})
 		},
 		maxp = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p) {
-					return(max(p))
-				}))
+				return(apply(x,1,combine.maxp))
 			})
 		},
 		weight = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,function(p,w) {
-					ze <- which(p==0)
-					if (length(ze)>0)
-						p[ze] <- 0.1*min(p[-ze])
-					return(prod(p^w))
-				},weight))
+				return(apply(x,1,combine.weight,weight))
 			})
 		},
 		dperm.min = {
@@ -414,3 +391,106 @@ meta.worker <- function(x,co,sl,cnt,s,r,sa,ll,el,w) {
 	)
 	return(p.iter)
 }
+
+#' Combine p-values with Simes' method
+#'
+#' This function combines p-values from the various statistical tests supported by
+#' metaseqR using the Simes' method (see reference in the main \code{\link{metasqr}}
+#' help page or in the vignette).
+#'
+#' @param p a p-value matrix (rows are genes, columns are statistical tests).
+#' @return A vector of combined p-values.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' p <- matrix(runif(300),100,3)
+#' pc <- combine.simes(p)
+#'}
+combine.simes <- function(p) {
+	ze <- which(p==0)
+	if (length(ze)>0)
+		p[ze] <- 0.1*min(p[-ze])
+	m <- length(p)
+	y <- sort(p)
+	s <- min(m*(y/(1:m)))
+	return(min(c(s,1)))
+}
+
+#' Combine p-values with Bonferroni's method
+#'
+#' This function combines p-values from the various statistical tests supported by
+#' metaseqR using the Bonferroni's method (see reference in the main
+#' \code{\link{metasqr}} help page or in the vignette).
+#'
+#' @param p a p-value matrix (rows are genes, columns are statistical tests).
+#' @return A vector of combined p-values.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' p <- matrix(runif(300),100,3)
+#' pc <- combine.bonferroni(p)
+#'}
+combine.bonferroni <- function(p) {
+	ze <- which(p==0)
+	if (length(ze)>0)
+		p[ze] <- 0.1*min(p[-ze])
+	b <- length(p)*min(p)
+	return(min(c(1,b)))
+}
+
+#' Combine p-values using weights
+#'
+#' This function combines p-values from the various statistical tests supported by
+#' metaseqR using p-value weights.
+#'
+#' @param p a p-value matrix (rows are genes, columns are statistical tests).
+#' @param w a weights vector, must sum to 1.
+#' @return A vector of combined p-values.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' p <- matrix(runif(300),100,3)
+#' pc <- combine.weight(p,w=c(0.2,0.5,0.3))
+#'}
+combine.weight <- function(p,w) {
+	ze <- which(p==0)
+	if (length(ze)>0)
+		p[ze] <- 0.1*min(p[-ze])
+	return(prod(p^w))
+	#return(combine.simes(p/w))
+}
+
+#' Combine p-values using the minimum p-value
+#'
+#' This function combines p-values from the various statistical tests supported by
+#' metaseqR by taking the minimum p-value.
+#'
+#' @param p a p-value matrix (rows are genes, columns are statistical tests).
+#' @return A vector of combined p-values.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' p <- matrix(runif(300),100,3)
+#' pc <- combine.min(p)
+#'}
+combine.minp <- function(p) { return(min(p)) }
+
+#' Combine p-values using the maximum p-value
+#'
+#' This function combines p-values from the various statistical tests supported by
+#' metaseqR by taking the maximum p-value.
+#'
+#' @param p a p-value matrix (rows are genes, columns are statistical tests).
+#' @return A vector of combined p-values.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' p <- matrix(runif(300),100,3)
+#' pc <- combine.max(p)
+#'}
+combine.maxp <- function(p) { return(max(p)) }

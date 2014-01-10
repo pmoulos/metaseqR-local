@@ -2134,7 +2134,7 @@ metaseqr <- function(
 		}
 		else
 		{
-			warnwrap(paste("The report option was enabled but no template file is "
+			warnwrap(paste("The report option was enabled but no template file is ",
 				"provided! The HTML report will NOT be generated."))
 			has.template <- FALSE
 		}

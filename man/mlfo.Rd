@@ -2,7 +2,7 @@
 \alias{mlfo}
 \title{MLE dispersion estimate}
 \usage{
-  downsample.counts(counts,seed=42)
+  mlfo(phi, y)
 }
 \arguments{
   \item{phi}{the parameter to be optimized.}

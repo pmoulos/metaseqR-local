@@ -115,16 +115,26 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 	}
 
 	v <- numeric(N)
-	if (!is.null(seed)) set.seed(seed)
-	i.updown <- sample(1:length(v),sum(ndeg))
-	reg.dir <- rep(c(1,-1),c(ndeg[1],ndeg[2]))
-	v[i.updown] <- reg.dir
-	if (!is.null(seed)) set.seed(seed+19051980)
-	lambda.2 <- ((fc.basis + rexp(N))^v)*lambda.1
-	mu.2 <- sweep(lambda.2,2,L2/sum(lambda.2[,1]),"*")
-	sim.2 <- matrix(0,N,s2)
-	for (j in 1:s2)
-		sim.2[,j] <- rnbinom(N,size=1/phi.hat[ii],mu=mu.2[,j])
+	if (sum(ndeg)>0) {
+		if (!is.null(seed)) set.seed(seed)
+		i.updown <- sample(1:length(v),sum(ndeg))
+		reg.dir <- rep(c(1,-1),c(ndeg[1],ndeg[2]))
+		v[i.updown] <- reg.dir
+		if (!is.null(seed)) set.seed(seed+19051980)
+		lambda.2 <- ((fc.basis + rexp(N))^v)*lambda.1
+		mu.2 <- sweep(lambda.2,2,L2/sum(lambda.2[,1]),"*")
+		sim.2 <- matrix(0,N,s2)
+		for (j in 1:s2)
+			sim.2[,j] <- rnbinom(N,size=1/phi.hat[ii],mu=mu.2[,j])
+	}
+	else {
+		if (!is.null(seed)) set.seed(seed+19051980)
+		lambda.2 <- lambda.1
+		mu.2 <- sweep(lambda.2,2,L2/sum(lambda.2[,1]),"*")
+		sim.2 <- matrix(0,N,s2)
+		for (j in 1:s2)
+			sim.2[,j] <- rnbinom(N,size=1/phi.hat[ii],mu=mu.2[,j])
+	}
 
 	# Now we have to simulate annotation
 	if (!is.null(seed)) set.seed(seed)
@@ -159,7 +169,7 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 	)
 	colnames(sim.1) <- paste("G1_rep",1:s1,sep="")
 	colnames(sim.2) <- paste("G2_rep",1:s2,sep="")
-	rownames(sim.1) <- rownames(sim.2) <- gene_id
+	rownames(sim.1) <- rownames(sim.2) <- names(v) <- gene_id
 
 	return(list(simdata=cbind(sim.data,sim.1,sim.2),truedeg=v))
 }

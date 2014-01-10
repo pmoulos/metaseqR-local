@@ -1,11 +1,16 @@
 #' @docType data
 #' @name hg19.exon.counts
 #' @title Human RNA-Seq data with three conditions, three samples
-#' @description This data set contains RNA-Seq exon read counts for 3 chromosomes. The data are from an experiment studying the
-#' effect of a long non-coding RNA related to the ASCL2 gene in WNT signaling and intestinal cancer. It has two conditions (CON, DOX)
-#' and four samples (CON_BR1, CON_BR2, DOX_BR1, DOX_BR2). It also contains a predefined \code{sample.list} and \code{libsize.list}
-#' named \code{sample.list.hg18} and \code{libsize.list.hg18}.
-#' @usage hg18.exon.counts
+#' @description This data set contains RNA-Seq exon read counts for 3 chromosomes.
+#' Data are derived from three colon tissue types (normal, paracancerous, cancerous).
+#' It contains three coditions (normal, paracancerous, cancerous) with one replicate
+#' each (three samples in total). It also contains a predefined \code{sample.list}
+#' and \code{libsize.list} named \code{sample.list.hg19} and \code{libsize.list.hg19}.
+#' Data were downloaded from GEO (GSE33782) and the corresponding reference is
+#' Wu et al., Transcriptome profiling of the cancer, adjacent non-tumor and distant
+#' normal tissues from a colorectal cancer patient by deep sequencing. PLoS One
+#' 2012, 7(8), e41001.
+#' @usage hg19.exon.counts
 #' @format a \code{data.frame} with exon read counts and some embedded annotation,
 #' one row per exon.
 #' @source GEO (http://www.ncbi.nlm.nih.gov/geo/)

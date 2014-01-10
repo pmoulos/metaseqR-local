@@ -2,7 +2,7 @@
 \alias{meta.worker}
 \title{Permutation tests helper}
 \usage{
-  meta.worker(x,co,sl,cnt,s,r,sa,ll
+  meta.worker(x,co,sl,cnt,s,r,sa,ll,
     el,w)
 }
 \arguments{

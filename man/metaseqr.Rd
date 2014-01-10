@@ -25,9 +25,10 @@
         "nbpseq"),
     stat.args = NULL,
     adjust.method = sort(c(p.adjust.methods, "qvalue")),
-    meta.p = if (length(statistics) > 1) c("simes", "fisher", "dperm.min", 
-        "dperm.max", "dperm.weight", "fperm", "whitlock", "intersection", 
-        "union", "none") else "none",
+    meta.p = if (length(statistics) > 1) c("simes", "bonferroni", "fisher", 
+        "dperm.min", "dperm.max", "dperm.weight", "fperm", "whitlock", 
+        "intersection", "union", "minp", "maxp", "weight", "none") 
+        else "none",
     weight = rep(1/length(statistics), length(statistics)),
     nperm = 10000, reprod=TRUE, pcut = NA, log.offset = 1,
     preset = NULL,
