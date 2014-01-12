@@ -41,26 +41,16 @@
 #' # Not yet available
 #'}
 meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min",
-	"dperm.max","dperm.weight","fperm","whitlock","intersection","union","minp",
-	"maxp","weight","none"),counts,sample.list,statistics,stat.args,libsize.list,
-	nperm=10000,weight=rep(1/length(statistics),length(statistics)),reprod=TRUE,
+	"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight","none"),
+	counts,sample.list,statistics,stat.args,libsize.list,nperm=10000,
+	weight=rep(1/length(statistics),length(statistics)),reprod=TRUE,
 	multic=FALSE) {
 	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
-		"dperm.max","dperm.weight","fperm","whitlock","intersection","union","minp",
-		"maxp","weight","none"))
+		"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
+		"none"))
 	contrast <- names(cp.list)
 	disp("Performing meta-analysis with ",meta.p)
 	switch(meta.p,
-		intersection = {
-			sum.p.list <- wapply(multic,cp.list,function(x) return(apply(x,1,prod)))
-		},
-		union = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				unp <- apply(x,1,sum)
-				unp[unp>1] <- 1
-				return(unp)
-			})
-		},
 		fisher = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
 				tmp <- fisher.method(x,p.corr="none",zero.sub=1e-32)
@@ -460,7 +450,6 @@ combine.weight <- function(p,w) {
 	if (length(ze)>0)
 		p[ze] <- 0.1*min(p[-ze])
 	return(prod(p^w))
-	#return(combine.simes(p/w))
 }
 
 #' Combine p-values using the minimum p-value

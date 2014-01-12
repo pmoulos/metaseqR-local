@@ -1,4 +1,3 @@
-- Remove intersection and union from the combination methods as they are equivalent to minp and maxp (which are more statistically relevant!)
 - Add EBSeq in statistics
 - Make the filters, normalization and statistical list arguments evaluation functions check also argument values (e.g. numeric)
 - Create interactive MA plots with highcharts

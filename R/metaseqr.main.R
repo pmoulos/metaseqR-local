@@ -177,30 +177,29 @@
 #' regarding meta-analysis)}. It can be one of \code{"simes"} (default), 
 #' \code{"bonferroni"}, \code{"minp"}, \code{"maxp"}, \code{"weight"},
 #' \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"}, \code{"fisher"},
-#' \code{"fperm"}, \code{"whitlock"}, \code{"intersection"}, \code{"union"} or
-#' \code{"none"}. For the \code{"fisher"} and \code{"fperm"} methods, see the 
-#' documentation of the R package MADAM. For the \code{"whitlock"} method, see
-#' the documentation of the survcomp Bioconductor package. With the
-#' \code{"intersection"} option, the final p-value is the product of individual 
-#' p-values derived from each method. However, the product is not used for the
-#' statistical cutoff to derive gene lists. In this case, the final gene list is
-#' derived from the common differentially expressed genes from all applied methods.
-#' Similarly, when \code{meta.p="union"}, the final list is derived from the union
-#' of individual methods and the final p-values are the sum of individual p-values.
-#' The latter can be used as a very lose statistical threshold to aggregate results
-#' from all methods regardless of their False Positive Rate. With the \code{"simes"}
-#' option, the method proposed by Simes (Simes, R. J., 1986) is used. With the 
-#' \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"} options, a 
-#' permutation procedure is initialed, where \code{nperm} permutations are performed
-#' across the samples of the normalized counts matrix, producing \code{nperm}
-#' permuted instances of the initital dataset. Then, all the chosen statistical
-#' tests are re-executed for each permutation. The final p-value is the number
-#' of times that the p-value of the permuted datasets is smaller than the original
-#' dataset. The p-value of the original dataset is created based on the choice of
-#' one of \code{dperm.min}, \code{dperm.max} or \code{dperm.weight} options.
-#' In case of \code{dperm.min}, the intial p-value vector is consists of the
-#' minimum p-value resulted from the applied statistical tests for each gene. The
-#' maximum p-value is used with the \code{dperm.max} option. With the 
+#' \code{"fperm"}, \code{"whitlock"} or\code{"none"}. For the \code{"fisher"} and
+#' \code{"fperm"} methods, see the documentation of the R package MADAM. For the
+#' \code{"whitlock"} method, see the documentation of the survcomp Bioconductor
+#' package. With the \code{"maxp"} option, the final p-value is the maximum p-value
+#' out of those returned by each statistical test. This is equivalent to an
+#' "intersection" of the results derived from each algorithm so as to have a final
+#' list with the common genes returned by all statistical tests. Similarly, when
+#' \code{meta.p="minp"}, is equivalent to a "union" of the results derived from
+#' each algorithm so as to have a final list with all the genes returned by all
+#' statistical tests. The latter can be used as a very lose statistical threshold
+#' to aggregate results from all methods regardless of their False Positive Rate.
+#' With the \code{"simes"} option, the method proposed by Simes (Simes, R. J., 1986)
+#' is used. With the \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"}
+#' options, a permutation procedure is initialed, where \code{nperm} permutations
+#' are performed across the samples of the normalized counts matrix, producing
+#' \code{nperm} permuted instances of the initital dataset. Then, all the chosen
+#' statistical tests are re-executed for each permutation. The final p-value is
+#' the number of times that the p-value of the permuted datasets is smaller than
+#' the original dataset. The p-value of the original dataset is created based on
+#' the choice of one of \code{dperm.min}, \code{dperm.max} or \code{dperm.weight}
+#' options. In case of \code{dperm.min}, the intial p-value vector is consists of
+#' the minimum p-value resulted from the applied statistical tests for each gene.
+#' The maximum p-value is used with the \code{dperm.max} option. With the 
 #' \code{dperm.weight} option, the \code{weight} weighting vector for each
 #' statistical test is used to weight each p-value according to the power of
 #' statistical tests (some might work better for a specific dataset). Be careful
@@ -209,6 +208,9 @@
 #' samples across biological conditions. In that case, use \code{meta.p="simes"}
 #' instead. Finally, there are the \code{"minp"}, \code{"maxp"} and \code{"weight"}
 #' options which correspond to the latter three methods but without permutations.
+#' Generally, permutations would be accurate to use when the experiment includes
+#' >5 samples per condition (or even better 7-10) which is rather rare in RNA-Seq
+#' experiments.
 #' @param weight a vector of weights with the same length as the \code{statistics}
 #' vector containing a weight for each statistical test. It should sum to 1. 
 #' \strong{Use with caution with the} \code{dperm.weight} \strong{parameter! 
@@ -779,8 +781,8 @@ metaseqr <- function(
 	stat.args=NULL,
 	adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
 	meta.p=if (length(statistics)>1) c("simes","bonferroni","fisher","dperm.min",
-		"dperm.max","dperm.weight","fperm","whitlock",
-		"intersection","union","minp","maxp","weight","none") else "none",
+		"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
+		"none") else "none",
 	weight=rep(1/length(statistics),length(statistics)),
 	nperm=10000,
 	reprod=TRUE,
@@ -918,8 +920,8 @@ metaseqr <- function(
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq",
 		"limma","nbpseq"),multiarg=TRUE)
 	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
-		"dperm.max","dperm.weight","fperm","whitlock","intersection","union",
-		"minp","maxp","weight","none"),multiarg=FALSE)
+		"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
+		"none"),multiarg=FALSE)
 	check.text.args("fig.format",fig.format,c("png","jpg","tiff","bmp","pdf","ps"),
 		multiarg=TRUE)
 	check.text.args("export.what",export.what,c("annotation","p.value","adj.p.value",
@@ -1856,14 +1858,6 @@ metaseqr <- function(
 			if (length(statistics)>1)
 			{
 				switch(meta.p,
-					intersection = {
-						cut.ind <- which(apply(cp.list[[cnt]],1,
-							function(x,p) return(all(x<=p)),pcut)) # The correct way
-					},
-					union = {
-						cut.ind <- which(apply(cp.list[[cnt]],1,
-							function(x,p) return(any(x<=p)),pcut)) # The correct way
-					},
 					fisher = {
 						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					},
