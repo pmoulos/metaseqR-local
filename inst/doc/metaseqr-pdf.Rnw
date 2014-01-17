@@ -15,31 +15,44 @@
 \lstset{breaklines=true} % break long lines
 \begin{document}
 
-%\VignetteIndexEntry{RNA-Seq data analysis using mulitple statistical algorithms with metaseqR}
+%\VignetteIndexEntry{RNA-Seq data analysis using mulitple statistical algorithms
+ with metaseqR}
 %\VignetteEngine{knitr::knitr}
 
 \title{RNA-Seq data analysis using mulitple statistical algorithms with metaseqR}
 \author{Panagiotis Moulos}
 \maketitle
 
-During the past few years, a lot of R/Bioconductor packages have been developped for the analysis of RNA-Seq data, introducing several
-approaches. For example, packages using the negative binomial distribution to model the null hypotheses (\emph{DESeq}, \emph{edgeR}, \emph{NBPSeq})
-or packages using Bayesian statistics (\emph{baySeq}, \emph{EBSeq}). In addition, packages specialized to RNA-Seq data normalization have 
-also been developed (\emph{EDASeq}). The package \emph{metaseqR} (pronounced meta-seek-er) tries to provide an interface to several
-algorithms, similar to the recent \emph{TCC} package. However, it is much simpler to use than \emph{TCC}, incoporates more algorithms
-for normalization and statistical analysis and builds a full report with several interactive and non-interactive diagnostic plots so that
-the users can easily explore the results and have whatever they need for this part of their research in one place. The metaseqR report is
-one of its most strong points as it provides an automatically generated summary, based on the pipeline inputs and the results, which can be
-used directly as a draft in methods paragraph in scientific publications. It also provides a lot of diagnostic figures and each figure is
-accompanied by a small explanatory text, and a list of references accroding to the algorithms used in the pipeline, which can also be used
-in a scientific article. All the report components are grouped in a comprehensive way, with a table of contents. Most importantly,
-metaseqR provides an interface for RNA-Seq data meta-analysis by providing the ability to use different algorithms for the statistical
-testing part and combining the p-values using popular published methods (e.g. Fisher's method, Whitlock's method) and two package-specific
-methods (intersection, union of statistically significant results). In the future, more algorithms will be incorporated in the package,
-with more diagnostic plots and more examples. This initial vignette contains just this introductory text and reference to some examples
-in the package documentation, which we believe that at this point contains sufficient explanation to run the metaseqr pipeline. Throughout
-the rest of this document, \emph{metaseqr} refers to the name of the analysis pipeline while \emph{metaseqR} refers to the name of the
-package.
+During the past few years, a lot of R/Bioconductor packages have been developped
+for the analysis of RNA-Seq data, introducing several approaches. For example,
+packages using the negative binomial distribution to model the null hypotheses
+(\emph{DESeq}, \emph{edgeR}, \emph{NBPSeq}) or packages using Bayesian statistics
+(\emph{baySeq}, \emph{EBSeq}). In addition, packages specialized to RNA-Seq data
+normalization have also been developed (\emph{EDASeq}). The package \emph{metaseqR}
+(pronounced meta-seek-er) tries to provide an interface to several algorithms,
+similar to the recent \emph{TCC} package. However, it is much simpler to use than
+\emph{TCC}, incoporates more algorithms for normalization and statistical analysis
+and builds a full report with several interactive and non-interactive diagnostic
+plots so that the users can easily explore the results and have whatever they need
+for this part of their research in one place. The metaseqR report is one of its
+most strong points as it provides an automatically generated summary, based on the
+pipeline inputs and the results, which can be used directly as a draft in methods
+paragraph in scientific publications. It also provides a lot of diagnostic figures
+and each figure is accompanied by a small explanatory text, and a list of
+references accroding to the algorithms used in the pipeline, which can also be
+used in a scientific article. All the report components are grouped in a
+comprehensive way, with a table of contents. Most importantly, metaseqR provides
+an interface for RNA-Seq data meta-analysis by providing the ability to use
+different algorithms for the statistical testing part and combining the p-values
+using popular published methods (e.g. Fisher's method, Whitlock's method) and two
+package-specific methods (intersection, union of statistically significant results).
+In the future, more algorithms will be incorporated in the package, with more
+diagnostic plots and more examples. This initial vignette contains just this
+introductory text and reference to some examples in the package documentation,
+which we believe that at this point contains sufficient explanation to run the
+metaseqr pipeline. Throughout the rest of this document, \emph{metaseqr} refers
+to the name of the analysis pipeline while \emph{metaseqR} refers to the name of
+the package.
 
 \section{Getting started}
 
@@ -47,7 +60,8 @@ package.
 library(metaseqR)
 @
 
-Detailed instructions on how to run the metaseqr pipeline can be found under the main documentation of the metaseqR package:
+Detailed instructions on how to run the metaseqr pipeline can be found under the
+main documentation of the metaseqR package:
 
 <<init-metaseqr, eval=FALSE, echo=TRUE>>=
 library(metaseqR)
@@ -58,15 +72,19 @@ help(metaseqr.main)
 Briefly, to run metaseqr you need:
 
 \begin{itemize}
- \item A text tab delimited file in a spreadsheet like format containing at least unique gene identifiers (corresponding to one of metaseqR's
-supported formats, for the time being Ensembl
- \item A list of statistical contrasts for which you wish to check differential expression
- \item An internet connection so that the interactive parts of the report can be properly rendered, as the report template points to external
-Content Delivery Networks (CDNs) distributing the appropriate JavaScript
+ \item A text tab delimited file in a spreadsheet like format containing at least
+  unique gene identifiers (corresponding to one of metaseqR's supported formats,
+  for the time being Ensembl
+ \item A list of statistical contrasts for which you wish to check differential
+  expression
+ \item An internet connection so that the interactive parts of the report can be
+  properly rendered, as the report template points to external Content Delivery
+  Networks (CDNs) distributing the appropriate JavaScript
 \end{itemize}
 
-Everything else (e.g. genomic regions annotation etc.) can be handled by the metaseqr pipeline. Some example data are included in the
-package. See the related help pages:
+Everything else (e.g. genomic regions annotation etc.) can be handled by the
+metaseqr pipeline. Some example data are included in the package. See the related
+help pages:
 
 <<help-1, eval=FALSE, echo=TRUE>>=
 help(hg18.exon.data)
@@ -75,8 +93,8 @@ help(mm9.gene.data)
 
 \section{Running the metaseqr pipeline}
 
-Running a metaseqr pipeline instance is quite straightforward. Again, see the examples in the main help page. An example and the command
-window output follow:
+Running a metaseqr pipeline instance is quite straightforward. Again, see the
+examples in the main help page. An example and the command window output follow:
 
 <<data-1, eval=TRUE, echo=TRUE>>=
 data("mm9.gene.data",package="metaseqR")
@@ -94,7 +112,8 @@ sample.list.mm9
 libsize.list.mm9
 @
 
-Following is a full example with the informative messages that are printed in the command window:
+Following is a full example with the informative messages that are printed in the
+command window:
 
 <<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
 library(metaseqR)
@@ -145,10 +164,12 @@ To get a glimpse on the results, run:
 head(result[["data"]][["e14.5_vs_adult_8_weeks"]])
 @
 
-Check the HTML report generated in the output directory defined by the export.where argument above.
+Check the HTML report generated in the output directory defined by the
+export.where argument above.
 
-Now, the same example but with more than one statistical selection algorithms, a different normalization, an analysis preset and
-filtering applied prior to normalization:
+Now, the same example but with more than one statistical selection algorithms, a
+different normalization, an analysis preset and filtering applied prior to
+normalization:
 
 <<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
 library(metaseqR)
@@ -177,7 +198,8 @@ result <- metaseqr(
 )
 @
 
-A similar example with no filtering applied and no Venn diagram generation (not evaluated here):
+A similar example with no filtering applied and no Venn diagram generation (not
+evaluated here):
 
 <<example-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE>>=
 library(metaseqR)
@@ -199,9 +221,11 @@ result <- metaseqr(
 )
 @
 
-An additional example with human exon data (if you have a multiple core system, be very careful on how you are using the restrict.cores
-option and generally how many cores you are using with scripts purely written in R. The analysis with exon read data can very easily
-cause memory problems, so unless you have more than 64Gb of RAM available, consider setting restrict.cores to something like 0.2):
+An additional example with human exon data (if you have a multiple core system,
+be very careful on how you are using the restrict.cores option and generally how
+many cores you are using with scripts purely written in R. The analysis with exon
+read data can very easily cause memory problems, so unless you have more than 64Gb
+of RAM available, consider setting restrict.cores to something like 0.2):
 
 <<example-4, eval=FALSE, echo=TRUE, tidy=FALSE>>=
 # A full example pipeline with exon counts
@@ -271,24 +295,31 @@ metaseqr(
 
 \section{metaseqR components}
 
-The metaseqR package includes several functions which are responsible for running each part of the pipeline (data reading and summarization,
-filtering, normalization, statistical analysis and meta-analysis and reporting). Although metaseqR is designed to run as a pipeline, where
-all the parameters for each individual part can be passed in the main function, several of the individual functions can be run separately
-so that the more experienced user can build custom pipelines. All the HTML help pages contain analytical documentation on how to run these
-functions, their inputs and outputs and contain basic examples. For example, runnning
+The metaseqR package includes several functions which are responsible for running
+each part of the pipeline (data reading and summarization, filtering, normalization,
+statistical analysis and meta-analysis and reporting). Although metaseqR is
+designed to run as a pipeline, where all the parameters for each individual part
+can be passed in the main function, several of the individual functions can be run
+separately so that the more experienced user can build custom pipelines. All the
+HTML help pages contain analytical documentation on how to run these functions,
+their inputs and outputs and contain basic examples. For example, runnning
 
 <<help-2, eval=FALSE, echo=TRUE>>=
 help(stat.edgeR)
 @
 
-will open the help page of the wrapper function over the edgeR statistical testing algorithm which contains an example of data generation,
-processing, up to statistical selection.
+will open the help page of the wrapper function over the edgeR statistical testing
+algorithm which contains an example of data generation, processing, up to
+statistical selection.
 
-Most of the diagnostic plots, work with simple matrices as inputs, so they can be easily used outside the main pipeline, as long as all
-the necessary arguments are given. It should be noted that a report can be generated only when running the whole metaseqr pipeline and in
-the current version there is no support for generating custom reports.
+Most of the diagnostic plots, work with simple matrices as inputs, so they can be
+easily used outside the main pipeline, as long as all the necessary arguments are
+given. It should be noted that a report can be generated only when running the
+whole metaseqr pipeline and in the current version there is no support for
+generating custom reports.
 
-A very detailed documentation on how to run metaseqr and explanation for all its parameters can be obtained by
+A very detailed documentation on how to run metaseqr and explanation for all its
+parameters can be obtained by
 
 <<help-3, eval=FALSE, echo=TRUE>>=
 help(metaseqr)
@@ -301,47 +332,70 @@ help(metaseqr)
 The metaseqR package currently supports three methods of data input:
 
 \begin{enumerate}
-  \item Aligned reads in SAM/BAM or BED format. In this case, the input files are passed to the metaseqr pipeline through a simply
-  structured tab-delimited text file. This file contains in its first column unique names that are used to identify each sample, the
-  SAM/BAM/ BED file names (preferably with their full path) in the second column, and the biological conditions/groups for each
-  sample/file in the third column. The columns may or may not be named, as this information is not used by metaseqR. The above order
-  (sample names, file names, biological condition) is used instead. This is the preferred method of data input as in this way, the
-  analysis is streamlined within R from the beginning until the end, ensuring data integrity (e.g. the compatibility of the genome
-  annotations used, something that can sometimes be broken when using external read counting software). SAM/BAM files are imported
-  through the Bioconductor packages Rsamtools and Repitools and BED files are imported through the Bioconductor package rtracklayer.
-  The aligned reads are converted to a read counts table through facilities provided in the Bioconductor package GenomicRanges. The
-  Ensembl gene or exon regions which are used to summarize the read alignments and create the final read counts table for each gene
-  or exon can be obtained either through downloading at the time of usage using the Bioconductor package biomaRt, or through the use
-  of the embedded in the metaseqR package Ensembl annotation for speed, or from a user-specified file.
-  \item Summarized numbers of reads for each genomic feature (gene or exon) by providing a file containing the read counts table.
-  This file should contain at least: a) a column with a unique identifier for each gene/exon (currently only Ensembl identifiers are
-  supported unless the required annotation elements for each genomic region are embedded in the file), b) as many columns as the number
-  of samples in the experiment. Each column with sample read counts should be named with a unique sample name. Optionally, the read
-  counts file can contain annotation elements for each genomic feature (gene or exon) corresponding to the unique identifier column.
-  In this case, the pipeline may be executed with the annotation=``embedded'' argument and it is very useful when the user does
-  not wish to use Ensembl annotation or the organisms under investigation is not supported by metaseqR. If the user chooses to use
-  embedded to the read counts file annotation, then at least the following elements should be provided for each genomic region, apart
-  from its unique name should be provided (in parenthesis next to each element, the required column name): chromosome where the genomic
-  feature is located (chromosome), starting base pair in the chromosome (start), ending base pair in the chromosome (end). For best
-  performance (e.g. availability of all quality control and diagnostic plots), the following annotation elements should also be
-  provided: GC content (gc\_content) for genomic features of type ``gene'', the gene model name (gene\_name) for genomic features of
-  type ``exon'', the transcribing strand of each feature, denoted as ``+'' or ``-'' (strand), HUGO (or other alias) gene name (gene\_name)
-  and each genomic features biotype/biological categorization, for example Ensembl categorizations like ``protein\_coding'', ``ncRNA'',
-  ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied with Ensembl annotation, it is better practice not to
-  use embedded annotation in the counts file but download it or use the embedded in the package annotation using the respective options.
-  \item Like case (2) but all the data mentioned in (2) are stored in an R data frame object (for example, derived after a user-defined
-  or otherwise customized preprocessing).
+  \item Aligned reads in SAM/BAM or BED format. In this case, the input files are
+   passed to the metaseqr pipeline through a simply structured tab-delimited text
+   file. This file contains in its first column unique names that are used to
+   identify each sample, the SAM/BAM/ BED file names (preferably with their full
+   path) in the second column, and the biological conditions/groups for each
+   sample/file in the third column. The columns may or may not be named, as this
+   information is not used by metaseqR. The above order (sample names, file names,
+   biological condition) is used instead. This is the preferred method of data
+   input as in this way, the analysis is streamlined within R from the beginning
+   until the end, ensuring data integrity (e.g. the compatibility of the genome
+   annotations used, something that can sometimes be broken when using external
+   read counting software). SAM/BAM files are imported through the Bioconductor
+   packages Rsamtools and Repitools and BED files are imported through the
+   Bioconductor package rtracklayer. The aligned reads are converted to a read
+   counts table through facilities provided in the Bioconductor package
+   GenomicRanges. The Ensembl gene or exon regions which are used to summarize
+   the read alignments and create the final read counts table for each gene or
+   exon can be obtained either through downloading at the time of usage using the
+   Bioconductor package biomaRt, or through the use of the embedded in the
+   metaseqR package Ensembl annotation for speed, or from a user-specified file.
+  \item Summarized numbers of reads for each genomic feature (gene or exon) by
+   providing a file containing the read counts table. This file should contain at
+   least: a) a column with a unique identifier for each gene/exon (currently only
+   Ensembl identifiers are supported unless the required annotation elements for
+   each genomic region are embedded in the file), b) as many columns as the number
+   of samples in the experiment. Each column with sample read counts should be
+   named with a unique sample name. Optionally, the read counts file can contain
+   annotation elements for each genomic feature (gene or exon) corresponding to
+   the unique identifier column. In this case, the pipeline may be executed with
+   the annotation=``embedded'' argument and it is very useful when the user does
+   not wish to use Ensembl annotation or the organisms under investigation is not
+   supported by metaseqR. If the user chooses to use embedded to the read counts
+   file annotation, then at least the following elements should be provided for
+   each genomic region, apart from its unique name should be provided (in
+   parenthesis next to each element, the required column name): chromosome where
+   the genomic feature is located (chromosome), starting base pair in the
+   chromosome (start), ending base pair in the chromosome (end). For best
+   performance (e.g. availability of all quality control and diagnostic plots),
+   the following annotation elements should also be provided: GC content
+   (gc\_content) for genomic features of type ``gene'', the gene model name
+   (gene\_name) for genomic features of type ``exon'', the transcribing strand of
+   each feature, denoted as ``+'' or ``-'' (strand), HUGO (or other alias) gene
+   name (gene\_name) and each genomic features biotype/biological categorization,
+   for example Ensembl categorizations like ``protein\_coding'', ``ncRNA'',
+  ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied
+  with Ensembl annotation, it is better practice not to use embedded annotation
+  in the counts file but download it or use the embedded in the package annotation
+  using the respective options.
+  \item Like case (2) but all the data mentioned in (2) are stored in an R data
+  frame object (for example, derived after a user-defined or otherwise customized
+  preprocessing).
 \end{enumerate}
 
-In any case of the above, some of the main input arguments to the pipeline can become mutually exclusive. For example the user cannot
-supply both an input read counts table and a file with targets including sample filenames. Details on such issues can be found in the
-package documentation.
+In any case of the above, some of the main input arguments to the pipeline can
+become mutually exclusive. For example the user cannot supply both an input read
+counts table and a file with targets including sample filenames. Details on such
+issues can be found in the package documentation.
 
 \subsection{Data filtering}
 
-Two optional data filter types are implemented in the metaseqR package, operating at the exon (when exon counts are requested or
-provided to/from the pipeline) or the gene level (applied after summarizing exon counts to gene counts when exon counts are provided,
-or applied on gene counts if only a gene read counts table is provided). It should also be noted that, like the metaseqr pipeline,
+Two optional data filter types are implemented in the metaseqR package, operating
+at the exon (when exon counts are requested or provided to/from the pipeline) or
+the gene level (applied after summarizing exon counts to gene counts when exon
+counts are provided, or applied on gene counts if only a gene read counts table is provided). It should also be noted that, like the metaseqr pipeline,
 these filter are created with only the detection of differential expression at the gene level and not at the exon level or the
 detection of differential splicing.
 

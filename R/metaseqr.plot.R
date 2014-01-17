@@ -342,7 +342,9 @@ diagplot.boxplot <- function(mat,name=NULL,log.it="auto",y.lim="default",
 		nams <- unlist(name)
 		grouped <- TRUE
 	}
-	cols <- c("red3","green3","blue2","gold","skyblue","orange3","burlywood")
+	cols <- c("red3","green3","blue2","gold","skyblue","orange3","burlywood","red",
+		"blue","green","orange","darkgrey","green4","black","pink","brown",
+		"magenta","yellowgreen","pink4","seagreen4","darkcyan")
 	if (grouped) {
 		tmp <- as.numeric(factor(as.class.vector(name)))
 		b.cols <- cols[tmp]
@@ -2096,8 +2098,8 @@ make.venn.colorscheme <- function(n) {
 #' will be added to the plot using these names, else a set of column names will
 #' be auto-generated. \code{p} can also be a list or a data frame.
 #' @param sig a significance level (0 < sig <=1).
-#' @param x what to plot on x-axis, can be one of \code{"FPR"}, \code{"FNR"},
-#' \code{"TPR"}, \code{"TNR"} for False Positive Rate, False Negative Rate, True
+#' @param x what to plot on x-axis, can be one of \code{"fpr"}, \code{"fnr"},
+#' \code{"tpr"}, \code{"tnr"} for False Positive Rate, False Negative Rate, True
 #' Positive Rate and True Negative Rate respectively.
 #' @param y what to plot on y-axis, same as \code{x} above.
 #' @param output one or more R plotting device to direct the plot result to.
@@ -2169,7 +2171,7 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 			FP[i] <- length(which(psample<cuts[i] & local.truth==0))
 			FN[i] <- length(which(psample>cuts[i] & local.truth!=0))
 			TN[i] <- length(which(psample>cuts[i] & local.truth==0))
-
+			
 			SCRX[i] <- i/S
 			SCRY[i] <- TP[i]/(FN[i]+FP[i])
 
@@ -2580,14 +2582,8 @@ diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
 		graphics.open(output,fil,width=1024,height=1024,res=100)
 
 	xlim <- ylim <- c(1,N)
-	#par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
-	#	lwd=1.5,lty=1)
-	###
 	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
-		lwd=1.5)
-	lty=c(rep(2,6),rep(1,5))
-	names(lty) <- colnames(means)
-	###
+		lwd=1.5,lty=1)
 	plot.new()
 
 	switch(type,
@@ -2596,7 +2592,7 @@ diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
 			axis(1,at=pretty(xlim,10))
 			axis(2)
 			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],lty=lty[n],...)
+				lines(means[,n],col=colspace[n],...)
 			}
 			grid()
 			title(main="Selected genes vs False Positives",
@@ -2620,7 +2616,7 @@ diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
 			axis(1,at=pretty(xlim,10))
 			axis(2)
 			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],lty=lty[n],...)
+				lines(means[,n],col=colspace[n],...)
 			}
 			grid()
 			title(main="Selected genes vs False Negatives",

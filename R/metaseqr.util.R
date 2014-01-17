@@ -1209,7 +1209,7 @@ get.preset.opts <- function(preset,org) {
 		all.basic = {
 			exon.filters <- NULL
 			gene.filters <- NULL
-			pcut <- 1
+			pcut <- NA
 			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
 				"adj.meta.p.value","fold.change")
 			export.scale <- c("natural","log2")
@@ -1219,7 +1219,7 @@ get.preset.opts <- function(preset,org) {
 		all.normal = {
 			exon.filters <- NULL
 			gene.filters <- NULL
-			pcut <- 1
+			pcut <- NA
 			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
 				"adj.meta.p.value","fold.change","stats","counts")
 			export.scale <- c("natural","log2")
@@ -1229,7 +1229,7 @@ get.preset.opts <- function(preset,org) {
 		all.full = {
 			exon.filters <- NULL
 			gene.filters <- NULL
-			pcut <- 1
+			pcut <- NA
 			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
 				"adj.meta.p.value","fold.change","stats","counts","flags")
 			export.scale <- c("natural","log2","log10","vst")

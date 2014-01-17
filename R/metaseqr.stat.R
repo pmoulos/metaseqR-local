@@ -208,7 +208,8 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		else { # GLM only
 			s <- unlist(con)
 			us <- unique(s)
-			design <- model.matrix(~0+s,data=dge$samples)
+			#design <- model.matrix(~0+s,data=dge$samples) # Ouch!
+			design <- model.matrix(~s,data=dge$samples)
 			colnames(design) <- us
 			fit <- glmFit(dge,design=design,offset=stat.args$offset,
 				weights=stat.args$weights,lib.size=stat.args$lib.size,
@@ -290,19 +291,30 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		con <- contrast.list[[con.name]]
 		s <- unlist(con)
 		us <- unique(s)
-		design <- model.matrix(~0+s,data=dge$samples)
-		colnames(design) <- us
-		vom <- voom(dge,design,normalize.method=stat.args$normalize.method)
-		fit <- lmFit(vom,design)
-		co <- makeContrasts(contrasts=paste(us[2],us[1],sep="-"),levels=design)
-		fit <- eBayes(contrasts.fit(fit,co))
-		if (length(con)==2)
-			res <- topTable(fit,coef=1,n=nrow(vom))
-		else
-			res <- topTable(fit,coef=1:ncol(fit$design),n=nrow(vom))
-		p[[con.name]] <- res[,"P.Value"]
-		names(p[[con.name]]) <- rownames(res)
-		p[[con.name]] <- p[[con.name]][rownames(dge)]
+		ms <- match(rownames(dge$samples),names(s))
+		if (any(is.na(ms)))
+			ms <- ms[which(!is.na(ms))]
+		if (length(con)==2) {
+			design <- model.matrix(~0+s,data=dge$samples[ms,])
+			colnames(design) <- us
+			vom <- voom(dge[,ms],design,normalize.method=stat.args$normalize.method)
+			fit <- lmFit(vom,design)
+			fit <- eBayes(fit)
+			co <- makeContrasts(contrasts=paste(us[2],us[1],sep="-"),levels=design)
+			fit <- eBayes(contrasts.fit(fit,co))
+			p[[con.name]] <- fit$p.value[,1]
+		}
+		else {
+			design <- model.matrix(~s,data=dge$samples[ms,])
+			colnames(design) <- us
+			vom <- voom(dge[,ms],design,normalize.method=stat.args$normalize.method)
+			fit <- lmFit(vom,design)
+			fit <- eBayes(fit)
+			res <- topTable(fit,coef=2:ncol(fit$design),n=nrow(vom))
+			p[[con.name]] <- res[,"P.Value"]
+			names(p[[con.name]]) <- rownames(res)
+			p[[con.name]] <- p[[con.name]][rownames(dge)]
+		}
 		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)
@@ -462,7 +474,7 @@ stat.noiseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,
 					filter=stat.args$filter,depth=stat.args$depth,
 					cv.cutoff=stat.args$cv.cutoff)
 			# Beware! This is not the classical p-value!
-			p[[con.name]] <- 1 - res@results[[1]]$prob 
+			p[[con.name]] <- 1 - res@results[[1]]$prob
 		}
 		else {
 			warnwrap(

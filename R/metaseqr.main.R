@@ -905,7 +905,7 @@ metaseqr <- function(
 		counts.name <- "imported custom data frame"
 	}
 
-	if (meta.p=="dperm.weight" && sum(weight)>1)
+	if (meta.p %in% c("weight","dperm.weight") && sum(weight)>1)
 		stopwrap("The weights given for p-value combination should sum to 1!")
 
 	check.text.args("file.type",file.type,c("auto","sam","bam","bed"),multiarg=FALSE)
@@ -1734,7 +1734,7 @@ metaseqr <- function(
 	else
 		adj.cp.list <- NULL
 
-	# At this point, all method-specific objects must become a matrices for exporting 
+	# At this point, all method-specific objects must become matrices for exporting 
 	# and plotting
 	switch(class(norm.genes.expr),
 		CountDataSet = { # Has been processed with DESeq

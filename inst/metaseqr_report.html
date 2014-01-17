@@ -942,7 +942,7 @@
 										cat("<strong><a href=\"lists/metaseqr_sig_out_",n,".txt.gz\" download>Download</a> the DEG result list for ",n,".</strong></br>",sep="")
 										if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
 											cat("<strong><a href=\"lists/metaseqr_all_out_",n,".txt.gz\" download>Download</a> the whole result list for ",n,".</strong></br>",sep="")
-										cat("</br></div>")
+										cat("</br></div></div>")
 									}
 									counter <- 1
 									cat("<script type=\"text/javascript\">")
@@ -951,7 +951,6 @@
 										counter <- counter + 1
 									}
 									cat("</script>")
-									cat("</div>")
 								}
 								%>
 							</div> <!-- End results container -->
