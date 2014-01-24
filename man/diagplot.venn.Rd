@@ -16,8 +16,29 @@
   \code{colnames(pmat) <-}
   \code{c("deseq","edger","nbpseq")}.}
 
-  \item{pcut}{a p-value cutoff for statistical
+  \item{fcmat}{an optional matrix with fold changes
+  corresponding to the application of each statistical
+  algorithm. The fold change matrix must have the colnames
+  attribute and the colnames should correspond to the name
+  of the algorithm used to fill the specific column (see
+  the parameter \code{pmat}).}
+
+  \item{pcut}{if \code{fcmat} is supplied, an absolute
+  fold change cutoff to be applied to \code{fcmat} to
+  determine the differentially expressed genes for each
+  algorithm.}
+
+  \item{fcut}{a p-value cutoff for statistical
   significance. Defaults to \code{0.05}.}
+
+  \item{direction}{if \code{fcmat} is supplied, a keyword
+  to denote which genes to draw in the Venn diagrams with
+  respect to their direction of regulation. It can be one
+  of \code{"dereg"} for the total of regulated genes, where
+  \code{abs(fcmat[,n])>=fcut} (default), \code{"up"} for
+  the up-regulated genes where \code{fcmat[,n]>=fcut} or
+  \code{"down"} for the up-regulated genes where
+  \code{fcmat[,n]<=-fcut}.}
 
   \item{nam}{a name to be appended to the output graphics
   file (if \code{"output"} is not \code{"x11"}).}

@@ -35,7 +35,8 @@ Depends:
 	log4r
 Suggests:
     parallel,
-    TCC
+    TCC,
+    zoo
 Description: Provides an interface to several normalization and
     statistical testing packages for RNA-Seq gene expression data.
     Additionally, it creates several diagnostic plots, performs
@@ -51,8 +52,8 @@ biocViews: Bioinformatics, Preprocessing, HighThroughputSequencing,
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 0.91.0
-Date: 2014-01-03
+Version: 0.92.0
+Date: 2014-01-25
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'

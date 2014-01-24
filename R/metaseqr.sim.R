@@ -1,3 +1,122 @@
+#' Estimate AUFC weights
+#'
+#' This functions automatically estimates weights for the \code{"weight"} and
+#' \code{"dperm.weight"} options of metaseqR for combining p-values from multiple
+#' statistical tests. It creates simulated dataset based on real data and then
+#' performs statistical analysis with metaseqR several times in order to derive
+#' False Discovery Curves. Then, the average areas under the false discovery curves
+#' are used to construct weights for each algorithm, according to its performance
+#' when using simulated data.
+#'
+#' @param counts the real raw counts table from which the simulation parameters
+#' will be estimated. It must not be normalized and must contain only integer
+#' counts, without any other annotation elements and unique gene identifiers as
+#' the rownames attribute.
+#' @param normalization same as \code{normalization} in \code{link{metaseqr}}.
+#' @param statistics same as \code{statistics} in \code{link{metaseqr}}.
+#' @param nsim the number of simulations to perform to estimate the weights. It
+#' default to 10.
+#' @param N the number of genes to produce. See \code{link{make.sim.data.sd}}.
+#' @param samples a vector with 2 integers, which are the number of samples for
+#' each condition (two conditions currently supported).
+#' @param ndeg a vector with 2 integers, which are the number of differentially
+#' expressed genes to be produced. The first element is the number of up-regulated
+#' genes while the second is the number of down-regulated genes.
+#' @param fc.basis the minimum fold-change for deregulation.
+#' @param top the top \code{top} best ranked (according to p-value) to use, to
+#' calculate area under the false discovery curve.
+#' @param model.org the organism from which the data are derived. It must be one
+#' of \code{\link{metaseqr}} supported organisms.
+#' @param seed a list of seed for reproducible simulations. Defaults to \code{NULL}.
+#' @param draw.fpc draw the averaged false discovery curves? Default to \code{FALSE}.
+#' @param multic whether to run in parallel (if package \code{parallel} is present
+#' or not.
+#' @value A vector of weights to be used in \link{\code{metaseqr}} with the
+#' \code{weights} option.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
+	N=10000,samples=c(3,3),ndeg=c(500,500),top=500,model.org="mm9",seed=NULL,
+	draw.fpc=FALSE,multic=FALSE) {
+	if (!require(zoo))
+		stopwrap("R pacakage zoo is required in order to estimate AUFC weights!")
+	if (ncol(counts)<4)
+		stopwrap("Cannot estimate AUFC weights with an initial dataset with less ",
+			"than 4 samples!")
+	else if (ncol(counts)>=4 && ncol(counts)<10) {
+		reind <- sample(20,1:ncol(counts),replace=TRUE)
+		counts <- counts[,reind]
+	}
+	if (is.null(seed)) {
+		seed.start <- round(100*runif(1))
+		seed.end <- seed.start + nsim - 1
+		seed <- as.list(seed.start:seed.end)
+	}
+	par.list <- estimate.sim.params(counts)
+
+	disp("Running simulations... This procedure requires time... Please wait...")
+	sim.results <- wapply(seed,function(x,normalization,statistics,N,par.list,
+		samples,ndeg,fc.basis,model.org) {
+		D <- make.sim.data.sd(N=N,param=par.list,samples=samples,ndeg=ndeg,
+			fc.basis=fc.basis,model.org=model.org,seed=x)
+		dd <- D$simdata
+		
+		tmp <- metaseqr(
+			counts=dd,
+			sample.list=list(G1=paste("G1_rep",1:samples[1],sep=""),
+				G2=paste("G2_rep",1:samples[2],sep="")),
+			contrast=c("G1_vs_G2"),
+			annotation="embedded",
+			id.col=4,
+			gc.col=5,
+			name.col=7,
+			bt.col=8,
+			count.type="gene",
+			normalization=normalization,
+			statistics=statistics,
+			meta.p="simes",
+			fig.format="png",
+			preset="all.basic",
+			export.where=tempdir(),
+			qc.plots=NULL,
+			report=FALSE,
+			run.log=FALSE,
+			out.list=TRUE
+		)
+
+		# Retrieve several p-values
+		p.list <- vector("list",length(statistics))
+		for (s in statistics) {
+			field <- paste("p-value",s,sep="_")
+			p[[s]] <- tmp$data[[1]][,field]
+			names(p[[s]]) <- rownames(tmp$data[[1]])
+		}
+		p.matrix <- do.call("cbind",p.list)
+		return(list(simdata=D,pvalues=p.matrix))
+	},normalization,statistics,N,par.list,samples,ndeg,fc.basis,model.org)
+
+	disp("Estimating AUFC weights... Please wait...")
+	fpc.obj <- wapply(sim.results,function(x) {
+		true.de <- x$simdata$truedeg
+		names(true.de) <- rownames(x$simdata$simdata)
+		p.matrix <- x$p.matrix
+		true.de <- true.de[rownames(p.matrix)]
+		fdc <- diagplot.ftd(true.de,p.matrix,type="fpc",draw=FALSE)
+	})
+	avg.fpc <- diagplot.avg.ftd(fpc.obj,draw=draw.fpc)
+
+	x <- 1:top
+	aufc <- apply(avg.fpc$avg.ftdr$means[1:top,],2,function(x,i) {
+		return(sum(diff(i)*rollmean(x,2)))
+	},x)
+	weight.aufc <- (sum(aufc)/aufc)/sum(sum(aufc)/aufc)
+	return(weight.aufc)
+}
+
 #' Create simulated counts using TCC package
 #'
 #' This function creates simulated RNA-Seq gene expression datasets using the

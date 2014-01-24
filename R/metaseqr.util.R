@@ -247,7 +247,7 @@ get.defaults <- function(what,method=NULL) {
 				},
 				noiseq = {
 					return(list(
-						method="rpkm", # which normalization
+						method="tmm", # which normalization
 						long=1000,lc=1,k=0.5, # common arguments
 						refColumn=1,logratioTrim=0.3,sumTrim=0.05,
 						doWeighting=TRUE,Acutoff=-1e+10 # TMM normalization arguments

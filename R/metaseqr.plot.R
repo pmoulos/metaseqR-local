@@ -1557,8 +1557,21 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' the colnames should correspond to the name of the algorithm used to fill the
 #' specific column (e.g. if \code{"statistics"=c("deseq","edger","nbpseq")} then
 #' \code{colnames(pmat) <-} \code{c("deseq","edger","nbpseq")}.
+#' @param fcmat an optional matrix with fold changes corresponding to the application
+#' of each statistical algorithm. The fold change matrix must have the colnames
+#' attribute and the colnames should correspond to the name of the algorithm used
+#' to fill the specific column (see the parameter \code{pmat}).
 #' @param pcut a p-value cutoff for statistical significance. Defaults to
 #' \code{0.05}.
+#' @param fcut if \code{fcmat} is supplied, an absolute fold change cutoff to be
+#' applied to \code{fcmat} to determine the differentially expressed genes for
+#' each algorithm.
+#' @param direction if \code{fcmat} is supplied, a keyword to denote which genes
+#' to draw in the Venn diagrams with respect to their direction of regulation. It
+#' can be one of \code{"dereg"} for the total of regulated genes, where
+#' \code{abs(fcmat[,n])>=fcut} (default), \code{"up"} for the up-regulated genes
+#' where \code{fcmat[,n]>=fcut} or \code{"down"} for the up-regulated genes where
+#' \code{fcmat[,n]<=-fcut}.
 #' @param nam a name to be appended to the output graphics file (if \code{"output"}
 #' is not \code{"x11"}).
 #' @param output one or more R plotting device to direct the plot result to.
@@ -1579,14 +1592,20 @@ diagplot.filtered <- function(x,y,output="x11",path=NULL,...) {
 #' \dontrun{
 #' # Not yet available...
 #'}
-diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
+diagplot.venn <- function(pmat,fcmat=NULL,pcut=0.05,fcut=0.5,
+	direction=c("dereg","up","down"),nam=as.character(round(1000*runif(1))),
 	output="x11",path=NULL,alt.names=NULL,...) {
+	check.text.args("direction",direction,c("dereg","up","down"))
 	if (is.na(pcut) || is.null(pcut) || pcut==1)
 		warnwrap("Illegal pcut argument! Using the default (0.05)")
 	algs <- colnames(pmat)
 	if (is.null(algs))
 		stopwrap("The p-value matrices must have the colnames attribute (names of ",
 			"statistical algorithms)!")
+	if (!is.null(fcmat) && (is.null(colnames(fcmat)) ||
+		length(intersect(colnames(pmat),colnames(fcmat)))!=length(algs)))
+		stopwrap("The fold change matrices must have the colnames attribute (names of ",
+			"statistical algorithms) and must be the same as in the p-value matrices!")
 	nalg <- length(algs)
 	if(nalg>5) {
 		warnwrap(paste("Cannot create a Venn diagram for more than 5 result sets!",
@@ -1606,9 +1625,36 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 	results <- vector("list",nalg+length(pairs))
 	names(results)[1:nalg] <- aliases
 	names(results)[(nalg+1):length(results)] <- names(pairs)
-	for (a in aliases) {
-		results[[a]] <- genes[which(pmat[,algs[a]]<pcut)]
-		counts[[areas[[a]]]] <- length(results[[a]])
+	if (is.null(fcmat)) {
+		for (a in aliases) {
+			results[[a]] <- genes[which(pmat[,algs[a]]<pcut)]
+			counts[[areas[[a]]]] <- length(results[[a]])
+		}
+	}
+	else {
+		switch(direction,
+			dereg = {
+				for (a in aliases) {
+					results[[a]] <-
+						genes[which(pmat[,algs[a]]<pcut & abs(fcmat[,algs[a]])>=fcut)]
+					counts[[areas[[a]]]] <- length(results[[a]])
+				}
+			},
+			up = {
+				for (a in aliases) {
+					results[[a]] <-
+						genes[which(pmat[,algs[a]]<pcut & fcmat[,algs[a]]>=fcut)]
+					counts[[areas[[a]]]] <- length(results[[a]])
+				}
+			},
+			down = {
+				for (a in aliases) {
+					results[[a]] <-
+						genes[which(pmat[,algs[a]]<pcut & fcmat[,algs[a]]<=-fcut)]
+					counts[[areas[[a]]]] <- length(results[[a]])
+				}
+			}
+		)
 	}
 	# Now, perform the intersections
 	for (p in names(pairs)) {
@@ -1635,7 +1681,7 @@ diagplot.venn <- function(pmat,pcut=0.05,nam=as.character(round(1000*runif(1))),
 				fill=color.scheme$fill,
 				cex=1.5,
 				cat.cex=1.3,
-				#cat.pos=c(0,0),
+				cat.pos=c(0,0),
 				cat.col=color.scheme$font,
 				#cat.dist=0.07,
 				cat.fontfamily=rep("Bookman",2)
@@ -2527,6 +2573,9 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,
 #' Supported mechanisms: \code{"x11"} (default), \code{"png"}, \code{"jpg"},
 #' \code{"bmp"}, \code{"pdf"} or \code{"ps"}.
 #' @param path the path to create output files.
+#' @param draw boolean to determine whether to plot the curves or just return the
+#' calculated values (in cases where the user wants the output for later averaging
+#' for example). Defaults to \code{TRUE} (make plots).
 #' @param ... further arguments to be passed to plot devices, such as parameter
 #' from \code{\link{par}}.
 #' @return A named list with two members: the first member (\code{avg.ftdr})
@@ -2539,7 +2588,7 @@ diagplot.ftd <- function(truth,p,type="fdc",N=2000,output="x11",path=NULL,
 #' \dontrun{
 #' # Not yet available
 #'}
-diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
+diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,draw=TRUE,...) {
 	y.name <- list(
 		tpc="Number of True Positives",
 		fpc="Number of False Positives",
@@ -2575,69 +2624,73 @@ diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,...) {
 	means <- do.call("cbind",lapply(avg.ftdr.obj,function(x) x$mean))
 	stds <- do.call("cbind",lapply(avg.ftdr.obj,function(x) x$sd))
 
-	fil <- file.path(path,paste("AVG_FTDR_",type,".",output,sep=""))
-	if (output %in% c("pdf","ps","x11"))
-		graphics.open(output,fil,width=8,height=8)
+	if (draw) {
+		fil <- file.path(path,paste("AVG_FTDR_",type,".",output,sep=""))
+		if (output %in% c("pdf","ps","x11"))
+			graphics.open(output,fil,width=8,height=8)
+		else
+			graphics.open(output,fil,width=1024,height=1024,res=100)
+
+		xlim <- ylim <- c(1,N)
+		par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
+			lwd=1.5,lty=1)
+		plot.new()
+
+		switch(type,
+			fpc = {
+				plot.window(xlim,ylim,log="y")
+				axis(1,at=pretty(xlim,10))
+				axis(2)
+				for (n in colnames(means)) {
+					lines(means[,n],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs False Positives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
+			},
+			tpc = {
+				plot.window(xlim,ylim)
+				axis(1,at=pretty(xlim,10))
+				axis(2,at=pretty(ylim,10))
+				for (n in colnames(means)) {
+					lines(means[,n],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs True Positives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
+			},
+			fnc = {
+				plot.window(xlim,ylim,log="y")
+				axis(1,at=pretty(xlim,10))
+				axis(2)
+				for (n in colnames(means)) {
+					lines(means[,n],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs False Negatives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
+			},
+			tnc = {
+				plot.window(xlim,ylim)
+				axis(1,at=pretty(xlim,10))
+				axis(2,at=pretty(ylim,10))
+				for (n in colnames(means)) {
+					lines(means[,n],col=colspace[n],...)
+				}
+				grid()
+				title(main="Selected genes vs True Negatives",
+					xlab="Number of selected genes",ylab=y.name[[type]])
+				legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
+			}
+		)
+		
+		graphics.close(output)
+	}
 	else
-		graphics.open(output,fil,width=1024,height=1024,res=100)
-
-	xlim <- ylim <- c(1,N)
-	par(cex.axis=0.9,cex.main=1,cex.lab=0.9,font.lab=2,font.axis=2,pty="m",
-		lwd=1.5,lty=1)
-	plot.new()
-
-	switch(type,
-		fpc = {
-			plot.window(xlim,ylim,log="y")
-			axis(1,at=pretty(xlim,10))
-			axis(2)
-			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],...)
-			}
-			grid()
-			title(main="Selected genes vs False Positives",
-				xlab="Number of selected genes",ylab=y.name[[type]])
-			legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
-		},
-		tpc = {
-			plot.window(xlim,ylim)
-			axis(1,at=pretty(xlim,10))
-			axis(2,at=pretty(ylim,10))
-			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],...)
-			}
-			grid()
-			title(main="Selected genes vs True Positives",
-				xlab="Number of selected genes",ylab=y.name[[type]])
-			legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
-		},
-		fnc = {
-			plot.window(xlim,ylim,log="y")
-			axis(1,at=pretty(xlim,10))
-			axis(2)
-			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],...)
-			}
-			grid()
-			title(main="Selected genes vs False Negatives",
-				xlab="Number of selected genes",ylab=y.name[[type]])
-			legend(x="topleft",legend=colnames(means),col=colspace,lty=1)
-		},
-		tnc = {
-			plot.window(xlim,ylim)
-			axis(1,at=pretty(xlim,10))
-			axis(2,at=pretty(ylim,10))
-			for (n in colnames(means)) {
-				lines(means[,n],col=colspace[n],...)
-			}
-			grid()
-			title(main="Selected genes vs True Negatives",
-				xlab="Number of selected genes",ylab=y.name[[type]])
-			legend(x="bottomright",legend=colnames(means),col=colspace,lty=1)
-		}
-	)
-	
-	graphics.close(output)
+		fil <- NULL
 
 	return(list(avg.ftdr=list(means=means,stds=stds),path=fil))
 }

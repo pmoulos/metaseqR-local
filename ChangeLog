@@ -18,5 +18,11 @@ added:
   - Functions to create false discovery and ROC curves
 fixed:
   - A bug in p-value vector naming causing unordered p-values for limma and baySeq when combining methods
-  - Smaller byg fixes
+  - Smaller bug fixes
+
+changes in version 0.92.0 (2014-01-25)
+added:
+  - Functions to estimate weights for combining p-values based on simulated datasets from real data
+fixed:
+  - Smaller bug fixes
 

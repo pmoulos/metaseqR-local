@@ -60,12 +60,9 @@
   not.}
 }
 \value{
-  A named list with two members: the first member 
-  (\code{avg.ftdr}) contains a list with the 
-  means and the standard deviations of the averaged
-  \code{ftdr.obj} and are used to create the plot. 
-  The second member (\code{path}) contains the 
-  path to the created figure graphic.
+  A vector of weights to be used in 
+  \link{\code{metaseqr}} with the 
+  \code{weights} option.
 }
 \description{
   This functions automatically estimates weights 
