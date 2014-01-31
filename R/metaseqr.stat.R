@@ -94,8 +94,13 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			p[[con.name]] <- res$pval
 		}
 		else {
-			fit0 <- fitNbinomGLMs(cds,count~1)
-			fit1 <- fitNbinomGLMs(cds,count~condition)
+			#cind <- match(cons,the.design$condition)
+			#if (any(is.na(cind)))
+			#	cind <- cind[which(!is.na(cind))]
+			cc <- names(unlist(con))
+			cds.tmp <- cds[,cc]
+			fit0 <- fitNbinomGLMs(cds.tmp,count~1)
+			fit1 <- fitNbinomGLMs(cds.tmp,count~condition)
 			p[[con.name]] <- nbinomGLMTest(fit1,fit0)
 		}
 		names(p[[con.name]]) <- rownames(object)
@@ -209,9 +214,11 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			s <- unlist(con)
 			us <- unique(s)
 			#design <- model.matrix(~0+s,data=dge$samples) # Ouch!
-			design <- model.matrix(~s,data=dge$samples)
-			colnames(design) <- us
-			fit <- glmFit(dge,design=design,offset=stat.args$offset,
+			ms <- match(names(s),rownames(dge$samples))
+			if (any(is.na(ms)))
+				ms <- ms[which(!is.na(ms))]
+			design <- model.matrix(~s,data=dge$samples[ms,])
+			fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
 				weights=stat.args$weights,lib.size=stat.args$lib.size,
 				prior.count=stat.args$prior.count,start=stat.args$start,
 				method=stat.args$method)				
@@ -291,7 +298,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		con <- contrast.list[[con.name]]
 		s <- unlist(con)
 		us <- unique(s)
-		ms <- match(rownames(dge$samples),names(s))
+		ms <- match(names(s),rownames(dge$samples))
 		if (any(is.na(ms)))
 			ms <- ms[which(!is.na(ms))]
 		if (length(con)==2) {
@@ -306,7 +313,6 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		}
 		else {
 			design <- model.matrix(~s,data=dge$samples[ms,])
-			colnames(design) <- us
 			vom <- voom(dge[,ms],design,normalize.method=stat.args$normalize.method)
 			fit <- lmFit(vom,design)
 			fit <- eBayes(fit)

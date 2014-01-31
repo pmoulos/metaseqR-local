@@ -339,11 +339,13 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
 	low.lib <- which(apply(mat,2,sum)<libsize.gt)
 	if (length(low.lib)>0)
 		mat <- mat[,-low.lib]
+	disp("Downsampling counts...")
 	dmat <- downsample.counts(mat,seed)
 	low.co <- which(apply(dmat,1,function(x) if (mean(x)<5) TRUE else FALSE))
 	if (length(low.co)>0)
 		dmat <- dmat[-low.co,]
 	mu.hat <- apply(dmat,1,mean)
+	disp("Estimating initial dispersion population...")
 	phi.est <- apply(dmat,1,function(x) {
 		m <- mean(x)
 		v <- var(x)
@@ -353,6 +355,7 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
 	phi.ind <- which(phi.est>0)
 	phi.est <- phi.est[phi.ind]
 	dmat <- dmat[phi.ind,]
+	disp("Estimating dispersions using log-likelihood...\n")
 	init <- wapply(multic,seq_along(1:nrow(dmat)),function(i,d,p) {
 		list(y=d[i,],h=p[i])
 	},dmat,phi.est)

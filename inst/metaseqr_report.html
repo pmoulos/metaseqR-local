@@ -406,7 +406,7 @@
 										cat("<ul>")
 										for (na in names(norm.args)) {
 											if (length(norm.args[[na]])==1 && is.function(norm.args[[na]]))
-												cat("<li>custom function</li>")
+												cat("<li>",as.character(substitute(norm.args[[na]])),"</li>",sep="")
 											else if (length(norm.args[[na]])==1)
 												cat("<li>",paste(na,norm.args[[na]],sep=": "),"</li>")
 											else if (length(norm.args[[na]])>1)
@@ -424,7 +424,7 @@
 												cat("<ul>")
 												for (sa in names(stat.args[[s]])) {
 													if (length(stat.args[[s]][[sa]])==1 && is.function(stat.args[[s]][[sa]]))
-														cat("<li>",sa,": custom function</li>")
+														cat("<li>",sa,": ",as.character(substitute(stat.args[[na]])),"</li>",sep="")
 													else if (length(stat.args[[s]][[sa]])==1)
 														cat("<li>",paste(sa,stat.args[[s]][[sa]],sep=": "),"</li>")
 													else if (length(stat.args[[s]][[sa]])>1)

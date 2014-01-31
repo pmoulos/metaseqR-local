@@ -1128,7 +1128,7 @@ metaseqr <- function(
 			if (length(norm.args[[na]])==1 && is.function(norm.args[[na]]))
 			{
 				disp("  ",na,": ")
-				print(norm.args[[na]])
+				disp(as.character(substitute(norm.args[[na]])))
 			}
 			else if (length(norm.args[[na]])==1)
 				disp("  ",paste(na,norm.args[[na]],sep=": "))
@@ -1145,7 +1145,7 @@ metaseqr <- function(
 			if (length(stat.args[[sa]])==1 && is.function(stat.args[[sa]]))
 			{
 				disp("  ",sa,": ")
-				print(stat.args[[sa]])
+				disp(as.character(substitute(stat.args[[na]])))
 			}
 			else if (length(stat.args[[sa]])==1)
 				disp("  ",paste(sa,stat.args[[sa]],sep=": "))
@@ -1654,12 +1654,15 @@ metaseqr <- function(
 	gene.data.filtered <- rbind(gene.data.zero,gene.data.dead)
 	if (!is.null(gene.data.filtered) && nrow(gene.data.filtered)>0)
 	{
+		disp(nrow(gene.data.filtered)," genes filtered out")
 		if (!is.null(gene.data.zero) && nrow(gene.data.zero)>0)
 			attr(gene.data.filtered,"gene.length") <- c(attr(gene.data.zero,"gene.length"),
 				attr(gene.data.dead,"gene.length"))
 		else
 			attr(gene.data.filtered,"gene.length") <- attr(gene.data.dead,"gene.length")
 	}
+	if (!is.null(gene.filters) || !is.null(exon.filters))
+		disp(nrow(gene.data.expr)," genes remain after filtering")
 
 	############################################################################
 	# END FILTERING SECTION
@@ -1687,26 +1690,56 @@ metaseqr <- function(
 			deseq = {
 				p.list <- stat.deseq(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]])
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			},
 			edger = {
 				p.list <- stat.edger(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]])
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			},
 			noiseq = {
 				p.list <- stat.noiseq(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]],gene.data.expr,log.offset)
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			},
 			bayseq = {
 				p.list <- stat.bayseq(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]],libsize.list)
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			},
 			limma = {
 				p.list <- stat.limma(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]])
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			},
 			nbpseq = {
 				p.list <- stat.nbpseq(norm.genes.expr,sample.list,contrast.list,
 					stat.args[[alg]],libsize.list)
+				if (!is.na(pcut)) {
+					for (con in names(contrast.list))
+						disp("  Contrast ",con,": found ",
+							length(which(p.list[[con]]<=pcut))," genes")
+				}
 			}
 		)
 		for (n in names(p.list))
@@ -1806,8 +1839,6 @@ metaseqr <- function(
 	}
 	
 	disp("Building output files...")
-	
-	disp("  Adding non-filtered data...")
 	if (out.list) out <- make.export.list(contrast) else out <- NULL
 	if (report) html <- make.export.list(contrast) else html <- NULL
 	if ("normalized" %in% export.values)
@@ -1822,10 +1853,35 @@ metaseqr <- function(
 		good.flags <- flags[rownames(norm.genes.expr),]
 	else
 		good.flags <- NULL
+
+	if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
+	{
+		gene.counts.filtered <- rbind(gene.counts.zero,gene.counts.dead)
+		gene.counts.unnorm.filtered <- rbind(gene.counts.zero,gene.counts.unnorm)
+		if ("normalized" %in% export.values)
+			norm.list.filtered <- make.transformation(gene.counts.filtered,
+				export.scale,log.offset)
+		else
+			norm.list.filtered <- NULL
+		if ("raw" %in% export.values)
+			raw.list.filtered <- make.transformation(gene.counts.unnorm.filtered,
+				export.scale,log.offset)
+		else
+			raw.list.filtered <- NULL
+		if ("flags" %in% export.what)
+			all.flags <- rbind(
+				matrix(1,nrow(gene.counts.zero),ncol(flags)),
+					flags[rownames(gene.counts.dead),]
+			)
+		else
+			all.flags <- NULL
+	}
+	
 	counter <- 1
 	for (cnt in contrast)
 	{
-		disp("    Contrast: ",cnt)
+		disp("  Contrast: ",cnt)
+		disp("    Adding non-filtered data...")
 		the.export <- build.export(
 			gene.data=gene.data.expr,
 			raw.gene.counts=gene.counts.expr,
@@ -1934,33 +1990,10 @@ metaseqr <- function(
 			html[[cnt]] <- the.html.table
 			counter <- counter+1
 		}
-	}
 
-	if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
-	{
-		disp("  Adding filtered data...")
-		gene.counts.filtered <- rbind(gene.counts.zero,gene.counts.dead)
-		gene.counts.unnorm.filtered <- rbind(gene.counts.zero,gene.counts.unnorm)
-		if ("normalized" %in% export.values)
-			norm.list.filtered <- make.transformation(gene.counts.filtered,
-				export.scale,log.offset)
-		else
-			norm.list.filtered <- NULL
-		if ("raw" %in% export.values)
-			raw.list.filtered <- make.transformation(gene.counts.unnorm.filtered,
-				export.scale,log.offset)
-		else
-			raw.list.filtered <- NULL
-		if ("flags" %in% export.what)
-			all.flags <- rbind(
-				matrix(1,nrow(gene.counts.zero),ncol(flags)),
-					flags[rownames(gene.counts.dead),]
-			)
-		else
-			all.flags <- NULL
-		for (cnt in contrast)
+		if (!is.null(gene.counts.zero) || !is.null(gene.counts.dead))
 		{
-			disp("    Contrast: ",cnt)
+			disp("    Adding filtered data...")
 			the.export.filtered <- build.export(
 				gene.data=gene.data.filtered,
 				raw.gene.counts=gene.counts.unnorm.filtered,
@@ -1978,23 +2011,23 @@ metaseqr <- function(
 				log.offset=log.offset,
 				report=report
 			)
+
+			# Now we should be having the.export and the.export.filtered. We do not 
+			# generate html output for filtered or total results just a compressed
+			# text file. We thus have to append the.export$text.table and 
+			# the.export.filtered$html.table before writing the final output...
+			export.all <- rbind(the.export$text.table,the.export.filtered$text.table)
+			# ...and order them somehow... alphabetically according to row names, as
+			# the annotation might not have been bundled...
+			export.all <- export.all[order(rownames(export.all)),]
+
+			res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_all_out_",
+				cnt,".txt.gz",sep=""))
+			disp("    Writing output...")
+			gzfh <- gzfile(res.file,"w")
+			write.table(export.all,gzfh,quote=FALSE,row.names=FALSE,sep="\t")
+			close(gzfh)
 		}
-
-		# Now we should be having the.export and the.export.filtered. We do not 
-		# generate html output for filtered or total results just a compressed
-		# text file. We thus have to append the.export$text.table and 
-		# the.export.filtered$html.table before writing the final output...
-		export.all <- rbind(the.export$text.table,the.export.filtered$text.table)
-		# ...and order them somehow... alphabetically according to row names, as
-		# the annotation might not have been bundled...
-		export.all <- export.all[order(rownames(export.all)),]
-
-		res.file <- file.path(PROJECT.PATH[["lists"]],paste("metaseqr_all_out_",
-			cnt,".txt.gz",sep=""))
-		disp("    Writing output...")
-		gzfh <- gzfile(res.file,"w")
-		write.table(export.all,gzfh,quote=FALSE,row.names=FALSE,sep="\t")
-		close(gzfh)
 	}
 
 	############################################################################
