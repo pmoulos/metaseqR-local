@@ -227,6 +227,7 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		}
 		p[[con.name]] <- res$table[,"PValue"]
 		names(p[[con.name]]) <- rownames(res$table)
+		p[[con.name]] <- p[[con.name]][rownames(dge)]
 		p[[con.name]][which(is.na(p[[con.name]]))] <- 1
 	}
 	return(p)

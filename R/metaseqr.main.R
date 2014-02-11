@@ -121,8 +121,8 @@
 #' similar as possible to the \code{"download"} case, in terms of column structure.
 #' @param org the supported organisms by metaseqr. These can be, for human genomes
 #' \code{"hg18"} or \code{"hg19"}, for mouse genomes \code{"mm9"}, \code{"mm10"},
-#' for rat genomes \code{"rno5"}, for drosophila genomes \code{"dm3"} and for
-#' zebrafish genomes \code{"danRer7"}.
+#' for rat genomes \code{"rno5"}, for drosophila genomes \code{"dm3"}, for zebrafish
+#' genomes \code{"danRer7"} and for Arabidopsis thaliana genomes \code{"tair10"}.
 #' @param count.type the type of reads inside the counts file. It can be one of 
 #' \code{"gene"} or \code{"exon"}. This is a very important and mandatory parameter
 #' as it defines the course of the workflow.
@@ -149,11 +149,16 @@
 #' present in the NOISeq package (specified by the \code{norm.args} argument), 
 #' \code{"nbpseq"} for the normalization algorithms present in the NBPSeq package
 #' (specified by the \code{norm.args} argument) or  \code{"none"} to not normalize
-#' the data (highly unrecommended).
+#' the data (highly unrecommended). It can also be \code{"each"} where in this
+#' case, the normalization applied will be specific to each statistical test used
+#' (i.e. the normalization method bundled with each package and used in its
+#' examples and documentation).
 #' @param norm.args a named list whose names are the names of the normalization
 #' algorithm parameters and its members parameter values. See section "Normalization
 #' parameters" below for details. Leave \code{NULL} for the defaults of 
-#' \code{normalization}.
+#' \code{normalization}. If \code{normalization="each"}, it must be a named list
+#' of lists, where each sub-list contains normalization parameters specific to
+#' each statistical test to be used.
 #' @param statistics one or more statistical analyses to be performed by the
 #' metaseqr pipeline.It can be one or more of \code{"deseq"} (default) to conduct
 #' statistical test(s) implemented in the DESeq package, \code{"edger"} to conduct
@@ -748,7 +753,7 @@ metaseqr <- function(
 	name.col=NA,
 	bt.col=NA,
 	annotation=c("download","embedded"),
-	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),
+	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7","tair10"),
 	count.type=c("gene","exon"),
 	exon.filters=list(
 		min.active.exons=list(
@@ -775,7 +780,7 @@ metaseqr <- function(
 		biotype=get.defaults("biotype.filter",org[1])
 	),
 	when.apply.filter=c("postnorm","prenorm"),
-	normalization=c("edaseq","deseq","edger","noiseq","nbpseq","none"),
+	normalization=c("edaseq","deseq","edger","noiseq","nbpseq","each","none"),
 	norm.args=NULL,
 	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq"),
 	stat.args=NULL,
@@ -910,13 +915,13 @@ metaseqr <- function(
 
 	check.text.args("file.type",file.type,c("auto","sam","bam","bed"),multiarg=FALSE)
 	check.text.args("annotation",annotation,c("embedded","download"),multiarg=FALSE)
-	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7"),
-		multiarg=FALSE)
+	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7",
+		"tair10"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
 	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),
 		multiarg=FALSE)
 	check.text.args("normalization",normalization,c("edaseq","deseq","edger","noiseq",
-		"nbpseq","none"),multiarg=FALSE)
+		"nbpseq","each","none"),multiarg=FALSE)
 	check.text.args("statistics",statistics,c("deseq","edger","noiseq","bayseq",
 		"limma","nbpseq"),multiarg=TRUE)
 	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
@@ -1010,29 +1015,10 @@ metaseqr <- function(
 	}
 
 	# Check additional input arguments for normalization and statistics
-	if (!is.null(norm.args))
-	{
-		tmp <- norm.args
-		tmp <- validate.list.args("normalization",normalization,tmp)
-		norm.args <- get.defaults("normalization",normalization)
-		if (length(tmp)>0)
-			norm.args <- set.arg(norm.args,tmp)
-	}
-	else
-		norm.args <- get.defaults("normalization",normalization)
-	for (s in statistics)
-	{
-		if (!is.null(stat.args[[s]]))
-		{
-			tmp <- stat.args[[s]]
-			tmp <- validate.list.args("statistics",s,tmp)
-			stat.args[[s]] <- get.defaults("statistics",s)
-			if (length(tmp)>0)
-				stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
-		}
-		else
-			stat.args[[s]] <- get.defaults("statistics",s)
-	}
+	alg.args <- validate.alg.args(normalization,statistics,norm.args,stat.args)
+	norm.args <- alg.args$norm.args
+	stat.args <- alg.args$stat.args
+	
 	# Override settigs if a preset is given
 	if (!is.null(preset))
 	{
@@ -1959,7 +1945,8 @@ metaseqr <- function(
 				pp <- sum.p.list[[cnt]][sum.p.list[[cnt]]<pcut]
 			}
 		}
-		else pp <- sum.p.list[[cnt]]
+		else
+			pp <- sum.p.list[[cnt]]
 		export <- export[order(pp),]
 		if (report)
 			export.html <- export.html[order(pp),]
@@ -2009,7 +1996,7 @@ metaseqr <- function(
 				export.values=export.values,
 				export.stats=export.stats,
 				log.offset=log.offset,
-				report=report
+				report=FALSE
 			)
 
 			# Now we should be having the.export and the.export.filtered. We do not 

@@ -26,3 +26,11 @@ added:
 fixed:
   - Smaller bug fixes
 
+changes in version 0.93.0 (2014-01-25)
+added:
+  - Support for Arabidopsis thaliana
+  - Additional validation functions
+fixed:
+  - Bugs affecting multilevel factorial analysis (single factor, more than two conditions)
+  - Smaller bug fixes
+

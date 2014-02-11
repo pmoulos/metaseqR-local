@@ -8,7 +8,8 @@
     path = NULL, contrast = NULL, libsize.list = NULL,
     id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
     annotation = c("download", "embedded"),
-    org = c("hg18", "hg19", "mm9", "mm10", "rno5", "dm3", "danRer7"),
+    org = c("hg18", "hg19", "mm9", "mm10", "rno5", "dm3", "danRer7",
+      "tair10"),
     count.type = c("gene", "exon"),
     exon.filters = list(min.active.exons = list(exons.per.gene = 5, 
         min.exons = 2, frac = 1/5)),
@@ -192,7 +193,8 @@
   be, for human genomes \code{"hg18"} or \code{"hg19"}, for
   mouse genomes \code{"mm9"}, \code{"mm10"}, for rat
   genomes \code{"rno5"}, for drosophila genomes
-  \code{"dm3"} and for zebrafish genomes \code{"danRer7"}.}
+  \code{"dm3"} for zebrafish genomes \code{"danRer7"}
+  and for Arabidopsis thaliana genomes \code{"tair10"}.}
 
   \item{count.type}{the type of reads inside the counts
   file. It can be one of \code{"gene"} or \code{"exon"}.
@@ -234,13 +236,22 @@
   argument), \code{"nbpseq"} for the normalization
   algorithms present in the NBPSeq package (specified by
   the \code{norm.args} argument) or \code{"none"} to not
-  normalize the data (highly unrecommended).}
+  normalize the data (highly unrecommended). It can also 
+  be \code{"each"} where in this case, the normalization 
+  applied will be specific to each statistical test used
+  (i.e. the normalization method bundled with each package 
+  and used in its examples and documentation). The last
+  choice is for future use!}
 
   \item{norm.args}{a named list whose names are the names
   of the normalization algorithm parameters and its members
   parameter values. See section "Normalization parameters"
   below for details. Leave \code{NULL} for the defaults of
-  \code{normalization}.}
+  \code{normalization}. If \code{normalization="each"}, it 
+  must be a named list of lists, where each sub-list 
+  contains normalization parameters specific to each 
+  statistical test to be used. The last choice is for 
+  future use!}
 
   \item{statistics}{one or more statistical analyses to be
   performed by the metaseqr pipeline.It can be one or more

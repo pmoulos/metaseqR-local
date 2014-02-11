@@ -25,7 +25,8 @@
   auto-generated. \code{p} can also be a list or 
   a data frame.}
 
-  \item{sig}{a significance level (0 < sig <=1).}
+  \item{sig}{a significance level (0 < \code{sig} 
+  <=1).}
 
   \item{x}{what to plot on x-axis, can be one of 
   \code{"fpr"}, \code{"fnr"}, \code{"tpr"}, 

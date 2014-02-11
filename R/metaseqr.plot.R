@@ -2143,7 +2143,7 @@ make.venn.colorscheme <- function(n) {
 #' \code{truth} vector. If the matrix has a \code{colnames} attribute, a legend
 #' will be added to the plot using these names, else a set of column names will
 #' be auto-generated. \code{p} can also be a list or a data frame.
-#' @param sig a significance level (0 < sig <=1).
+#' @param sig a significance level (0 < \code{sig} <=1).
 #' @param x what to plot on x-axis, can be one of \code{"fpr"}, \code{"fnr"},
 #' \code{"tpr"}, \code{"tnr"} for False Positive Rate, False Negative Rate, True
 #' Positive Rate and True Negative Rate respectively.
@@ -2171,8 +2171,10 @@ make.venn.colorscheme <- function(n) {
 #'}
 diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 	path=NULL,draw=TRUE,...) {
-	check.text.args("x",x,c("fpr","fnr","tpr","tnr","scrx"),multiarg=FALSE)
-	check.text.args("y",y,c("fpr","fnr","tpr","tnr","scry"),multiarg=FALSE)
+	check.text.args("x",x,c("fpr","fnr","tpr","tnr","scrx","sens","spec"),
+		multiarg=FALSE)
+	check.text.args("y",y,c("fpr","fnr","tpr","tnr","scry","sens","spec"),
+		multiarg=FALSE)
 	if (is.list(p))
 		pmat <- do.call("cbind",p)
 	else if (is.data.frame(p))
@@ -2188,7 +2190,9 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 		fpr="False Positive Rate",
 		fnr="False Negative Rate",
 		scrx="Ratio of selected",
-		scry="Evaluation Score"
+		scry="Normalized TP/(FP+FN)",
+		sens="Sensitivity",
+		spec="1 - Specificity"
 	)
 
 	ROC <- vector("list",ncol(pmat))
@@ -2199,24 +2203,43 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 		"darkcyan")
 	colspace <- colspace.universe[1:ncol(pmat)]
 	names(colspace) <- colnames(pmat)
-	
+
+	eps <- min(pmat[!is.na(pmat) & pmat>0])
 	for (n in colnames(pmat)) {
 		disp("Processing ",n)
-		gg <- which(pmat[,n]<sig)
-		psample <- pmat[gg,n]
+		gg <- which(pmat[,n]<=sig)
+		psample <- -log10(pmax(pmat[gg,n],eps))
+		#psample <- pmat[gg,n]
 		size <- seq(1,length(gg))
-		cuts <- seq(min(psample),sig,length.out=length(gg))
+		cuts <- seq(-log10(sig),max(psample),length.out=length(gg))
+		#cuts <- seq(min(psample),sig,length.out=length(gg))
 		local.truth <- truth[gg]
 		S <- length(size)
 				
-		TP <- FP <- FN <- TN <- FPR <- FNR <- TPR <- TNR <-
+		TP <- FP <- FN <- TN <- FPR <- FNR <- TPR <- TNR <- SENS <- SPEC <-
 			SCRX <- SCRY <- numeric(S)
 		
 		for (i in 1:S) {
-			TP[i] <- length(which(psample<cuts[i] & local.truth!=0))
-			FP[i] <- length(which(psample<cuts[i] & local.truth==0))
-			FN[i] <- length(which(psample>cuts[i] & local.truth!=0))
-			TN[i] <- length(which(psample>cuts[i] & local.truth==0))
+			TP[i] <- length(which(psample>cuts[i] & local.truth!=0))
+			FP[i] <- length(which(psample>cuts[i] & local.truth==0))
+			FN[i] <- length(which(psample<cuts[i] & local.truth!=0))
+			TN[i] <- length(which(psample<cuts[i] & local.truth==0))
+
+			## Alternatives which I keep in the code
+			#TP[i] <- length(intersect(names(which(psample>cuts[i])),
+			#	names(which(local.truth!=0))))
+			#FP[i] <- length(intersect(names(which(psample>cuts[i])),
+			#	names(which(local.truth==0))))
+			#FN[i] <- length(intersect(names(which(psample<cuts[i])),
+			#	names(which(local.truth!=0))))
+			#TN[i] <- length(intersect(names(which(psample<cuts[i])),
+			#	names(which(local.truth==0))))
+			#bad <- which(psample<cuts[i])
+			#good <- which(psample>cuts[i])
+			#TP[i] <- length(which(local.truth[good]!=0))
+			#FP[i] <- length(which(local.truth[good]==0))
+			#TN[i] <- length(which(local.truth[bad]==0))
+			#FN[i] <- length(which(local.truth[bad]!=0))
 			
 			SCRX[i] <- i/S
 			SCRY[i] <- TP[i]/(FN[i]+FP[i])
@@ -2231,6 +2254,8 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 				TNR[i] <- 0
 			else
 				TNR[i] <- TN[i]/(TN[i]+FP[i])
+			SENS[i] <- TPR[i]
+			SPEC[i] <- 1 - TNR[i]
 		}
 		# There are some extreme cases...
 		if (all(FPR==0))
@@ -2240,7 +2265,7 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 
 		ROC[[n]] <- list(TP=TP,FP=FP,FN=FN,TN=TN,
 			FPR=FPR,FNR=FNR,TPR=TPR,TNR=TNR,SCRX=SCRX,SCRY=SCRY/max(SCRY),
-			AUC=NULL)
+			SENS=SENS,SPEC=SPEC,AUC=NULL)
 	}
 	
 	for (n in colnames(pmat)) {
@@ -2250,7 +2275,7 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 			auc <- auc + 0.5*(ROC[[n]][[toupper(x)]][i]-ROC[[n]][[toupper(x)]][i-1])*
 				(ROC[[n]][[toupper(y)]][i]+ROC[[n]][[toupper(y)]][i-1])
 		}
-		ROC[[n]]$AUC <- auc
+		ROC[[n]]$AUC <- abs(auc)
 	}
 	disp("")
 
@@ -2273,7 +2298,9 @@ diagplot.roc <- function(truth,p,sig=0.05,x="fpr",y="tpr",output="x11",
 			lines(ROC[[n]][[toupper(x)]],ROC[[n]][[toupper(y)]],col=colspace[n],...)
 		grid()
 		title(xlab=ax.name[[x]],ylab=ax.name[[y]])
-		legend(x="bottomright",legend=names(ROC),col=colspace,lty=1)
+		auc.text <- as.character(sapply(ROC,function(x) round(x$AUC,digits=3)))
+		legend(x="bottomright",col=colspace,lty=1,cex=0.9,
+			legend=paste(names(ROC)," (AUC = ",auc.text,")",sep=""))
 
 		graphics.close(output)
 	}

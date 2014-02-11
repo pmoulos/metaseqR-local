@@ -3,9 +3,9 @@
 \title{Estimate negative binomial parameters from 
   real data}
 \usage{
-  estimate.sim.params(real.counts,libsize.gt=3e+6,
-    rowmeans.gt=5,eps=1e-11,restrict.cores=0.8,
-    seed=42)
+  estimate.sim.params(real.counts, libsize.gt = 3e+6,
+    rowmeans.gt = 5,eps = 1e-11, 
+    restrict.cores = 0.8, seed = 42, draw = FALSE)
 }
 \arguments{
   \item{real.counts}{a text tab-delimited file 
@@ -37,6 +37,12 @@
 
   \item{seed}{a seed to use with random number 
   generation for reproducibility.}
+
+  \item{draw}{boolean to determine whether to 
+  plot the estimated simulation parameters 
+  (mean and dispersion) or not. Defaults to 
+  \code{FALSE} (do not draw a mean-dispersion 
+  scatterplot).}
 }
 \value{
   A named list with two members: \code{mu.hat}

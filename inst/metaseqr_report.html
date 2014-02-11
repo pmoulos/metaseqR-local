@@ -402,17 +402,37 @@
 									<strong>Normalization arguments:</strong>
 									<%=
 									if (!is.null(norm.args)) {
-										cat(paste(names(norm.args),collapse=", "),"</br>")
-										cat("<ul>")
-										for (na in names(norm.args)) {
-											if (length(norm.args[[na]])==1 && is.function(norm.args[[na]]))
-												cat("<li>",as.character(substitute(norm.args[[na]])),"</li>",sep="")
-											else if (length(norm.args[[na]])==1)
-												cat("<li>",paste(na,norm.args[[na]],sep=": "),"</li>")
-											else if (length(norm.args[[na]])>1)
-												cat("<li>",paste(na,paste(norm.args[[na]],collapse=", "),sep=": "),"</li>")
+										if (normalization=="each") {
+											for (n in names(norm.args)) {
+												cat("<strong>Statistical arguments for</strong> ",report.messages$norm[[n]],": ",paste(names(norm.args[[n]]),collapse=", "))
+												if (length(norm.args[[n]])>0) {
+													cat("<ul>")
+													for (na in names(norm.args[[n]])) {
+														if (length(norm.args[[n]][[na]])==1 && is.function(norm.args[[n]][[na]]))
+															cat("<li>",na,": ",as.character(substitute(norm.args[[na]])),"</li>",sep="")
+														else if (length(norm.args[[n]][[na]])==1)
+															cat("<li>",paste(na,norm.args[[n]][[na]],sep=": "),"</li>")
+														else if (length(norm.args[[n]][[na]])>1)
+															cat("<li>",paste(na,paste(norm.args[[n]][[na]],collapse=", "),sep=": "),"</li>")
+														}
+														cat("</ul>")
+													}
+												else cat("not available or not required</br>")
+											}
 										}
-										cat("</ul>")
+										else {
+											cat(paste(names(norm.args),collapse=", "),"</br>")
+											cat("<ul>")
+											for (na in names(norm.args)) {
+												if (length(norm.args[[na]])==1 && is.function(norm.args[[na]]))
+													cat("<li>",as.character(substitute(norm.args[[na]])),"</li>",sep="")
+												else if (length(norm.args[[na]])==1)
+													cat("<li>",paste(na,norm.args[[na]],sep=": "),"</li>")
+												else if (length(norm.args[[na]])>1)
+													cat("<li>",paste(na,paste(norm.args[[na]],collapse=", "),sep=": "),"</li>")
+											}
+											cat("</ul>")
+										}
 									} else cat("not available")
 									%>
 									<strong>Statistical algorithm(s): </strong> <%=paste(unlist(report.messages$stat[statistics],use.names=FALSE),collapse=", ")%></br>

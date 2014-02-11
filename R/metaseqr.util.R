@@ -198,6 +198,60 @@ read.targets <- function(input,path=NULL) {
 	return(list(samples=sample.list,files=file.list,type=type))
 }
 
+#' Get precalculated statistical test weights
+#'
+#' This function returns pre-calculated weights for human, mouse and fruitfly,
+#' based on the performance of simulated datasets based on real data from the
+#' ReCount database (\url{http://bowtie-bio.sourceforge.net/recount/}).
+#'
+#' @param org \code{"human"}, \code{"mouse"} or \code{"fruitfly"}.
+#' @param statistics which statistical tests are being used (see \code{link{metaseqr}}
+#' main help page).
+#' @return A named vector of convex weights.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' wh <- get.weights("human",c("deseq","edger","noiseq"))
+#}
+get.weights <- function(org=c("human","mouse","fruitfly"),statistics=c("deseq",
+	"edger","noiseq","bayseq","limma","nbpseq")) {
+	org <- tolower(org)
+	check.text.args("org",org,c("human","mouse","fruitfly"))
+	switch(org,
+		human = {
+			return(c(
+				deseq=0.05772458,
+				edger=0.14321672,
+				limma=0.34516089,
+				nbpseq=0.06108182,
+				noiseq=0.11595169,
+				bayseq=0.27686431
+			))
+		},
+		mouse = {
+			return(c(
+				deseq=0.05257695,
+				edger=0.24161354,
+				limma=0.29957277,
+				nbpseq=0.04914485,
+				noiseq=0.06847809,
+				bayseq=0.28861381
+			))
+		},
+		fruitfly = {
+			return(c(
+				deseq=0.01430269,
+				edger=0.12923339,
+				limma=0.38315685,
+				nbpseq=0.01265952,
+				noiseq=0.06778537,
+				bayseq=0.39286218
+			))	     
+		}
+	)
+}
+
 #' Default parameters for several metaseqr functions
 #'
 #' This function returns a list with the default settings for each filtering,
@@ -492,10 +546,174 @@ get.defaults <- function(what,method=NULL) {
 						non_coding=FALSE,
 						sense_overlapping=FALSE
 					))
+				},
+				tair10 = {
+					return(list(
+						miRNA=FALSE,
+						ncRNA=FLASE,
+						protein_coding=FALSE,
+						pseudogene=FALSE,
+						rRNA=TRUE,
+						snoRNA=FALSE,
+						snRNA=FALSE,
+						transposable_element=FALSE,
+						tRNA=FALSE
+					))
 				}
 			)
 		}
 	)
+}
+
+#' Validate normalization and statistical algorithm arguments
+#'
+#' This function checks and validates the arguments passed by the user to the
+#' normalization and statistics algorithms supported by metaseqR. As these are
+#' given into lists and passed to the algorithms, the list members must be checked
+#' for \code{NULL}, valid names etc. This function performs these checks and
+#' ignores any invalid arguments.
+#'
+#' @param normalization a keyword determining the normalization strategy to be
+#' performed by metaseqR. See \code{\link{metaseqr}} main help page for details.
+#' @param statistics the statistical tests to be performed by metaseqR. See
+#' \code{\link{metaseqr}} main help page for details.
+#' @param norm.args the user input list of normalization arguments. See
+#' \code{\link{metaseqr}} main help page for details.
+#' @param stat.args the user input list of statistical test arguments. See
+#' \code{\link{metaseqr}} main help page for details.
+#' @return A list with two members (\code{norm.args}, \code{stat.args}) with valid
+#' arguments to be used as user input for the algorithms supported by metaseqR.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+validate.alg.args <- function(normalization,statistics,norm.args,stat.args) {
+	if (normalization=="each") {
+		if (!is.null(norm.args)) {
+			for (s in statistics) {
+				if (!is.null(norm.args[[s]])) {
+					switch(s,
+						deseq = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("normalization",s,tmp)
+							norm.args[[s]] <- get.defaults("normalization",s)
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						},
+						edger = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("statistics",s,tmp)
+							norm.args[[s]] <- get.defaults("normalization",s)
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						},
+						limma = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("statistics","edger",tmp)
+							norm.args[[s]] <- get.defaults("normalization","edger")
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						},
+						nbpseq = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("statistics",s,tmp)
+							norm.args[[s]] <- get.defaults("normalization",s)
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						},
+						noiseq = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("statistics",s,tmp)
+							norm.args[[s]] <- get.defaults("normalization",s)
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						},
+						bayseq = {
+							tmp <- norm.args[[s]]
+							tmp <- validate.list.args("statistics","edger",tmp)
+							norm.args[[s]] <- get.defaults("normalization","edger")
+							if (length(tmp)>0)
+								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+						}
+					)
+				}
+				else {
+					switch(s,
+						deseq = {
+							norm.args[[s]] <- get.defaults(normalization,"deseq")
+						},
+						edger = {
+							norm.args[[s]] <- get.defaults(normalization,"edger")
+						},
+						limma = {
+							norm.args[[s]] <- get.defaults(normalization,"edger")
+						},
+						nbpseq = {
+							norm.args[[s]] <- get.defaults(normalization,"nbpseq")
+						},
+						noiseq = {
+							norm.args[[s]] <- get.defaults(normalization,"noiseq")
+						},
+						bayseq = {
+							norm.args[[s]] <- get.defaults(normalization,"edger")
+						}
+					)
+				}
+			}
+		}
+		else {
+			norm.args <- vector("list",length(statistics))
+			names(norm.args) <- statistics
+			for (s in statistics) {
+				switch(s,
+					deseq = {
+						norm.args[[s]] <- get.defaults(normalization,"deseq")
+					},
+					edger = {
+						norm.args[[s]] <- get.defaults(normalization,"edger")
+					},
+					limma = {
+						norm.args[[s]] <- get.defaults(normalization,"edger")
+					},
+					nbpseq = {
+						norm.args[[s]] <- get.defaults(normalization,"nbpseq")
+					},
+					noiseq = {
+						norm.args[[s]] <- get.defaults(normalization,"noiseq")
+					},
+					bayseq = {
+						norm.args[[s]] <- get.defaults(normalization,"edger")
+					}
+				)
+			}
+		}
+	}
+	else {
+		if (!is.null(norm.args))
+		{
+			tmp <- norm.args
+			tmp <- validate.list.args("normalization",normalization,tmp)
+			norm.args <- get.defaults("normalization",normalization)
+			if (length(tmp)>0)
+				norm.args <- set.arg(norm.args,tmp)
+		}
+		else
+			norm.args <- get.defaults("normalization",normalization)
+	}
+	for (s in statistics) {
+		if (!is.null(stat.args[[s]])) {
+			tmp <- stat.args[[s]]
+			tmp <- validate.list.args("statistics",s,tmp)
+			stat.args[[s]] <- get.defaults("statistics",s)
+			if (length(tmp)>0)
+				stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
+		}
+		else
+			stat.args[[s]] <- get.defaults("statistics",s)
+	}
+	return(list(norm.args=norm.args,stat.args=stat.args))
 }
 
 #' Validate list parameters for several metaseqR functions
@@ -786,8 +1004,11 @@ validate.list.args <- function(what,method=NULL,arg.list) {
 #' mm9.exons <- get.annotation("mm9","exon")
 #'}
 get.annotation <- function(org,type) {
-	mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",host=get.host(org),
-		dataset=get.dataset(org))
+	if (org!="tair10")
+		mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",host=get.host(org),
+			dataset=get.dataset(org))
+	else
+		mart <- useMart(biomart="ENSEMBL_MART_PLANT",dataset=get.dataset(org))
 	#mart <- useMart(biomart="ensembl",host=get.host(org),dataset=get.dataset(org))
 	chrs.exp <- paste(get.valid.chrs(org),collapse="|")
 	if (type=="gene") {
@@ -861,7 +1082,8 @@ get.host <- function(org) {
 		mm10 = { return("www.ensembl.org") },
 		rn5 = { return("www.ensembl.org") },
 		dm3 = { return("www.ensembl.org") },
-		danRer7 = { return("www.ensembl.org") }
+		danRer7 = { return("www.ensembl.org") },
+		tair10 = { return("www.ensembl.org") }
 	)
 }
 
@@ -886,7 +1108,8 @@ get.dataset <- function(org) {
 		mm10 = { return("mmusculus_gene_ensembl") },
 		rn5 = { return("rnorvegicus_gene_ensembl") },
 		dm3 = { return("dmelanogaster_gene_ensembl") },
-		danRer7 = { return("drerio_gene_ensembl") }
+		danRer7 = { return("drerio_gene_ensembl") },
+		tair10 = { return("athaliana_eg_gene") }
 	)
 }
 
@@ -952,6 +1175,11 @@ get.valid.chrs <- function(org)
 				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
 				"chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr23",
 				"chr24","chr25","chr3","chr4","chr5","chr6","chr7","chr8","chr9"
+			))
+		},
+		tair10 = {
+			return(c(
+				"chr1","chr2","chr3","chr4","chr5"
 			))
 		}
 	)
@@ -1792,7 +2020,10 @@ make.matrix <- function(samples,data.list,export.scale="natural") {
 	names(mat) <- export.scale
 	for (scl in export.scale) {
 		mat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
-		if (!is.matrix(mat.data)) mat.data <- as.matrix(mat.data)
+		if (!is.matrix(mat.data)) {
+			mat.data <- as.matrix(mat.data)
+			colnames(mat.data) <- samples
+		}
 		mat[[scl]] <- mat.data
 	}
 	return(do.call("cbind",mat))
@@ -2016,7 +2247,8 @@ make.report.messages <- function(lang) {
 					deseq="DESeq",
 					edger="edgeR",
 					noiseq="NOISeq",
-					nbpseq="NBPSeq"
+					nbpseq="NBPSeq",
+					each="the same as the corresponding statistical test"
 				),
 				stat=list(
 					deseq="DESeq",
@@ -2498,7 +2730,7 @@ make.report.messages <- function(lang) {
 						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
 						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
 						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
+						nbpseq="Di, Y, Schafer, D., Cumbie, J.S., and Chang, J.H. (2011). The NBP Negative Binomial Model for Assessing Differential Gene Expression from RNA-Seq. Statistical Applications in Genetics and Molecular Biology 10(1), 1-28.",
 						none=NULL
 					),
 					stat=list(

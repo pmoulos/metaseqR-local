@@ -210,7 +210,7 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 	seed=NULL) {
 	if (!is.null(model.org)) {
 		check.text.args("model.org",model.org,c("hg18","hg19","mm9","mm10",
-			"rno5","dm3","danRer7"),multiarg=FALSE)
+			"rno5","dm3","danRer7","tair10"),multiarg=FALSE)
 		ann <- get.annotation(model.org,"gene")
 		real.gc <- as.numeric(ann$gc_content)
 	}
@@ -317,6 +317,9 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 #' @param restrict.cores in case of parallel optimization, the fraction of the
 #' available cores to use.
 #' @param seed a seed to use with random number generation for reproducibility.
+#' @param draw boolean to determine whether to plot the estimated simulation
+#' parameters (mean and dispersion) or not. Defaults to \code{FALSE} (do not draw
+#' a mean-dispersion scatterplot).
 #' @return A named list with two members: \code{mu.hat} which contains negative
 #' binomial mean estimates and \code{phi.hat} which contains dispersion.
 #' estimates
@@ -327,15 +330,19 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 #' par.list <- estimate.sim.params("bottomly_read_counts.txt")
 #'}
 estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
-	eps=1e-11,restrict.cores=0.8,seed=42) {
+	eps=1e-11,restrict.cores=0.8,seed=42,draw=FALSE) {
 	multic <- check.parallel(restrict.cores)
 	if (is.data.frame(real.counts))
-		real.data <- real.counts
-	else if (file.exists(real.counts))
+		mat <- as.matrix(real.counts)
+	else if (is.matrix(real.counts))
+		mat <- real.counts
+	else if (file.exists(real.counts)) {
 		real.data <- read.delim(real.counts,row.names=1)
+		mat <- as.matrix(real.data)
+	}
 	else
 		stopwrap("The input count data must be either a file or a data frame!")
-	mat <- as.matrix(real.data)
+	
 	low.lib <- which(apply(mat,2,sum)<libsize.gt)
 	if (length(low.lib)>0)
 		mat <- mat[,-low.lib]
@@ -362,6 +369,13 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
 	phi.hat <- unlist(wapply(multic,init,function(x,eps) {
 		optimize(mlfo,c(x$h-1e-2,x$h+1e-2),y=x$y,tol=eps)$minimum
 	},eps))
+	if (draw) {
+		x11()
+		plot(log10(mu.hat[phi.ind]),log10(phi.hat),col="blue",pch=20,cex=0.5,
+			xlab="",ylab="")
+		title(xlab="mean",ylab="dispesion",font=2,cex=0.9)
+		grid()
+	}
 	return(list(mu.hat=mu.hat[phi.ind],phi.hat=phi.hat))
 }
 
@@ -474,4 +488,60 @@ make.permutation <- function(counts,sample.list,contrast,repl=FALSE) {
 		virtual.sample.list[[n]] <- virtual.samples[[n]]
 	return(list(counts=virtual.counts,sample.list=virtual.sample.list,
 		contrast=virtual.contrast))
+}
+
+#' Calculate the ratio TP/(FP+FN)
+#'
+#' This function calculates the ratio of True Positives to the sum of False
+#' Positives and False Negatives given a matrix of p-values (one for each
+#' statistical test used) and a vector of ground truth (DE or non-DE). This
+#' function serves as a method evaluation helper.
+#'
+#' @param truth the ground truth differential expression vector. It should contain
+#' only zero and non-zero elements, with zero denoting non-differentially expressed
+#' genes and non-zero, differentially expressed genes. Such a vector can be obtained
+#' for example by using the \code{\link{make.sim.data.sd}} function, which creates
+#' simulated RNA-Seq read counts based on real data. It MUST be named with gene
+#' names, the same as in \code{p}.
+#' @param p a p-value matrix whose rows correspond to each element in the
+#' \code{truth} vector. If the matrix has a \code{colnames} attribute, a legend
+#' will be added to the plot using these names, else a set of column names will
+#' be auto-generated. \code{p} can also be a list or a data frame. In any case,
+#' each row (or element) MUST be named with gene names (the same as in \code{truth}).
+#' @param sig a significance level (0 < \code{sig} <=1).
+#' @return A named list with two members. The first member is a data frame with
+#' the numbers used to calculate the TP/(FP+FN) ratio and the second member is
+#' the ratio TP/(FP+FN) for each statistical test.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' # Not yet available
+#'}
+calc.otr <- function(truth,p,sig=0.05) {
+	if (is.list(p))
+		pmat <- do.call("cbind",p)
+	else if (is.data.frame(p))
+		pmat <- as.matrix(p)
+	else if (is.matrix(p))
+		pmat <- p
+	if (is.null(colnames(pmat)))
+		colnames(pmat) <- paste("p",1:ncol(pmat),sep="_")
+
+	sig.genes <- true.isects <- missed <- vector("list",ncol(pmat))
+	names(sig.genes) <- names(true.isects) <- names(missed) <- colnames(pmat)
+	for (n in colnames(pmat)) {
+		sig.genes[[n]] <- names(which(pmat[,n]<sig))
+		true.isects[[n]] <- intersect(sig.genes[[n]],names(which(truth!=0)))
+		missed[[n]] <- setdiff(names(which(truth!=0)),true.isects[[n]])
+	}
+	result <- data.frame(
+		P=sapply(sig.genes,length),
+		TP=sapply(true.isects,length),
+		FN=sapply(missed,length)
+	)
+	result$FP <- result$P - result$TP
+	otr <- result$TP/(result$FP+result$FN)
+	names(otr) <- rownames(result)
+	return(list(result=result,otr=otr))
 }
