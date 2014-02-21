@@ -548,33 +548,50 @@ each of the applied statistical tests and will also report, apart from the p-val
 from each method, a combined p-value using one of the following methods:
 
 \begin{enumerate}
-  \item	The Simes p-value combination method. This method uses the minimum p-value from all methods divided by the number of statistics
-  used and multiplied by the number of tests performed (similar to Bonferroni correction).
-  \item the Fisher p-value combination meta-analysis method, implemented in the R package MADAM. This is the default method.
-  \item same as (1) but using permutations, as implemented in the R package MADAM. This option is quite computationally intensive
-  and requires additional running time.
-  \item the Whitlock p-value combination method, implemented in the Bioconductor package survcomp. This method has the advantage
-  of allowing weighting for each methodology. In the current version of metaseqR, the weights are equal for all statistical tests.
-  \item intersection of the results derived from each statistical test. The reported p-value is the product of the p-values returned
-  from each method. However, this product is not used as the final statistical threshold like with the three previous options. This
-  happens because p-values for genes for which the null hypothesis is not rejected lose uniformity when multiplied. Instead, the
-  p-value threshold given to the pipeline by the argument pcut is applied to the results of each method and the common genes found
-  by all methods are reported. The product of the p-values is also reported as mentioned above.
-  \item union of the results derived from each statistical test. The reported p-value is the sum of the p-values returned by each
-  method. The sum is used as in case (4) and the union of the genes found by all methods are reported.
+  \item	The Simes p-value combination method (ref). This method uses the minimum
+   ordered p-value from all methods divided by the inverse order of the p-values.
+   The ordering is performed across the number of statistics used. This is the
+   default method.
+  \item the Fisher p-value combination meta-analysis method, implemented in the R
+   package MADAM. This is the default method.
+  \item same as (2) but using permutations, as implemented in the R package MADAM.
+   This option is quite computationally intensive and requires additional running
+   time.
+  \item the Whitlock p-value combination method, implemented in the Bioconductor
+   package survcomp. This method has the advantage of allowing weighting for each
+   methodology. In the current version of metaseqR, the weights are equal for all
+   statistical tests. For example, the user may estimate weights for his/her
+   dataset using metaseqR facilities for this purpose.
+  \item The maximum p-value returned by a set of statistical tests for the same
+   gene. This is equivalent to the “intersection” of the results derived from
+   each statistical test, returning genes which have been found as statistically
+   significant by all the statistical tests applied. The maximum p-value ensures
+   that the false positives are minimized at a (usually high) cost on the true
+   positives (statistical power).
+  \item The minimum p-value returned by a set of statistical tests for the same
+   gene. This is equivalent to the “union” of the results derived from each
+   statistical test, returning genes which have been found as statistically
+   significant by at least one of the statistical tests applied. The minimum
+   p-value ensures that the true positives are maximized at a (usually high)
+   cost on the false positives (type I error).
+  \item A weighted p-value where the weights can be either fixed (e.g. equal or
+   set by the user according to performance evidence from the literature), or
+   estimated using metaseqR's facilities for this purpose (simulation based on
+   the user data and weighting according to performance measurement on simulated
+   data). The weights must sum to 1.
   \item A method based on permutations. This method has three variants:
   \begin{enumerate}
     \item In the first variant (\lstinline{dperm.min}), an initial p-value vector
-    is constructed for each gene, containing the minimum p-value resulted from t
-    he applied statistical tests (more lose).
+     is constructed for each gene, containing the minimum p-value resulted from
+     the applied statistical tests (more lose, see above).
     \item In the second variant (\lstinline{dperm.max}), an initial p-value vector
-    is constructed for each gene, containing the maximum p-value resulted from
-    the applied statistical tests (more strict).
-    \item In the third variant (\lstinline{dperm.weight}), an initial p-value
-    vector is constructed for each gene, containing the convex linear combination
-    of the p-values resulted from all the statistical tests applied for each gene.
-    To construct the convex linear combination, a vector of weights is used, one
-    for each statistical test, and the sum of all weights must be 1.
+     is constructed for each gene, containing the maximum p-value resulted from
+     the applied statistical tests (more strict, see above).
+    \item In the third variant (\lstinline{dperm.weight}), an initial p-vale
+     vector is constructed for each gene, containing the convex linear combination
+     of the p-values resulted from all the statistical tests applied for each gene.
+     To construct the convex linear combination, a vector of weights is used, one
+     for each statistical test, and the sum of all weights must be 1.
   \end{enumerate}
   After the construction of the original combined p-value with one of the
   aforementioned variants a permutation procedure is initialed, where nperm

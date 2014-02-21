@@ -26,7 +26,7 @@ added:
 fixed:
   - Smaller bug fixes
 
-changes in version 0.93.0 (2014-01-25)
+changes in version 0.93.0 (2014-02-12)
 added:
   - Support for Arabidopsis thaliana
   - Additional validation functions
@@ -34,3 +34,9 @@ fixed:
   - Bugs affecting multilevel factorial analysis (single factor, more than two conditions)
   - Smaller bug fixes
 
+changes in version 0.99.0 (2014-02-21)
+added:
+  - Support for Pan troglodytes
+  - Improved the simulator to i) simulate length bias and ii) better length selection
+fixed:
+  - Code changes to comply with Bioconductor's guidelines
