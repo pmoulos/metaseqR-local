@@ -268,7 +268,7 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 			factors=data.frame(class=classes),
 			biotype=biotype
 		)
-		norm.args$long=gene.length # Set the gene length feature
+		#norm.args$long=gene.length # Set the gene length feature
 	}
 	norm.args$k=log.offset # Set the zero fixing constant
 	switch(norm.args$method,

@@ -3,13 +3,13 @@
 \title{Get precalculated statistical test 
   weights}
 \usage{
-  get.weights(org = c("human", "mouse", "fruitfly"),
-    statistics = c("deseq", "edger", "noiseq", "bayseq",
-    "limma", "nbpseq"))
+  get.weights(org = c("human", "mouse", "fruitfly", 
+    "arabidopsis"), statistics = c("deseq", "edger", 
+    "noiseq", "bayseq", "limma", "nbpseq"))
 }
 \arguments{
-  \item{org}{\code{"human"}, \code{"mouse"} or 
-  \code{"fruitfly"}.}
+  \item{org}{\code{"human"}, \code{"mouse"}, 
+  \code{"fruitfly"} or \code{"arabidopsis"}.}
 
   \item{statistics}{which statistical tests 
   are being used (see \code{link{metaseqr}}

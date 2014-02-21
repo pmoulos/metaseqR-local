@@ -3,7 +3,7 @@
 \title{Create False (or True) Positive (or
   Negative) curves}
 \usage{
-  diagplot.ftd(truth, p, type = "fdc", N = 2000,
+  diagplot.ftd(truth, p, type = "fpc", N = 2000,
     output = "x11", path = NULL, draw = TRUE, ...)
 }
 \arguments{

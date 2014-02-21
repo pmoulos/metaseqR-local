@@ -317,7 +317,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			vom <- voom(dge[,ms],design,normalize.method=stat.args$normalize.method)
 			fit <- lmFit(vom,design)
 			fit <- eBayes(fit)
-			res <- topTable(fit,coef=2:ncol(fit$design),n=nrow(vom))
+			res <- topTable(fit,coef=2:ncol(fit$design),number=nrow(vom))
 			p[[con.name]] <- res[,"P.Value"]
 			names(p[[con.name]]) <- rownames(res)
 			p[[con.name]] <- p[[con.name]][rownames(dge)]

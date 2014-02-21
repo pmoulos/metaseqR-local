@@ -5,8 +5,8 @@
   estimate.aufc.weights(counts, normalization,
     statistics, nsim = 10, N = 10000, 
     samples = c(3, 3), ndeg = c(500, 500),
-    top = 500, model.org = "mm9", seed = NULL,
-    draw.fpc = FALSE, multic = FALSE)
+    top = 500, model.org = "mm9", fc.basis=1.5,
+    seed = NULL, draw.fpc = FALSE, multic = FALSE)
 }
 \arguments{
   \item{counts}{the real raw counts table from
@@ -17,16 +17,16 @@
   as the rownames attribute.}
 
   \item{normalization}{same as \code{normalization} 
-  in \code{link{metaseqr}}.}
+  in \code{\link{metaseqr}}.}
 
   \item{statistics}{same as \code{statistics} in 
-  \code{link{metaseqr}}.}
+  \code{\link{metaseqr}}.}
 
   \item{nsim}{the number of simulations to perform
   to estimate the weights. It default to 10.}
 
   \item{N}{the number of genes to produce. 
-  See \code{link{make.sim.data.sd}}.
+  See \code{\link{make.sim.data.sd}}.}
 
   \item{samples}{a vector with 2 integers, which
   are the number of samples for each condition 
@@ -47,7 +47,7 @@
 
   \item{model.org}{the organism from which the 
   data are derived. It must be one of 
- \code{\link{metaseqr}} supported organisms.}
+  \code{\link{metaseqr}} supported organisms.}
 
   \item{seed}{a list of seed for reproducible 
   simulations. Defaults to \code{NULL}.}
@@ -61,11 +61,11 @@
 }
 \value{
   A vector of weights to be used in 
-  \link{\code{metaseqr}} with the 
+  \code{\link{metaseqr}} with the 
   \code{weights} option.
 }
 \description{
-  This functions automatically estimates weights 
+  This function automatically estimates weights 
   for the \code{"weight"} and \code{"dperm.weight"} 
   options of metaseqR for combining p-values from 
   multiple statistical tests. It creates simulated 

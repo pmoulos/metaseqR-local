@@ -15,8 +15,7 @@
 \lstset{breaklines=true} % break long lines
 \begin{document}
 
-%\VignetteIndexEntry{RNA-Seq data analysis using mulitple statistical algorithms
- with metaseqR}
+%\VignetteIndexEntry{RNA-Seq data analysis using mulitple statistical algorithms with metaseqR}
 %\VignetteEngine{knitr::knitr}
 
 \title{RNA-Seq data analysis using mulitple statistical algorithms with metaseqR}
@@ -56,14 +55,14 @@ the package.
 
 \section{Getting started}
 
-<<init-init, eval=TRUE, echo=FALSE, message=FALSE>>=
+<<init-init, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE>>=
 library(metaseqR)
 @
 
 Detailed instructions on how to run the metaseqr pipeline can be found under the
 main documentation of the metaseqR package:
 
-<<init-metaseqr, eval=FALSE, echo=TRUE>>=
+<<init-metaseqr, eval=FALSE, echo=TRUE, warning=FALSE>>=
 library(metaseqR)
 help(metaseqr) # or
 help(metaseqr.main)
@@ -74,7 +73,7 @@ Briefly, to run metaseqr you need:
 \begin{itemize}
  \item A text tab delimited file in a spreadsheet like format containing at least
   unique gene identifiers (corresponding to one of metaseqR's supported formats,
-  for the time being Ensembl
+  for the time being Ensembl)
  \item A list of statistical contrasts for which you wish to check differential
   expression
  \item An internet connection so that the interactive parts of the report can be
@@ -115,7 +114,7 @@ libsize.list.mm9
 Following is a full example with the informative messages that are printed in the
 command window:
 
-<<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
+<<example-1, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE>>=
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -171,7 +170,7 @@ Now, the same example but with more than one statistical selection algorithms, a
 different normalization, an analysis preset and filtering applied prior to
 normalization:
 
-<<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE>>=
+<<example-2, eval=TRUE, echo=TRUE, tidy=FALSE, message=TRUE, warning=FALSE>>=
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
@@ -201,7 +200,7 @@ result <- metaseqr(
 A similar example with no filtering applied and no Venn diagram generation (not
 evaluated here):
 
-<<example-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE>>=
+<<example-3, eval=FALSE, echo=TRUE, tidy=FALSE, message=FALSE, warning=FALSE>>=
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(

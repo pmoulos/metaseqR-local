@@ -6,7 +6,8 @@
   make.sim.data.sd(N, param, samples = c(5, 5),
     ndeg = rep(round(0.1*N), 2), fc.basis = 1.5,
 	libsize.range = c(0.7, 1.4), libsize.mag = 1e+7,
-    model.org = NULL, seed = NULL)
+    model.org = NULL, sim.length.bias = FALSE, 
+    seed = NULL)
 }
 \arguments{
   \item{N}{the number of genes to produce.}
@@ -46,6 +47,17 @@
   of the supported organisms (see the main 
   \code{\link{metaseqr}} help page). It is used 
   to sample real values for GC content.}
+
+  \item{sim.length.bias}{a boolean to instruct 
+  the simulator to create genes whose read counts is
+  proportional to their length. This is achieved by 
+  sorting in increasing order the mean parameter of 
+  the negative binomial distribution (and the 
+  dispersion according to the mean) which will cause 
+  an increasing gene count length with the sampling. 
+  The sampled lengths are also sorted so that in the 
+  final gene list, shorter genes have less counts as 
+  compared to the longer ones. The default is FALSE.}
 
   \item{seed}{a seed to use with random number 
   generation for reproducibility.}

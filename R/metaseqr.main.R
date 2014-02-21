@@ -121,8 +121,9 @@
 #' similar as possible to the \code{"download"} case, in terms of column structure.
 #' @param org the supported organisms by metaseqr. These can be, for human genomes
 #' \code{"hg18"} or \code{"hg19"}, for mouse genomes \code{"mm9"}, \code{"mm10"},
-#' for rat genomes \code{"rno5"}, for drosophila genomes \code{"dm3"}, for zebrafish
-#' genomes \code{"danRer7"} and for Arabidopsis thaliana genomes \code{"tair10"}.
+#' for rat genomes \code{"rno5"}, for drosophila genome \code{"dm3"}, for zebrafish
+#' genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"} and for Arabidopsis
+#' thaliana genome \code{"tair10"}.
 #' @param count.type the type of reads inside the counts file. It can be one of 
 #' \code{"gene"} or \code{"exon"}. This is a very important and mandatory parameter
 #' as it defines the course of the workflow.
@@ -753,7 +754,7 @@ metaseqr <- function(
 	name.col=NA,
 	bt.col=NA,
 	annotation=c("download","embedded"),
-	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7","tair10"),
+	org=c("hg18","hg19","mm9","mm10","rno5","dm3","danrer7","pantro4","tair10"),
 	count.type=c("gene","exon"),
 	exon.filters=list(
 		min.active.exons=list(
@@ -844,20 +845,24 @@ metaseqr <- function(
 	}
 
 	# Initialize environmental variables
-	if (!exists("HOME"))
-		init.envar()
+	HOME <- system.file(package="metaseqR")
+	TEMPLATE <- HOME
+	#if (!exists("HOME"))
+	#	init.envar()
 	# Globalize the project's path and verbosity
 	if (from.raw)
-		PROJECT.PATH <<- make.project.path(export.where)
+		PROJECT.PATH <- make.project.path(export.where)
 	else
-		PROJECT.PATH <<- make.project.path(export.where,counts)
+		PROJECT.PATH <- make.project.path(export.where,counts)
+	VERBOSE <- NULL
 	VERBOSE <<- verbose
 	# Check logger, here
 	#if (run.log && suppressWarnings(!require(log4r)))
 	#{
 	#	warning("R package log4r is required to create an log file! Log will not be created...")
 	#	run.log <- FALSE
-	#}	
+	#}
+	LOGGER <- NULL
 	if (run.log)
 		LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,"metaseqr_run.log"),
 			level=log4r:::INFO,logformat="%d %c %m")
@@ -915,8 +920,8 @@ metaseqr <- function(
 
 	check.text.args("file.type",file.type,c("auto","sam","bam","bed"),multiarg=FALSE)
 	check.text.args("annotation",annotation,c("embedded","download"),multiarg=FALSE)
-	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danRer7",
-		"tair10"),multiarg=FALSE)
+	check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3","danrer7",
+		"pantro4","tair10"),multiarg=FALSE)
 	check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
 	check.text.args("when.apply.filter",when.apply.filter,c("postnorm","prenorm"),
 		multiarg=FALSE)
@@ -937,7 +942,7 @@ metaseqr <- function(
 	check.text.args("export.values",export.values,c("raw","normalized"),multiarg=TRUE)
 	check.text.args("export.stats",export.stats,c("mean","median","sd","mad","cv",
 		"rcv"),multiarg=TRUE)
-	if (!is.null(preset)) 
+	if (!is.null(preset))
 		check.text.args("preset",preset,c("all.basic","all.normal","all.full",
 			"medium.basic","medium.normal","medium.full","strict.basic",
 			"strict.normal","strict.full"),multiarg=FALSE)
@@ -2186,7 +2191,7 @@ metaseqr <- function(
 		if (has.template)
 		{
 			exec.time <- elap2human(TB)
-			TEMP <<- environment()
+			TEMP <- environment()
 			brew(
 				file=report.template$html,
 				#output=file.path(PROJECT.PATH$main,paste(basename(PROJECT.PATH$main),
@@ -2286,17 +2291,17 @@ reduce.gene.data <- function(exon.data,gene.data) {
 	return(gene.data)
 }
 
-#' Initialize environment
-#'
-#' Initializes metaseqr environmental variables. Internal use only.
-#'
-#' @author Panagiotis Moulos
-init.envar <- function() {
-	HOME <<- system.file(package="metaseqR")
-	SCRIPT <<- file.path(HOME,"R")
-	TEMPLATE <<- HOME
-	ANNOTATION <<- file.path(HOME,"data")
-}
+# Initialize environment
+#
+# Initializes metaseqr environmental variables. Internal use only.
+#
+# @author Panagiotis Moulos
+#init.envar <- function() {
+#	HOME <<- system.file(package="metaseqR")
+#	SCRIPT <<- file.path(HOME,"R")
+#	TEMPLATE <<- HOME
+#	ANNOTATION <<- file.path(HOME,"data")
+#}
 #init.envar <- function() {
 #	#HOME <<- "/media/HD4/Fleming/dev/metaseqr"
 #	HOME <<- system.file(package="metaseqr")

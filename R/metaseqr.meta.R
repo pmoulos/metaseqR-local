@@ -53,7 +53,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 	switch(meta.p,
 		fisher = {
 			sum.p.list <- wapply(multic,cp.list,function(x) {
-				tmp <- fisher.method(x,p.corr="none",zero.sub=1e-32)
+				tmp <- fisher.method(x,p.corr="none",zero.sub=.Machine$double.xmin)
 				return(tmp$p.value)
 			})
 		},
@@ -61,7 +61,7 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 			sum.p.list <- wapply(multic,cp.list,function(x) {
 				if (multic)
 					tmp <- fisher.method.perm(x,p.corr="none",B=nperm,
-						mc.cores=getOption(cores),zero.sub=1e-32)
+						mc.cores=getOption("cores"),zero.sub=1e-32)
 				else
 					tmp <- fisher.method.perm(x,p.corr="none",B=nperm,zero.sub=1e-32)
 				return(tmp$p.value)

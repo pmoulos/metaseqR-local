@@ -204,7 +204,7 @@ read.targets <- function(input,path=NULL) {
 #' based on the performance of simulated datasets based on real data from the
 #' ReCount database (\url{http://bowtie-bio.sourceforge.net/recount/}).
 #'
-#' @param org \code{"human"}, \code{"mouse"} or \code{"fruitfly"}.
+#' @param org \code{"human"}, \code{"mouse"}, \code{"fruitfly"} or \code{"arabidopsis"}.
 #' @param statistics which statistical tests are being used (see \code{link{metaseqr}}
 #' main help page).
 #' @return A named vector of convex weights.
@@ -214,10 +214,10 @@ read.targets <- function(input,path=NULL) {
 #' \dontrun{
 #' wh <- get.weights("human",c("deseq","edger","noiseq"))
 #}
-get.weights <- function(org=c("human","mouse","fruitfly"),statistics=c("deseq",
-	"edger","noiseq","bayseq","limma","nbpseq")) {
+get.weights <- function(org=c("human","mouse","fruitfly","arabidopsis"),
+	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq")) {
 	org <- tolower(org)
-	check.text.args("org",org,c("human","mouse","fruitfly"))
+	check.text.args("org",org,c("human","mouse","fruitfly","arabidopsis"))
 	switch(org,
 		human = {
 			return(c(
@@ -247,7 +247,27 @@ get.weights <- function(org=c("human","mouse","fruitfly"),statistics=c("deseq",
 				nbpseq=0.01265952,
 				noiseq=0.06778537,
 				bayseq=0.39286218
-			))	     
+			))
+		},
+		arabidopsis = {
+			return(c(
+				deseq=0.04926122,
+				edger=0.10130858,
+				limma=0.40842011,
+				nbpseq=0.04596652,
+				noiseq=0.09336509,
+				bayseq=0.30167848
+			))
+		},
+		chimp = {
+			return(c(
+				deseq=NULL,
+				edger=NULL,
+				limma=NULL,
+				nbpseq=NULL,
+				noiseq=NULL,
+				bayseq=NULL
+			))
 		}
 	)
 }
@@ -302,7 +322,7 @@ get.defaults <- function(what,method=NULL) {
 				noiseq = {
 					return(list(
 						method="tmm", # which normalization
-						long=1000,lc=1,k=0.5, # common arguments
+						long=1000,lc=1,k=1, # common arguments
 						refColumn=1,logratioTrim=0.3,sumTrim=0.05,
 						doWeighting=TRUE,Acutoff=-1e+10 # TMM normalization arguments
 					))
@@ -526,7 +546,7 @@ get.defaults <- function(what,method=NULL) {
 						misc_RNA=FALSE
 					))
 				},
-				danRer7 = {
+				danrer7 = {
 					return(list(
 						antisense=FALSE,
 						protein_coding=FALSE,
@@ -547,10 +567,22 @@ get.defaults <- function(what,method=NULL) {
 						sense_overlapping=FALSE
 					))
 				},
+				pantro4 = {
+					return(list(
+						protein_coding=FALSE,
+						pseudogene=FALSE,
+						processed_pseudogene=FALSE,
+						miRNA=FALSE,
+						rRNA=TRUE,
+						snRNA=FALSE,
+						snoRNA=FALSE,
+						misc_RNA=FALSE
+					))
+				},
 				tair10 = {
 					return(list(
 						miRNA=FALSE,
-						ncRNA=FLASE,
+						ncRNA=FALSE,
 						protein_coding=FALSE,
 						pseudogene=FALSE,
 						rRNA=TRUE,
@@ -956,7 +988,7 @@ validate.list.args <- function(what,method=NULL,arg.list) {
 						"processed_pseudogene","miRNA","rRNA","misc_RNA")
 					not.valid <- which(!valid)
 				},
-				danRer7 = {
+				danrer7 = {
 					valid <- names(arg.list) %in% c("antisense","protein_coding",
 						"miRNA","snoRNA","rRNA","lincRNA","processed_transcript",
 						"snRNA","pseudogene","sense_intronic","misc_RNA",
@@ -1082,7 +1114,8 @@ get.host <- function(org) {
 		mm10 = { return("www.ensembl.org") },
 		rn5 = { return("www.ensembl.org") },
 		dm3 = { return("www.ensembl.org") },
-		danRer7 = { return("www.ensembl.org") },
+		danrer7 = { return("www.ensembl.org") },
+		pantro4 = { return("www.ensembl.org") },
 		tair10 = { return("www.ensembl.org") }
 	)
 }
@@ -1108,7 +1141,8 @@ get.dataset <- function(org) {
 		mm10 = { return("mmusculus_gene_ensembl") },
 		rn5 = { return("rnorvegicus_gene_ensembl") },
 		dm3 = { return("dmelanogaster_gene_ensembl") },
-		danRer7 = { return("drerio_gene_ensembl") },
+		danrer7 = { return("drerio_gene_ensembl") },
+		pantro4 = { return("ptroglodytes_gene_ensembl") },
 		tair10 = { return("athaliana_eg_gene") }
 	)
 }
@@ -1170,11 +1204,18 @@ get.valid.chrs <- function(org)
 				"chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet","chrYHet"
 			))
 		},
-		danRer7 = {
+		danrer7 = {
 			return(c(
 				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
 				"chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr23",
 				"chr24","chr25","chr3","chr4","chr5","chr6","chr7","chr8","chr9"
+			))
+		},
+		pantro4 = {
+			return(c(
+				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+				"chr17","chr18","chr19","chr20","chr21","chr22","chr2A","chr2B",
+				"chr3","chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
 			))
 		},
 		tair10 = {
@@ -1383,7 +1424,7 @@ get.strict.biofilter <- function(org) {
 				misc_RNA=TRUE
 			))
 		},
-		danRer7 = {
+		danrer7 = {
 			return(list(
 				antisense=FALSE,
 				protein_coding=FALSE,
@@ -2236,7 +2277,7 @@ make.report.messages <- function(lang) {
 					mm10="mouse (<em>Mus musculus</em>), genome version alias mm10",
 					rno5="rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
 					dm3="fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
-					danRer7="zebrafish (<em>Danio rerio</em>), genome version alias danRer7"
+					danrer7="zebrafish (<em>Danio rerio</em>), genome version alias danrer7"
 				),
 				whenfilter=list(
 					prenorm="before normalization",
@@ -2976,7 +3017,7 @@ filter.high <- function(x,f) { return(all(x>=f)) }
 disp <- function(...) {
 	if (exists("VERBOSE")) {
 		verbose <- get("VERBOSE")
-		if (verbose) {
+		if (!is.null(verbose) && verbose) {
 			#cat("\n",...,sep="")
 			message("\n",...,appendLF=FALSE)
 			#flush.console()
@@ -2985,31 +3026,58 @@ disp <- function(...) {
 	else
 		message("\n",...,appendLF=FALSE)
 	if (exists("LOGGER")) {
+		logger <- get("LOGGER")
 		levalias <- c("one","two","three","four","five")
-		switch(levalias[level(LOGGER)],
-			one = { debug(LOGGER,paste0(...)) },
-			two = { info(LOGGER,gsub("\\n","",paste0(...))) },
-			three = { warn(LOGGER,gsub("\\n","",paste0(...))) },
-			four = { error(LOGGER,gsub("\\n","",paste0(...))) },
-			five = { fatal(LOGGER,gsub("\\n","",paste0(...))) }
-		)
+		#if (!is.null(LOGGER)) {
+		#	switch(levalias[level(LOGGER)],
+		#		one = { debug(LOGGER,paste0(...)) },
+		#		two = { info(LOGGER,gsub("\\n","",paste0(...))) },
+		#		three = { warn(LOGGER,gsub("\\n","",paste0(...))) },
+		#		four = { error(LOGGER,gsub("\\n","",paste0(...))) },
+		#		five = { fatal(LOGGER,gsub("\\n","",paste0(...))) }
+		#	)
+		#}
+		if (!is.null(logger)) {
+			switch(levalias[level(logger)],
+				one = { debug(logger,paste0(...)) },
+				two = { info(logger,gsub("\\n","",paste0(...))) },
+				three = { warn(logger,gsub("\\n","",paste0(...))) },
+				four = { error(logger,gsub("\\n","",paste0(...))) },
+				five = { fatal(logger,gsub("\\n","",paste0(...))) }
+			)
+		}
 	}
 }
 
 stopwrap <- function(...,t="fatal") {
 	if (exists("LOGGER")) {
-		if (t=="fatal")
-			fatal(LOGGER,gsub("\\n","",paste0(...)))
-		else
-			error(LOGGER,gsub("\\n","",paste0(...)))
+		logger <- get("LOGGER")
+		if (!is.null(logger)) {
+			if (t=="fatal")
+				fatal(logger,gsub("\\n","",paste0(...)))
+			else
+				error(logger,gsub("\\n","",paste0(...)))
+		}
+		#if (!is.null(LOGGER)) {
+		#	if (t=="fatal")
+		#		fatal(LOGGER,gsub("\\n","",paste0(...)))
+		#	else
+		#		error(LOGGER,gsub("\\n","",paste0(...)))
+		#}
 	}
 	stop(paste0(...))
 }
 
 warnwrap <- function(...) {
 	if (exists("LOGGER")) {
-		warn(LOGGER,gsub("\\n","",paste0(...)))
+		logger <- get("LOGGER")
+		if (!is.null("logger"))
+			warn(logger,gsub("\\n","",paste0(...)))
 	}
+	#if (exists("LOGGER")) {
+	#	if (!is.null("LOGGER"))
+	#		warn(LOGGER,gsub("\\n","",paste0(...)))
+	#}
 	warning(paste0(...),call.=FALSE)
 }
 
@@ -3048,7 +3116,7 @@ elap2human <- function(start.time) {
 #		stopwrap("Bioconductor package biomaRt is required to update annotations!")
 #	VERBOSE <<- TRUE
 #	supported.types <- c("gene","exon")
-#	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danRer7")
+#	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danrer7")
 #	if (exists("ANNOTATION")) {
 #		for (type in supported.types) {
 #			for (org in supported.orgs) {

@@ -1,63 +1,33 @@
-\name{estimate.aufc.weights}
-\alias{estimate.aufc.weights}
-\title{Estimate AUFC weights}
+\name{diagplot.avg.ftd}
+\alias{diagplot.avg.ftd}
+\title{Create average False (or True) Discovery 
+  curves}
 \usage{
-  estimate.aufc.weights(counts, normalization,
-    statistics, nsim = 10, N = 10000, 
-    samples = c(3, 3), ndeg = c(500, 500),
-    top = 500, model.org = "mm9", seed = NULL,
-    draw.fpc = FALSE, multic = FALSE)
+  diagplot.avg.ftd(ftdr.obj, output = "x11",
+    path = NULL, draw = TRUE, ...)
 }
 \arguments{
-  \item{counts}{the real raw counts table from
-  which the simulation parameters will be 
-  estimated. It must not be normalized and must
-  contain only integer counts, without any other
-  annotation elements and unique gene identifiers
-  as the rownames attribute.}
+  \item{ftdr.obj}{a list with outputs from 
+  \code{\link{diagplot.ftd}}.}
 
-  \item{normalization}{same as \code{normalization} 
-  in \code{link{metaseqr}}.}
+  \item{output}{one or more R plotting 
+  device to direct the plot result to.
+  Supported mechanisms: \code{"x11"} (default), 
+  \code{"png"}, \code{"jpg"}, \code{"bmp"}, 
+  \code{"pdf"} or \code{"ps"}.}
 
-  \item{statistics}{same as \code{statistics} in 
-  \code{link{metaseqr}}.}
+  \item{path}{the path to create output files.}
 
-  \item{nsim}{the number of simulations to perform
-  to estimate the weights. It default to 10.}
+  \item{draw}{boolean to determine whether 
+  to plot the curves or just return the 
+  calculated values (in cases where the user 
+  wants the output for later averaging
+  for example). Defaults to \code{TRUE} (make 
+  plots).}
 
-  \item{N}{the number of genes to produce. 
-  See \code{link{make.sim.data.sd}}.
-
-  \item{samples}{a vector with 2 integers, which
-  are the number of samples for each condition 
-  (two conditions currently supported).}
-
-  \item{ndeg}{a vector with 2 integers, which
-  are the number of differentially expressed 
-  genes to be produced. The first element is 
-  the number of up-regulated genes while the 
-  second is the number of down-regulated genes.}
-
-  \item{fc.basis}{the minimum fold-change for 
-  deregulation.}
-
-  \item{top}{the top \code{top} best ranked 
-  (according to p-value) to use, to calculate 
-  area under the false discovery curve.}
-
-  \item{model.org}{the organism from which the 
-  data are derived. It must be one of 
- \code{\link{metaseqr}} supported organisms.}
-
-  \item{seed}{a list of seed for reproducible 
-  simulations. Defaults to \code{NULL}.}
-
-  \item{draw.fpc}{draw the averaged false 
-  discovery curves? Default to \code{FALSE}.}
-
-  \item{multic}{whether to run in parallel 
-  (if package \code{parallel} is present or
-  not.}
+  \item{...}{further arguments to be passed to 
+  plot devices, such as parameter from 
+  \code{\link{par}}.}
 }
 \value{
   A named list with two members: the first member 
@@ -68,17 +38,9 @@
   path to the created figure graphic.
 }
 \description{
-  This functions automatically estimates weights 
-  for the \code{"weight"} and \code{"dperm.weight"} 
-  options of metaseqR for combining p-values from 
-  multiple statistical tests. It creates simulated 
-  dataset based on real data and then performs 
-  statistical analysis with metaseqR several times 
-  in order to derive False Discovery Curves. Then, 
-  the average areas under the false discovery curves
-  are used to construct weights for each algorithm,
-  according to its performance when using simulated 
-  data.
+  This function creates false (or true) discovery 
+  curves using a list containing several outputs 
+  from \code{\link{diagplot.ftd}}.
 }
 \examples{
 \dontrun{

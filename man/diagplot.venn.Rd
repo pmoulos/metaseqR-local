@@ -2,7 +2,8 @@
 \alias{diagplot.venn}
 \title{Venn diagrams when performing meta-analysis}
 \usage{
-  diagplot.venn(pmat, pcut = 0.05,
+  diagplot.venn(pmat, fcmat = NULL, pcut = 0.05,
+    fcut = 0.5, direction = c("dereg", "up", "down"),
     nam = as.character(round(1000 * runif(1))),
     output = "x11", path = NULL, alt.names = NULL, ...)
 }

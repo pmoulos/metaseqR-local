@@ -8,8 +8,8 @@
     path = NULL, contrast = NULL, libsize.list = NULL,
     id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
     annotation = c("download", "embedded"),
-    org = c("hg18", "hg19", "mm9", "mm10", "rno5", "dm3", "danRer7",
-      "tair10"),
+    org = c("hg18", "hg19", "mm9", "mm10", "rno5", "dm3", "danrer7",
+      "pantro4", "tair10"),
     count.type = c("gene", "exon"),
     exon.filters = list(min.active.exons = list(exons.per.gene = 5, 
         min.exons = 2, frac = 1/5)),
@@ -20,7 +20,7 @@
         biotype = get.defaults("biotype.filter", org[1])),
     when.apply.filter = c("postnorm", "prenorm"),
     normalization = c("edaseq", "deseq", "edger", "noiseq", "nbpseq", 
-        "none"),
+        "each", "none"),
     norm.args = NULL,
     statistics = c("deseq", "edger", "noiseq", "bayseq", "limma", 
         "nbpseq"),
@@ -192,9 +192,10 @@
   \item{org}{the supported organisms by metaseqr. These can
   be, for human genomes \code{"hg18"} or \code{"hg19"}, for
   mouse genomes \code{"mm9"}, \code{"mm10"}, for rat
-  genomes \code{"rno5"}, for drosophila genomes
-  \code{"dm3"} for zebrafish genomes \code{"danRer7"}
-  and for Arabidopsis thaliana genomes \code{"tair10"}.}
+  genome \code{"rno5"}, for drosophila genome
+  \code{"dm3"}, for zebrafish genome \code{"danrer7"}, for
+  chimpanzee genome \code{"pantro4"} and for Arabidopsis 
+  thaliana genome \code{"tair10"}.}
 
   \item{count.type}{the type of reads inside the counts
   file. It can be one of \code{"gene"} or \code{"exon"}.

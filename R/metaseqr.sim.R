@@ -1,6 +1,6 @@
 #' Estimate AUFC weights
 #'
-#' This functions automatically estimates weights for the \code{"weight"} and
+#' This function automatically estimates weights for the \code{"weight"} and
 #' \code{"dperm.weight"} options of metaseqR for combining p-values from multiple
 #' statistical tests. It creates simulated dataset based on real data and then
 #' performs statistical analysis with metaseqR several times in order to derive
@@ -40,8 +40,8 @@
 #' # Not yet available
 #'}
 estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
-	N=10000,samples=c(3,3),ndeg=c(500,500),top=500,model.org="mm9",seed=NULL,
-	draw.fpc=FALSE,multic=FALSE) {
+	N=10000,samples=c(3,3),ndeg=c(500,500),top=500,model.org="mm9",fc.basis=1.5,
+	seed=NULL,draw.fpc=FALSE,multic=FALSE) {
 	if (!require(zoo))
 		stopwrap("R pacakage zoo is required in order to estimate AUFC weights!")
 	if (ncol(counts)<4)
@@ -191,6 +191,13 @@ make.sim.data.tcc <- function(...) {
 #' @param model.org the organism from which the real data are derived from. It
 #' must be one of the supported organisms (see the main \code{\link{metaseqr}}
 #' help page). It is used to sample real values for GC content.
+#' @param sim.length.bias a boolean to instruct the simulator to create genes
+#' whose read counts is proportional to their length. This is achieved by sorting
+#' in increasing order the mean parameter of the negative binomial distribution
+#' (and the dispersion according to the mean) which will cause an increasing gene
+#' count length with the sampling. The sampled lengths are also sorted so that in
+#' the final gene list, shorter genes have less counts as compared to the longer
+#' ones. The default is FALSE.
 #' @param seed a seed to use with random number generation for reproducibility.
 #' @return A named list with two members. The first member (\code{simdata})
 #' contains the synthetic dataset 
@@ -207,17 +214,37 @@ make.sim.data.tcc <- function(...) {
 #'}
 make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 	fc.basis=1.5,libsize.range=c(0.7,1.4),libsize.mag=1e+7,model.org=NULL,
-	seed=NULL) {
+	sim.length.bias=FALSE,seed=NULL) {
 	if (!is.null(model.org)) {
+		model.org <- tolower(model.org)
 		check.text.args("model.org",model.org,c("hg18","hg19","mm9","mm10",
-			"rno5","dm3","danRer7","tair10"),multiarg=FALSE)
+			"rno5","dm3","danrer7","pantro4","tair10"),multiarg=FALSE)
 		ann <- get.annotation(model.org,"gene")
 		real.gc <- as.numeric(ann$gc_content)
+		real.start <- as.numeric(ann$start)
+		real.end <- as.numeric(ann$end)
+		real.strand <- as.character(ann$strand)
 	}
 	mu.hat <- param$mu.hat
 	phi.hat <- param$phi.hat
+
 	if (!is.null(seed)) set.seed(seed)
-	ii <- sample(1:length(mu.hat),N,replace=TRUE)
+	if (sim.length.bias) {
+		sind <- sort(mu.hat,index.return=TRUE)$ix
+		mu.hat <- mu.hat[sind]
+		phi.hat <- phi.hat[sind]
+		if (length(mu.hat)>=N)
+			ii <- sort(sample(1:length(mu.hat),N))
+		else
+			ii <- sort(sample(1:length(mu.hat),N,replace=TRUE))
+	}
+	else {
+		if (length(mu.hat)>=N)
+			ii <- sample(1:length(mu.hat),N)
+		else
+			ii <- sample(1:length(mu.hat),N,replace=TRUE)
+	}
+
 	s1 <- samples[1]
 	s2 <- samples[2]
 	if (!is.null(seed)) set.seed(seed)
@@ -258,22 +285,42 @@ make.sim.data.sd <- function(N,param,samples=c(5,5),ndeg=rep(round(0.1*N),2),
 	# Now we have to simulate annotation
 	if (!is.null(seed)) set.seed(seed)
 	chromosome <- paste("chr",1+round(20*runif(N)),sep="")
-	if (!is.null(seed)) set.seed(seed)
-	start <- 1 + round(1e+6*runif(N))
-	if (!is.null(seed)) set.seed(seed)
-	end <- start + 250 + round(1e+6*runif(N))
 	gene_id <- gene_name <- paste("gene",1:N,sep="_")
-	if (!is.null(seed)) set.seed(seed)
 	if (!is.null(model.org)) {
-		if (length(real.gc)<=N)
-			gc_content <- sample(real.gc,N)
+		if (!is.null(seed)) set.seed(seed)
+		if (length(real.gc)>=N)
+			sample.ind <- sample(1:length(real.gc),N)			
 		else
-			gc_content <- sample(real.gc,N,replace=TRUE)
+			sample.ind <- sample(1:length(real.gc),N,replace=TRUE)
+		gc_content <- real.gc[sample.ind]
+		start <- real.start[sample.ind]
+		end <- real.end[sample.ind]
+		strand <- real.strand[sample.ind]
+		if (sim.length.bias) {
+			lenix <- sort(end-start,index.return=TRUE)$ix
+			start <- start[lenix]
+			end <- end[lenix]
+			gc_content <- gc_content[lenix]
+			strand <- strand[lenix]
+		}
 	}
-	else
+	else {
+		if (!is.null(seed)) set.seed(seed)
 		gc_content <- runif(N)
-	if (!is.null(seed)) set.seed(seed)
-	strand <- sample(c("+","-"),N,replace=TRUE)
+		if (!is.null(seed)) set.seed(seed)
+		start <- 1 + round(1e+6*runif(N))
+		if (!is.null(seed)) set.seed(seed)
+		end <- start + 250 + round(1e+6*runif(N))
+		if (!is.null(seed)) set.seed(seed)
+		strand <- sample(c("+","-"),N,replace=TRUE)
+		if (sim.length.bias) {
+			lenix <- sort(end-start,index.return=TRUE)$ix
+			start <- start[lenix]
+			end <- end[lenix]
+			gc_content <- gc_content[lenix]
+			strand <- strand[lenix]
+		}
+	}
 	if (!is.null(seed)) set.seed(seed)
 	biotype <- sample(paste("biotype",1:10),N,replace=TRUE)
 	sim.data <- data.frame(
@@ -370,7 +417,7 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
 		optimize(mlfo,c(x$h-1e-2,x$h+1e-2),y=x$y,tol=eps)$minimum
 	},eps))
 	if (draw) {
-		x11()
+		dev.new()
 		plot(log10(mu.hat[phi.ind]),log10(phi.hat),col="blue",pch=20,cex=0.5,
 			xlab="",ylab="")
 		title(xlab="mean",ylab="dispesion",font=2,cex=0.9)
