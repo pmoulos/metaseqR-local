@@ -3028,15 +3028,6 @@ disp <- function(...) {
 	if (exists("LOGGER")) {
 		logger <- get("LOGGER")
 		levalias <- c("one","two","three","four","five")
-		#if (!is.null(LOGGER)) {
-		#	switch(levalias[level(LOGGER)],
-		#		one = { debug(LOGGER,paste0(...)) },
-		#		two = { info(LOGGER,gsub("\\n","",paste0(...))) },
-		#		three = { warn(LOGGER,gsub("\\n","",paste0(...))) },
-		#		four = { error(LOGGER,gsub("\\n","",paste0(...))) },
-		#		five = { fatal(LOGGER,gsub("\\n","",paste0(...))) }
-		#	)
-		#}
 		if (!is.null(logger)) {
 			switch(levalias[level(logger)],
 				one = { debug(logger,paste0(...)) },
@@ -3058,12 +3049,6 @@ stopwrap <- function(...,t="fatal") {
 			else
 				error(logger,gsub("\\n","",paste0(...)))
 		}
-		#if (!is.null(LOGGER)) {
-		#	if (t=="fatal")
-		#		fatal(LOGGER,gsub("\\n","",paste0(...)))
-		#	else
-		#		error(LOGGER,gsub("\\n","",paste0(...)))
-		#}
 	}
 	stop(paste0(...))
 }
@@ -3074,10 +3059,6 @@ warnwrap <- function(...) {
 		if (!is.null("logger"))
 			warn(logger,gsub("\\n","",paste0(...)))
 	}
-	#if (exists("LOGGER")) {
-	#	if (!is.null("LOGGER"))
-	#		warn(LOGGER,gsub("\\n","",paste0(...)))
-	#}
 	warning(paste0(...),call.=FALSE)
 }
 

@@ -8,6 +8,7 @@
 #fi
 
 METASEQR_HOME=/media/HD4/Fleming/dev/metaseqR
+METASEQR_BUILD=/media/HD4/Fleming/dev/metaseqR-build
 REPO_HOME=/var/www/Rrepos
 
 #rm $METASEQR_HOME/inst/doc/metaseqr-pdf.tex
@@ -23,3 +24,14 @@ rm -r $REPO_HOME/*
 
 Rscript -e "remove.packages('metaseqR')"
 Rscript -e "source('roxybuild.R')"
+
+if [ -d $METASEQR_BUILD ]
+then
+	break
+else
+	mkdir -p $METASEQR_BUILD
+
+rsync -r --exclude=.svn $METASEQR_HOME $METASEQR_BUILD
+
+#R CMD build --resave-data $METASEQR_BUILD/metaseqR
+#R CMD check --no-build-vignettes $METASEQR_BUILD/metaseqR

@@ -9,7 +9,7 @@ roxy.package(
 	#R.libs="/usr/local/lib/R/site-library",
 	R.libs="/home/panos/R/x86_64-pc-linux-gnu-library/3.0",
 	repo.root="/var/www/Rrepos",
-	Rcmd.options=c(install="",build="",check="--as-cran",Rd2pdf="--pdf --no-preview"),
+	Rcmd.options=c(install="",build="--resave-data",check="--as-cran",Rd2pdf="--pdf --no-preview"),
 	pck.description=data.frame(
 		Package="metaseqR",
 		Type="Package",

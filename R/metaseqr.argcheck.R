@@ -189,7 +189,7 @@ check.file.args <- function(arg.name,arg.value) {
 #' @author Panagiotis Moulos
 #' @export
 check.parallel <- function(rc) {
-	if (suppressWarnings(!require(parallel)))
+	if (suppressWarnings(!require(parallel)) || .Platform$OS.type!="unix")
 		multi <- FALSE
 	else {
 		multi <- TRUE
