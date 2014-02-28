@@ -849,7 +849,7 @@ metaseqr <- function(
 	TEMPLATE <- HOME
 	#if (!exists("HOME"))
 	#	init.envar()
-	# Globalize the project's path and verbosity
+	# Globalize the project's verbosity and logger
 	if (from.raw)
 		PROJECT.PATH <- make.project.path(export.where)
 	else
@@ -857,15 +857,15 @@ metaseqr <- function(
 	VERBOSE <- NULL
 	VERBOSE <<- verbose
 	# Check logger, here
-	#if (run.log && suppressWarnings(!require(log4r)))
-	#{
-	#	warning("R package log4r is required to create an log file! Log will not be created...")
-	#	run.log <- FALSE
-	#}
+	if (run.log && suppressWarnings(!require(log4r)))
+	{
+		warning("R package log4r is required to create an log file! Log will not be created...")
+		run.log <- FALSE
+	}
 	LOGGER <- NULL
 	if (run.log)
 		LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,"metaseqr_run.log"),
-			level=log4r:::INFO,logformat="%d %c %m")
+			level=2,logformat="%d %c %m")
 	
 	# Check if sample names match in file/df and list, otherwise meaningless to proceed
 	if (!from.raw)
@@ -962,9 +962,8 @@ metaseqr <- function(
 	if (!is.null(contrast)) check.contrast.format(contrast,sample.list)
 	if ("bayseq" %in% statistics) libsize.list <- check.libsize(libsize.list,sample.list)
 
-	## Check main functionality packages
-	#check.packages(normalization,statistics,adjust.method,meta.p,export.scale,
-	#	qc.plots,report)
+	# Check main functionality packages
+	check.packages(adjust.method,meta.p,export.scale,qc.plots)
 	# Check if parallel processing is available
 	multic <- check.parallel(restrict.cores)
 	# Check the case of embedded annotation but not given gc and gene name columns
@@ -1295,7 +1294,7 @@ metaseqr <- function(
 		#	disp("Reading stored gene annotation for ",org,"...")
 		#	gene.data <- read.annotation(org,count.type)
 		#}
-		else if (annotation=="embedded") 
+		else if (annotation=="embedded")
 		{
 			# The following should work if annotation elements are arranged in 
 			# MeV-like data style
@@ -1325,19 +1324,22 @@ metaseqr <- function(
 		}
 		else # Reading from external file, similar to embedded
 		{
+			if (!is.data.frame(counts))
+			{
+				disp("Reading counts file ",counts.name,"...")
+				gene.counts <- read.delim(counts)
+			}
+			else
+				gene.counts <- counts
+			rownames(gene.counts) <- as.character(gene.counts[,id.col])
 			disp("Reading external gene annotation for ",org," from ",annotation,"...")
 			gene.data <- read.delim(annotation)
+			rownames(gene.data) <- as.character(gene.data$gene_id)
 			gene.data <- gene.data[rownames(gene.counts),]
-			colnames(gene.data)[id.col] <- "gene_id"
-			if (!is.na(gc.col))
-			{
-				colnames(gene.data)[gc.col] <- "gc_content"
-				if (max(gene.data$gc_content<=1)) # Is already divided
-					gene.data$gc_content = 100*gene.data$gc_content
-			}
-			if (!is.na(name.col)) colnames(gene.data)[name.col] <- "gene_name"
-			if (!is.na(bt.col)) colnames(gene.data)[bt.col] <- "biotype"
+			if (max(gene.data$gc_content)<=1) # Is already divided
+				gene.data$gc_content = 100*gene.data$gc_content
 		}
+		
 		total.gene.data <- gene.data # We need this for some total stats
 		exon.filter.result <- NULL
 
@@ -1939,22 +1941,35 @@ metaseqr <- function(
 						cut.ind <- which(sum.p.list[[cnt]]<=pcut)
 					}
 				)
-				export <- export[cut.ind,]
-				if (report) export.html <- export.html[cut.ind,]
 				pp <- sum.p.list[[cnt]][cut.ind]
+				export <- export[cut.ind,]
+				export <- export[order(pp),]
+				if (report)
+				{
+					export.html <- export.html[cut.ind,]
+					export.html <- export.html[order(pp),]
+				}
 			}
 			else
 			{
-				export <- export[sum.p.list[[cnt]]<pcut,]
-				if (report) export.html <- export.html[sum.p.list[[cnt]]<pcut,]
-				pp <- sum.p.list[[cnt]][sum.p.list[[cnt]]<pcut]
+				cut.ind <- which(sum.p.list[[cnt]]<=pcut)
+				pp <- sum.p.list[[cnt]][cut.ind,]
+				export <- export[cut.ind,]
+				export <- export[order(pp),]
+				if (report)
+				{
+					export.html <- export.html[cut.ind,]
+					export.html <- export.html[order(pp),]
+				}
 			}
 		}
 		else
+		{
 			pp <- sum.p.list[[cnt]]
-		export <- export[order(pp),]
-		if (report)
-			export.html <- export.html[order(pp),]
+			export <- export[order(pp),]
+			if (report)
+				export.html <- export.html[order(pp),]
+		}
 
 		# Final safety trigger
 		na.ind <- grep("NA",rownames(export))

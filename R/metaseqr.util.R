@@ -25,12 +25,18 @@
 #' @examples
 #' # Not yet implenented
 read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
-	#if (!require(GenomicRanges))
-	#	stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
-	#if (file.type=="bed" && !require(rtracklayer))
-	#	stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
-	#if (file.type %in% c("sam","bam") && !require(Rsamtools))
-	#	stopwrap("The Bioconductor package Rsamtools is required to process BAM files!")
+	if (!require(GenomicRanges))
+		stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
+	if (file.type=="bed" && !require(rtracklayer))
+		stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
+	if (file.type %in% c("sam","bam")) {
+		if (!require(Rsamtools))
+			stopwrap("The Bioconductor package Rsamtools is required to process ",
+				"BAM files!")
+		if (suppressWarnings(!require(Repitools)))
+			stopwrap("Bioconductor package Repitools is required to proceed with ",
+				"reading BAM files!")
+	}
 
 	# Convert annotation to GRanges
 	disp("Converting annotation to GenomicRanges object...")
@@ -87,10 +93,6 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 		}
 	}
 	else if (file.type %in% c("sam","bam")) {
-		# Gives some warnings about reloaded functions
-		#if (suppressWarnings(!require(Repitools)))
-		#	stopwrap("Bioconductor package Repitools is required to proceed with ",
-		#	"reading BAM files!")
 		if (file.type=="sam") {
 			for (n in sample.names) {
 				dest <- file.path(dirname(sample.files[n]),n)

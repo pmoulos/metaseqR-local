@@ -404,6 +404,10 @@ diagplot.mds <- function(x,sample.list,method="spearman",log.it=TRUE,output="x11
 	colspace <- c("red","blue","yellowgreen","orange","aquamarine2",
 				  "pink2","seagreen4","brown","purple","chocolate")
 	pchspace <- c(20,17,15,16,8,3,2,0,1,4)
+	if (ncol(x)<3) {
+		warnwrap("MDS plot cannot be created with less than 3 samples! Skipping...")
+		return(NULL)
+	}
 	if (log.it)
 		y <- nat2log(x,base=2)
 	else
@@ -855,6 +859,11 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection",
 			fil <- diagplot.noiseq.saturation(d2s,output,covars$biotype,path=path)
 		},
 		rnacomp = {
+			if (ncol(local.obj)<3) {
+				warnwrap("RNA composition plot cannot be created with less than ",
+					"3 samples! Skipping...")
+				return(NULL)
+			}
 			diagplot.data <- NOISeq::dat(local.obj,type="cd")
 			fil <- file.path(path,paste(which.plot,"_",status,".",output,sep=""))
 			graphics.open(output,fil)
@@ -1130,6 +1139,9 @@ diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
 #'}
 diagplot.volcano <- function(f,p,con=NULL,fcut=1,pcut=0.05,alt.names=NULL,
 	output="x11",path=NULL,...) { # output can be json here...
+	## Check rjson
+	#if ("json" %in% output && !require(rjson))
+	#	stopwrap("R package rjson is required to create interactive volcano plot!")
 	if (is.null(path)) path <- getwd()
 	if (is.null(con))
 		con <- conn <- ""

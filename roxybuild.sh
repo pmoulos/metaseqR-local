@@ -30,6 +30,7 @@ then
 	break
 else
 	mkdir -p $METASEQR_BUILD
+fi
 
 rsync -r --exclude=.svn $METASEQR_HOME $METASEQR_BUILD
 

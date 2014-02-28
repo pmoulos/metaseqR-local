@@ -142,7 +142,7 @@ make.sim.data.tcc <- function(...) {
 		stopwrap("Bioconductor package TCC is required to create simulated data!")
 	#tcc <- simulateReadCounts(Ngene=Ngene,PDEG=PDEG,DEG.assign=DEG.assign,
 	#	DEG.foldchange=DEG.foldchange,replicates=replicates)
-	tcc <- simulateReadCounts(...)
+	tcc <- TCC::simulateReadCounts(...)
 	n <- nrow(tcc$count)
 	# Now we have to simulate annotation
 	chromosome <- paste("chr",1+round(20*runif(n)),sep="")

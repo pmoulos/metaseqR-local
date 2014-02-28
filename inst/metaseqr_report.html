@@ -967,7 +967,7 @@
 									counter <- 1
 									cat("<script type=\"text/javascript\">")
 									for (n in nn) {
-										cat("$('#table_",counter,"').dataTable({\"sScrollY\": 400,\"sScrollX\": 900,\"bJQueryUI\": true,\"sPaginationType\": \"full_numbers\",\"bStateSave\": true,\"iDisplayLength\": 50});",sep="")
+										cat("$('#table_",counter,"').dataTable({\"aaSorting\": [], \"sScrollY\": 400,\"sScrollX\": 900,\"bJQueryUI\": true,\"sPaginationType\": \"full_numbers\",\"bStateSave\": true,\"iDisplayLength\": 50});",sep="")
 										counter <- counter + 1
 									}
 									cat("</script>")

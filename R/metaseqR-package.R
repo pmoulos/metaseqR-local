@@ -5,7 +5,7 @@
 #' Package: \tab metaseqR\cr
 #' Type: \tab Package\cr
 #' Version: \tab 0.99.0\cr
-#' Date: \tab 2014-02-21\cr
+#' Date: \tab 2014-02-27\cr
 #' Depends: \tab R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils,
 #' knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, NBPSeq, MADAM, survcomp,
 #' brew, gplots, corrplot, GenomicRanges, Rsamtools, rtracklayer, Repitools,

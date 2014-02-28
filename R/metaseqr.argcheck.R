@@ -244,125 +244,120 @@ check.libsize <- function(libsize.list,sample.list) {
 		return(NULL)
 }
 
-## Required packages validator
-##
-## Checks if all the required packages are present according to metaseqr input 
-## options. Internal use only.
-##
-## @param n normalization method
-## @param d statistics method
-## @param a multiple testing correction method
-## @param m meta-analysis method
-## @param s data transformation method
-## @param p qc plot types
-## @param r reporting option
-## @author Panagiotis Moulos
-## @export
+#' Required packages validator
+#'
+#' Checks if all the required packages are present according to metaseqr input 
+#' options. Internal use only.
+#'
+#' @param a multiple testing correction method
+#' @param m meta-analysis method
+#' @param s data transformation method
+#' @param p qc plot types
+#' @author Panagiotis Moulos
+#' @export
+check.packages <- function(a,m,s,p) {
 #check.packages <- function(n,d,a,m,s,p,r) {
-#	# Commenting below to conform with CRAN/Bioconductor warnings/guidelines... 
-#	# Dangerous for testing without building though...
-#	# Check normalization
-#	switch(n,
-#		edaseq = {
-#			if (!require(EDASeq)) stopwrap("Bioconductor package EDASeq is required ",
-#				"for \"edaseq\" normalization!")
-#		},
-#		deseq = {
-#			if (!require(DESeq)) stopwrap("Bioconductor package DESeq is required ",
-#				"for \"deseq\" normalization!")
-#		},
-#		edger = {
-#			if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required ",
-#				"for \"edger\" normalization!")
-#		},
-#		noiseq = {
-#			if (!require(NOISeq)) stopwrap("Bioconductor package NOISeq is required ",
-#				"for \"noiseq\" normalization!")
-#		},
-#		nbpseq = {
-#			if (!require(NBPSeq)) stopwrap("R package NBPSeq is required for ",
-#				"\"nbpseq\" normalization!")
-#		},
-#		none = {}
-#	)
-#	# Check differential expression method
-#	for (dd in d)
-#	{
-#		switch(dd,
-#			deseq = {
-#				if (!require(DESeq)) 
-#					stopwrap("Bioconductor package DESeq is required for \"deseq\" ",
-#						"differential expression!")
-#			},
-#			edger = {
-#				if (!require(edgeR)) 
-#					stopwrap("Bioconductor package edgeR is required for \"edger\" ",
-#						"differential expression!")
-#			},
-#			noiseq = {
-#				if (!require(NOISeq)) 
-#					stopwrap("Bioconductor package NOISeq is required for \"noiseq\" ",
-#						"differential expression!")
-#			},
-#			bayseq = {
-#				if (!require(baySeq)) 
-#					stopwrap("Bioconductor package baySeq is required for \"bayseq\" ",
-#						"differential expression!")
-#			},
-#			limma = {
-#				if (!require(limma)) 
-#					stopwrap("Bioconductor package limma is required for \"limma\" ",
-#						"differential expression!")
-#				if (!require(edgeR)) 
-#					stopwrap("Bioconductor package edgeR is required for \"edger\" ",
-#						"differential expression!")
-#			},
-#			nbpseq = {
-#				if (!require(NBPSeq)) 
-#					stopwrap("R package NBPSeq is required for \"nbpseq\" ",
-#						"differential expression!")
-#			},
-#			none = {}
-#		)
-#	}
-#	# Check multiple testing correction
-#	if (a=="qvalue" && !require(qvalue))
-#		stopwrap("Bioconductor package qvalue is required for Storey-Tibshirani ",
-#			"q-value correction!")
-#	# Check meta-analysis packages
-#	if (m %in% c("fisher","perm","sum") && !require(MADAM))
-#		stopwrap("R package MADAM is required for \"fisher\", \"perm\" or \"sum\" ",
-#			"p-value meta analysis!")
-#	if (m=="whitlock" && !require(survcomp))
-#		stopwrap("Bioconductor package survcomp is required for \"whitlock\" ",
-#			"p-value meta analysis!")
-#	# Check VST
-#	if (("vst" %in% s) && !require(vsn))
-#		stopwrap("Bioconductor package vsn is required for \"vsn\" count data "
-#			"transformation!")
-#	# Check plots
-#	if (any(p %in% c("biodetection","countsbio","saturation","rnacomp","biodist")) 
-#		&& !require(NOISeq))
-#		stopwrap("Bioconductor package NOISeq is required for some of the selected ",
-#			"QC plots!")
-#	if (any(p %in% c("gcbias","lengthbias","meandiff","meanvar")) && !require(EDASeq))
-#		stopwrap("Bioconductor package EDASeq is required for some of the selected ",
-#			"QC plots!")
-#	if (any(p %in% c("deheatmap","correl")) && !require(gplots))
-#		stopwrap("R package gplots is required for some of the selected QC plots!")
-#	if ("correl" %in% p && !require(corrplot))
-#		stopwrap("R package corrplot is required for some of the selected QC plots!")
-#	if ("venn" %in% p && !require(VennDiagram))
-#		stopwrap("R package VennDiagram is required for some of the selected QC plots!")
-#	if (r && !require(brew))
-#		stopwrap("R package brew is required to create an HTML report!")
-#	# Check biomaRt
-#	if (!require(biomaRt))
-#		stopwrap("Bioconductor package biomaRt is required!")
-#	# Check utils
-#	if (!require(utils))
-#		stopwrap("R package utils is required!")
-#	# Check rjson
-#	if (!require(rjson))
-#		stopwrap("R package rjson is required!")
-#}
+	# Commenting below to conform with CRAN/Bioconductor warnings/guidelines... 
+	# Dangerous for testing without building though...
+	# Check normalization
+	#switch(n,
+	#	edaseq = {
+	#		if (!require(EDASeq)) stopwrap("Bioconductor package EDASeq is required ",
+	#			"for \"edaseq\" normalization!")
+	#	},
+	#	deseq = {
+	#		if (!require(DESeq)) stopwrap("Bioconductor package DESeq is required ",
+	#			"for \"deseq\" normalization!")
+	#	},
+	#	edger = {
+	#		if (!require(edgeR)) stopwrap("Bioconductor package edgeR is required ",
+	#			"for \"edger\" normalization!")
+	#	},
+	#	noiseq = {
+	#		if (!require(NOISeq)) stopwrap("Bioconductor package NOISeq is required ",
+	#			"for \"noiseq\" normalization!")
+	#	},
+	#	nbpseq = {
+	#		if (!require(NBPSeq)) stopwrap("R package NBPSeq is required for ",
+	#			"\"nbpseq\" normalization!")
+	#	},
+	#	none = {}
+	#)
+	## Check differential expression method
+	#for (dd in d)
+	#{
+	#	switch(dd,
+	#		deseq = {
+	#			if (!require(DESeq)) 
+	#				stopwrap("Bioconductor package DESeq is required for \"deseq\" ",
+	#					"differential expression!")
+	#		},
+	#		edger = {
+	#			if (!require(edgeR)) 
+	#				stopwrap("Bioconductor package edgeR is required for \"edger\" ",
+	#					"differential expression!")
+	#		},
+	#		noiseq = {
+	#			if (!require(NOISeq)) 
+	#				stopwrap("Bioconductor package NOISeq is required for \"noiseq\" ",
+	#					"differential expression!")
+	#		},
+	#		bayseq = {
+	#			if (!require(baySeq)) 
+	#				stopwrap("Bioconductor package baySeq is required for \"bayseq\" ",
+	#					"differential expression!")
+	#		},
+	#		limma = {
+	#			if (!require(limma)) 
+	#				stopwrap("Bioconductor package limma is required for \"limma\" ",
+	#					"differential expression!")
+	#			if (!require(edgeR)) 
+	#				stopwrap("Bioconductor package edgeR is required for \"edger\" ",
+	#					"differential expression!")
+	#		},
+	#		nbpseq = {
+	#			if (!require(NBPSeq)) 
+	#				stopwrap("R package NBPSeq is required for \"nbpseq\" ",
+	#					"differential expression!")
+	#		},
+	#		none = {}
+	#	)
+	#}
+	## Check multiple testing correction
+	#if (a=="qvalue" && !require(qvalue))
+	#	stopwrap("Bioconductor package qvalue is required for Storey-Tibshirani ",
+	#		"q-value correction!")
+	# Check meta-analysis packages
+	if (m %in% c("fisher","fperm") && !require(MADAM))
+		stopwrap("R package MADAM is required for \"fisher\", \"perm\" or \"sum\" ",
+			"p-value meta analysis!")
+	if (m=="whitlock" && !require(survcomp))
+		stopwrap("Bioconductor package survcomp is required for \"whitlock\" ",
+			"p-value meta analysis!")
+	# Check VST
+	if (("vst" %in% s) && !require(vsn))
+		stopwrap("Bioconductor package vsn is required for \"vsn\" count data ",
+			"transformation!")
+	## Check plots
+	#if (any(p %in% c("biodetection","countsbio","saturation","rnacomp","biodist")) 
+	#	&& !require(NOISeq))
+	#	stopwrap("Bioconductor package NOISeq is required for some of the selected ",
+	#		"QC plots!")
+	#if (any(p %in% c("gcbias","lengthbias","meandiff","meanvar")) && !require(EDASeq))
+	#	stopwrap("Bioconductor package EDASeq is required for some of the selected ",
+	#		"QC plots!")
+	#if (any(p %in% c("deheatmap","correl")) && !require(gplots))
+	#	stopwrap("R package gplots is required for some of the selected QC plots!")
+	#if ("correl" %in% p && !require(corrplot))
+	#	stopwrap("R package corrplot is required for some of the selected QC plots!")
+	if ("venn" %in% p && !require(VennDiagram))
+		stopwrap("R package VennDiagram is required for some of the selected QC plots!")
+	#if (r && !require(brew))
+	#	stopwrap("R package brew is required to create an HTML report!")
+	## Check biomaRt
+	#if (!require(biomaRt))
+	#	stopwrap("Bioconductor package biomaRt is required!")
+	## Check utils
+	#if (!require(utils))
+	#	stopwrap("R package utils is required!")
+}

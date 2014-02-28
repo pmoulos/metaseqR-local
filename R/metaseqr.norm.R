@@ -273,8 +273,9 @@ normalize.noiseq <- function(gene.counts,sample.list,norm.args=NULL,gene.data=NU
 	norm.args$k=log.offset # Set the zero fixing constant
 	switch(norm.args$method,
 		rpkm = {
-			M <- NOISeq::rpkm(assayData(ns.obj)$exprs,long=norm.args$long,
-				k=norm.args$k,lc=norm.args$lc)
+			#M <- NOISeq::rpkm(assayData(ns.obj)$exprs,long=norm.args$long,
+			#	k=norm.args$k,lc=norm.args$lc)
+			M <- rpkm(assayData(ns.obj)$exprs,gene.length=norm.args$long)
 		},
 		uqua = {
 			M <- NOISeq::uqua(assayData(ns.obj)$exprs,long=norm.args$long,

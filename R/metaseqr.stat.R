@@ -44,16 +44,24 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 	the.design <- data.frame(condition=classes,row.names=colnames(object))
 	p <- vector("list",length(contrast.list))
 	names(p) <- names(contrast.list)
+	 # Check if there is no replication anywhere
+	if (all(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE)))) {
+		warnwrap("No replication detected! There is a possibility that ",
+			"DESeq will fail to estimate dispersions...")
+		method.disp <- "blind"
+		sharingMode.disp <- "fit-only"
+		fitType.disp <- "local"
+	}
+	else {
+		method.disp <- stat.args$method
+		sharingMode.disp <- stat.args$sharingMode
+		fitType.disp <- stat.args$fitType
+	}
 	switch(class(object),
 		CountDataSet = { # Has been normalized with DESeq
 			cds <- object
-			 # Check if there is no replication anywhere
-			if (all(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE))))
-				cds <- estimateDispersions(cds,method="blind",sharingMode="fit-only",
-					fitType=stat.args$fitType)
-			else
-				cds <- estimateDispersions(cds,method=stat.args$method,
-					sharingMode=stat.args$sharingMode,fitType=stat.args$fitType)
+			cds <- estimateDispersions(cds,method=method.disp,
+				sharingMode=sharingMode.disp,fitType=fitType.disp)
 		},
 		DGEList = { # Has been normalized with edgeR
 			# Trick found at http://cgrlucb.wikispaces.com/edgeR+spring2013
@@ -61,28 +69,28 @@ stat.deseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			cds <- newCountDataSet(round(t(t(object$counts)/scl)*mean(scl)),
 				the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method=stat.args$method,
-				sharingMode=stat.args$sharingMode)
+			cds <- estimateDispersions(cds,method=method.disp,
+				sharingMode=sharingMode.disp)
 		},
 		matrix = { # Has been normalized with EDASeq or NOISeq
 			cds <- newCountDataSet(object,the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method=stat.args$method,
-				sharingMode=stat.args$sharingMode)
+			cds <- estimateDispersions(cds,method=method.disp,
+				sharingMode=sharingMode.disp)
 		},
 		list = { # Has been normalized with NBPSeq and main method was "nbpseq"
 			cds <- newCountDataSet(as.matrix(round(sweep(object$counts,2,
 				object$norm.factors,"*"))),the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method=stat.args$method,
-				sharingMode=stat.args$sharingMode)
+			cds <- estimateDispersions(cds,method=method.disp,
+				sharingMode=sharingMode.disp)
 		},
 		nbp = { # Has been normalized with NBPSeq and main method was "nbsmyth"...
 			cds <- newCountDataSet(as.matrix(round(object$pseudo.counts)),
 				the.design$condition)
 			sizeFactors(cds) <- rep(1,ncol(cds))
-			cds <- estimateDispersions(cds,method=stat.args$method,
-				sharingMode=stat.args$sharingMode)
+			cds <- estimateDispersions(cds,method=method.disp,
+				sharingMode=sharingMode.disp)
 		}
 	)
 	for (con.name in names(contrast.list)) {
@@ -170,22 +178,33 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		}
 	)
 	# Dispersion estimate step
-	if (stat.args$main.method=="classic") {
-		dge <- estimateCommonDisp(dge,rowsum.filter=stat.args$rowsum.filter)
-		dge <- estimateTagwiseDisp(dge,prior.df=stat.args$prior.df,
-			trend=stat.args$trend,span=stat.args$span,method=stat.args$tag.method,
-			grid.length=stat.args$grid.length,grid.range=stat.args$grid.range)
+	# Check if there is no replication anywhere
+	repli = TRUE
+	if (all(sapply(sample.list,function(x) ifelse(length(x)==1,TRUE,FALSE)))) {
+		warnwrap("No replication when testing with edgeR! Consider using another ",
+			"statistical test or just performing empirical analysis. Setting to ",
+			"0.2...")
+		repli <- FALSE
+		bcv <- 0.2
 	}
-	else if (stat.args$main.method=="glm") {
-		design <- model.matrix(~0+classes,data=dge$samples)
-		dge <- estimateGLMCommonDisp(dge,design=design,offset=stat.args$offset,
-			method=stat.args$glm.method,subset=stat.args$subset,
-			AveLogCPM=stat.args$AveLogCPM)
-		dge <- estimateGLMTrendedDisp(dge,design=design,offset=stat.args$offset,
-			method=stat.args$trend.method,AveLogCPM=stat.args$AveLogCPM)
-		dge <- estimateGLMTagwiseDisp(dge,design=design,offset=stat.args$offset,
-			dispersion=stat.args$dispersion,prior.df=stat.args$prior.df,
-			span=stat.args$span,AveLogCPM=stat.args$AveLogCPM)
+	if (repli) {
+		if (stat.args$main.method=="classic") {
+			dge <- estimateCommonDisp(dge,rowsum.filter=stat.args$rowsum.filter)
+			dge <- estimateTagwiseDisp(dge,prior.df=stat.args$prior.df,
+				trend=stat.args$trend,span=stat.args$span,method=stat.args$tag.method,
+				grid.length=stat.args$grid.length,grid.range=stat.args$grid.range)
+		}
+		else if (stat.args$main.method=="glm") {
+			design <- model.matrix(~0+classes,data=dge$samples)
+			dge <- estimateGLMCommonDisp(dge,design=design,offset=stat.args$offset,
+				method=stat.args$glm.method,subset=stat.args$subset,
+				AveLogCPM=stat.args$AveLogCPM)
+			dge <- estimateGLMTrendedDisp(dge,design=design,offset=stat.args$offset,
+				method=stat.args$trend.method,AveLogCPM=stat.args$AveLogCPM)
+			dge <- estimateGLMTagwiseDisp(dge,design=design,offset=stat.args$offset,
+				dispersion=stat.args$dispersion,prior.df=stat.args$prior.df,
+				span=stat.args$span,AveLogCPM=stat.args$AveLogCPM)
+		}
 	}
 	# Actual statistical test
 	for (con.name in names(contrast.list))
@@ -193,21 +212,49 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 		disp("  Contrast: ", con.name)
 		con <- contrast.list[[con.name]]
 		if (length(con)==2) {
-			if (stat.args$main.method=="classic") {
-				res <- exactTest(dge,pair=unique(unlist(con)))
+			if (repli) {
+				if (stat.args$main.method=="classic") {
+					res <- exactTest(dge,pair=unique(unlist(con)))
+				}
+				else if (stat.args$main.method=="glm") {
+					s <- unlist(con)
+					us <- unique(s)
+					ms <- match(names(s),rownames(dge$samples))
+					if (any(is.na(ms)))
+						ms <- ms[which(!is.na(ms))]
+					design <- model.matrix(~0+s,data=dge$samples[ms,])
+					colnames(design) <- us
+					fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
+						weights=stat.args$weights,lib.size=stat.args$lib.size,
+						prior.count=stat.args$prior.count,start=stat.args$start,
+						method=stat.args$method)
+					co <- makeContrasts(paste(us[2],us[1],sep="-"),
+						levels=design)
+					lrt <- glmLRT(fit,contrast=co,test=stat.args$test)
+					res <- topTags(lrt,n=nrow(dge))
+				}
 			}
-			else if (stat.args$main.method=="glm") {
-				s <- unlist(con)
-				us <- unique(s)
-				design <- model.matrix(~0+s,data=dge$samples)
-				colnames(design) <- us
-				fit <- glmFit(dge,design=design,offset=stat.args$offset,
-					weights=stat.args$weights,lib.size=stat.args$lib.size,
-					prior.count=stat.args$prior.count,start=stat.args$start,
-					method=stat.args$method)				
-				co <- makeContrasts(paste(us,collapse="-"),levels=design)
-				lrt <- glmLRT(fit,contrast=co,test=stat.args$test)
-				res <- topTags(lrt,n=nrow(dge))
+			else {
+				if (stat.args$main.method=="classic") {
+					res <- exactTest(dge,pair=unique(unlist(con)),
+						dispersion=bcv^2)
+				}
+				else if (stat.args$main.method=="glm") {
+					s <- unlist(con)
+					us <- unique(s)
+					ms <- match(names(s),rownames(dge$samples))
+					if (any(is.na(ms)))
+						ms <- ms[which(!is.na(ms))]
+					design <- model.matrix(~0+s,data=dge$samples[ms,])
+					colnames(design) <- us
+					fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
+						weights=stat.args$weights,lib.size=stat.args$lib.size,
+						prior.count=stat.args$prior.count,start=stat.args$start,
+						method=stat.args$method,dispersion=bcv^2)
+					co <- makeContrasts(paste(us[2],us[1],sep="-"),levels=design)
+					lrt <- glmLRT(fit,contrast=co,test=stat.args$test)
+					res <- topTags(lrt,n=nrow(dge))
+				}
 			}
 		}
 		else { # GLM only
@@ -218,12 +265,18 @@ stat.edger <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 			if (any(is.na(ms)))
 				ms <- ms[which(!is.na(ms))]
 			design <- model.matrix(~s,data=dge$samples[ms,])
-			fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
-				weights=stat.args$weights,lib.size=stat.args$lib.size,
-				prior.count=stat.args$prior.count,start=stat.args$start,
-				method=stat.args$method)				
+			if (repli)
+				fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
+					weights=stat.args$weights,lib.size=stat.args$lib.size,
+					prior.count=stat.args$prior.count,start=stat.args$start,
+					method=stat.args$method)
+			else
+				fit <- glmFit(dge[,ms],design=design,offset=stat.args$offset,
+					weights=stat.args$weights,lib.size=stat.args$lib.size,
+					prior.count=stat.args$prior.count,start=stat.args$start,
+					method=stat.args$method,dispersion=bcv^2)
 			lrt <- glmLRT(fit,coef=2:ncol(fit$design),test=stat.args$test)
-			res <- topTags(lrt,n=nrow(dge))
+				res <- topTags(lrt,n=nrow(dge))
 		}
 		p[[con.name]] <- res$table[,"PValue"]
 		names(p[[con.name]]) <- rownames(res$table)
@@ -571,7 +624,7 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,
 	)
 	CD <- new("countData",data=bayes.data,replicates=classes)
 	if (is.null(libsize.list))
-		libsizes(CD) <- getLibsizes(CD)
+		libsizes(CD) <- baySeq::getLibsizes(CD)
 	else
 		libsizes(CD) <- unlist(libsize.list)
 	for (con.name in names(contrast.list)) {
@@ -585,18 +638,18 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,
 			groups(cd) <- list(NDE=rep(1,length(unlist(con))),
 				DE=unlist(con,use.names=FALSE)) # Maybe this will not work
 		replicates(cd) <- as.factor(classes[names(unlist(con))])
-		cd <- getPriors.NB(cd,samplesize=stat.args$samplesize,
+		cd <- baySeq::getPriors.NB(cd,samplesize=stat.args$samplesize,
 			samplingSubset=stat.args$samplingSubset,
 			equalDispersions=stat.args$equalDispersions,
 			estimation=stat.args$estimation,zeroML=stat.args$zeroML,
 			consensus=stat.args$consensus,cl=stat.args$cl)
-		cd <- getLikelihoods.NB(cd,pET=stat.args$pET,
+		cd <- baySeq::getLikelihoods.NB(cd,pET=stat.args$pET,
 			marginalise=stat.args$marginalise,subset=stat.args$subset,
 			priorSubset=stat.args$priorSubset,bootStraps=stat.args$bootStraps,
 			conv=stat.args$conv,nullData=stat.args$nullData,
 			returnAll=stat.args$returnAll,returnPD=stat.args$returnPD,
 			discardSampling=stat.args$discardSampling,cl=stat.args$cl)
-		tmp <- topCounts(cd,group="DE",number=nrow(cd))
+		tmp <- baySeq::topCounts(cd,group="DE",number=nrow(cd))
 		p[[con.name]] <- 1 - as.numeric(tmp[,"Likelihood"])
 		names(p[[con.name]]) <- rownames(tmp)
 		p[[con.name]] <- p[[con.name]][rownames(CD@data)]
