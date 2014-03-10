@@ -874,7 +874,7 @@ metaseqr <- function(
 		{
 			if (file.exists(counts))
 			{
-				aline <- read.delim(counts,nrows=5) # Read the 1st line
+				aline <- read.delim(counts,nrows=5) # Read the 1st lines
 				aline <- colnames(aline)
 			}
 			else
@@ -1146,7 +1146,7 @@ metaseqr <- function(
 	disp("Meta-analysis method: ",meta.p)
 	disp("Multiple testing correction: ",adjust.method)
 	if (!is.na(pcut)) disp("p-value threshold: ",pcut)
-	disp("Logarithmic tranformation offset: ",log.offset)
+	disp("Logarithmic transformation offset: ",log.offset)
 	if (!is.null(preset)) disp("Analysis preset: ",preset)
 	disp("Quality control plots: ",paste(qc.plots,collapse=", "))
 	disp("Figure format: ",paste(fig.format,collapse=", "))
@@ -1235,7 +1235,7 @@ metaseqr <- function(
 			{
 				if (from.raw) # Double check
 				{
-					r2c <- read2count(file.list,file.type,exon.data)
+					r2c <- read2count(file.list,file.type,exon.data,multic=multic)
 					exon.counts <- r2c$counts
 					if (is.null(libsize.list))
 						libsize.list <- r2c$libsize
@@ -1361,7 +1361,7 @@ metaseqr <- function(
 			{
 				if (from.raw) # Double check
 				{
-					r2c <- read2count(file.list,file.type,gene.data)
+					r2c <- read2count(file.list,file.type,gene.data,multic=multic)
 					gene.counts <- r2c$counts
 					if (is.null(libsize.list))
 						libsize.list <- r2c$libsize

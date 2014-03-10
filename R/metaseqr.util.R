@@ -18,13 +18,17 @@
 #' used by \code{metaseqr} are available (that is apart from the main chromosome,
 #' start, end, unique id and strand columns, if also present are the gene name and
 #' biotype columns). The default is \code{FALSE}.
+#' @param multic a logical value indicating the presence of multiple cores. Defaults
+#' to \code{FALSE}. Do not change it if you are not sure whether package parallel
+#' has been loaded or not.
 #' @return A data frame with counts for each sample, ready to be passed to the
 #' main \code{\link{metaseqr}} pipeline.
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
 #' # Not yet implenented
-read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
+read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE,
+	multic=FALSE) {
 	if (!require(GenomicRanges))
 		stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
 	if (file.type=="bed" && !require(rtracklayer))
@@ -37,7 +41,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 			stopwrap("Bioconductor package Repitools is required to proceed with ",
 				"reading BAM files!")
 	}
-
+	
 	# Convert annotation to GRanges
 	disp("Converting annotation to GenomicRanges object...")
 	if (packageVersion("GenomicRanges")<1.14) { # Classic way
@@ -75,22 +79,24 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 	names(libsize) <- sample.names
 	
 	if (file.type=="bed") {
-		for (n in sample.names) {
+		ret.val <- wapply(multic,sample.names,function(n,sample.files) {
 			disp("Reading bed file ",basename(sample.files[n]),
 				" for sample with name ",n,". This might take some time...")
 			bed <- import.bed(sample.files[n],trackLine=FALSE,asRangedData=FALSE)
 			disp("  Checking for chromosomes not present in the annotation...")
-			bed <- bed[which(!is.na(match(seqnames(bed),seqlevels(annotation.gr))))]
-			libsize[[n]] <- length(bed)
+			bed <- bed[which(!is.na(match(as(seqnames(bed),"character"),
+				seqlevels(annotation.gr))))]
+			libsize <- length(bed)
 			if (length(bed)>0) {
 				disp("  Counting reads overlapping with given annotation...")
-				counts[,n] <- countOverlaps(annotation.gr,bed)
+				counts <- countOverlaps(annotation.gr,bed)
 			}
 			else
 				warnwrap(paste("No reads left after annotation chromosome presence ",
 					"check for sample ",n,sep=""))
 			gc(verbose=FALSE)
-		}
+			return(list(counts=counts,libsize=libsize))
+		},sample.files)
 	}
 	else if (file.type %in% c("sam","bam")) {
 		if (file.type=="sam") {
@@ -103,7 +109,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 			}
 		}
 		# What about paired-end? Probably collapse to single-end...
-		for (n in sample.names) {
+		ret.val <- wapply(multic,sample.names,function(n,sample.files) {
 			disp("Reading bam file ",basename(sample.files[n])," for sample with name ",
 				n,". This might take some time...")
 			bam <- BAM2GRanges(sample.files[n],verbose=FALSE)
@@ -112,16 +118,21 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 				seqlevels(annotation.gr))))]
 			#bam <- bam[which(!is.na(GenomicRanges::match(seqnames(bam),
 			#	seqlevels(annotation.gr))))]
-			libsize[[n]] <- length(bam)
+			libsize <- length(bam)
 			if (length(bam)>0) {
 				disp("  Counting reads overlapping with given annotation...")
-				counts[,n] <- countOverlaps(annotation.gr,bam)
+				counts <- countOverlaps(annotation.gr,bam)
 			}
 			else
 				warnwrap(paste("No reads left after annotation chromosome presence ",
 					"check for sample ",n,sep=""))
 			gc(verbose=FALSE)
-		}
+			return(list(counts=counts,libsize=libsize))
+		},sample.files)
+	}
+	for (i in 1:length(ret.val)) {
+		counts[,i] <- ret.val[[i]]$counts
+		libsize[[i]] <- ret.val[[i]]$libsize
 	}
 	
 	return(list(counts=counts,libsize=libsize))
@@ -164,7 +175,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE) {
 read.targets <- function(input,path=NULL) {
 	if (missing(input) || !file.exists(input))
 		stopwrap("The targets file should be a valid existing text file!")
-	tab <- read.delim(input)
+	tab <- read.delim(input,strip.white=TRUE)
 	samples <- as.character(tab[,1])
 	conditions <- unique(as.character(tab[,3]))
 	rawfiles <- as.character(tab[,2])
@@ -2768,6 +2779,11 @@ make.report.messages <- function(lang) {
 					)
 				),
 				references=list(
+					filein=list(
+						sam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
+						bam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
+						bed="Lawrence, M., Gentleman, R., Carey, V. (2009). rtracklayer: an R package for interfacing with genome browsers. Bioinformatics 25(14), 1841-1842."
+					),
 					norm=list(
 						edaseq="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
 						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",

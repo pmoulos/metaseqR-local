@@ -6,7 +6,8 @@
     statistics, nsim = 10, N = 10000, 
     samples = c(3, 3), ndeg = c(500, 500),
     top = 500, model.org = "mm9", fc.basis=1.5,
-    seed = NULL, draw.fpc = FALSE, multic = FALSE)
+    seed = NULL, draw.fpc = FALSE, multic = FALSE,
+    ...)
 }
 \arguments{
   \item{counts}{the real raw counts table from
@@ -58,6 +59,9 @@
   \item{multic}{whether to run in parallel 
   (if package \code{parallel} is present or
   not.}
+
+  \item{...}{Further arguments to be passed to 
+  \code{\link{estimate.sim.params}}.}
 }
 \value{
   A vector of weights to be used in 

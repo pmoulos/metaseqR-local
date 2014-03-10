@@ -31,6 +31,7 @@
 #' @param draw.fpc draw the averaged false discovery curves? Default to \code{FALSE}.
 #' @param multic whether to run in parallel (if package \code{parallel} is present
 #' or not.
+#' @param ... Further arguments to be passed to \code{\link{estimate.sim.params}}.
 #' @value A vector of weights to be used in \link{\code{metaseqr}} with the
 #' \code{weights} option.
 #' @export
@@ -41,14 +42,14 @@
 #'}
 estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
 	N=10000,samples=c(3,3),ndeg=c(500,500),top=500,model.org="mm9",fc.basis=1.5,
-	seed=NULL,draw.fpc=FALSE,multic=FALSE) {
+	seed=NULL,draw.fpc=FALSE,multic=FALSE,...) {
 	if (!require(zoo))
 		stopwrap("R pacakage zoo is required in order to estimate AUFC weights!")
 	if (ncol(counts)<4)
 		stopwrap("Cannot estimate AUFC weights with an initial dataset with less ",
 			"than 4 samples!")
 	else if (ncol(counts)>=4 && ncol(counts)<10) {
-		reind <- sample(20,1:ncol(counts),replace=TRUE)
+		reind <- sample(1:ncol(counts),20,replace=TRUE)
 		counts <- counts[,reind]
 	}
 	if (is.null(seed)) {
@@ -56,10 +57,10 @@ estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
 		seed.end <- seed.start + nsim - 1
 		seed <- as.list(seed.start:seed.end)
 	}
-	par.list <- estimate.sim.params(counts)
+	par.list <- estimate.sim.params(counts,...)
 
 	disp("Running simulations... This procedure requires time... Please wait...")
-	sim.results <- wapply(seed,function(x,normalization,statistics,N,par.list,
+	sim.results <- wapply(multic,seed,function(x,normalization,statistics,N,par.list,
 		samples,ndeg,fc.basis,model.org) {
 		D <- make.sim.data.sd(N=N,param=par.list,samples=samples,ndeg=ndeg,
 			fc.basis=fc.basis,model.org=model.org,seed=x)
@@ -92,18 +93,18 @@ estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
 		p.list <- vector("list",length(statistics))
 		for (s in statistics) {
 			field <- paste("p-value",s,sep="_")
-			p[[s]] <- tmp$data[[1]][,field]
-			names(p[[s]]) <- rownames(tmp$data[[1]])
+			p.list[[s]] <- tmp$data[[1]][,field]
+			names(p.list[[s]]) <- rownames(tmp$data[[1]])
 		}
 		p.matrix <- do.call("cbind",p.list)
 		return(list(simdata=D,pvalues=p.matrix))
 	},normalization,statistics,N,par.list,samples,ndeg,fc.basis,model.org)
 
 	disp("Estimating AUFC weights... Please wait...")
-	fpc.obj <- wapply(sim.results,function(x) {
+	fpc.obj <- wapply(multic,sim.results,function(x) {
 		true.de <- x$simdata$truedeg
 		names(true.de) <- rownames(x$simdata$simdata)
-		p.matrix <- x$p.matrix
+		p.matrix <- x$pvalues
 		true.de <- true.de[rownames(p.matrix)]
 		fdc <- diagplot.ftd(true.de,p.matrix,type="fpc",draw=FALSE)
 	})
@@ -388,9 +389,13 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
 		mat <- as.matrix(real.data)
 	}
 	else
-		stopwrap("The input count data must be either a file or a data frame!")
+		stopwrap("The input count data must be either a file, a matrix or a data ",
+			"frame!")
 	
 	low.lib <- which(apply(mat,2,sum)<libsize.gt)
+	if (length(low.lib)==ncol(mat))
+		stopwrap("Cannot estimate simulation parameters as the library sizes are ",
+			"too small! Try lowering the value of the libsize.gt parameter...")
 	if (length(low.lib)>0)
 		mat <- mat[,-low.lib]
 	disp("Downsampling counts...")

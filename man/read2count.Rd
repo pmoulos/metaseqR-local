@@ -3,7 +3,7 @@
 \title{SAM/BAM/BED file reader helper for the metaseqr pipeline}
 \usage{
   read2count(files.list, file.type, annotation,
-    has.all.fields = FALSE)
+    has.all.fields = FALSE, multic = FALSE)
 }
 \arguments{
   \item{files.list}{a named list whose members are named
@@ -31,6 +31,11 @@
   end, unique id and strand columns, if also present are
   the gene name and biotype columns). The default is
   \code{FALSE}.}
+
+  \item{multic}{a logical value indicating the presence 
+  of multiple cores. Defaults to \code{FALSE}. Do not 
+  change it if you are not sure whether package parallel
+  has been loaded or not.}
 }
 \value{
   A data frame with counts for each sample, ready to be

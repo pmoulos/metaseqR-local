@@ -549,7 +549,7 @@ each of the applied statistical tests and will also report, apart from the p-val
 from each method, a combined p-value using one of the following methods:
 
 \begin{enumerate}
-  \item	The Simes p-value combination method (ref). This method uses the minimum
+  \item	The Simes p-value combination method. This method uses the minimum
    ordered p-value from all methods divided by the inverse order of the p-values.
    The ordering is performed across the number of statistics used. This is the
    default method.

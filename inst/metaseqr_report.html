@@ -189,7 +189,12 @@
 									if (from.raw) {
 										cat("The raw ",file.type," files, one for each RNA-Seq sample, were summarized to ")
 										if (count.type=="exon") cat("an exon ") else if (count.type=="gene") cat("a gene ")
-										cat("read counts table, where each row represented ")
+										cat("read counts table, ")
+										if (file.type=="bam" || file.type=="sam")
+											cat("using the Bioconductor packages Repitools and GenomicRanges. ")
+										else if (file.type=="bed")
+											cat("using the Bioconductor packages rtracklayer and GenomicRanges. ")
+										cat("In the final read counts table, each row represented ")
 										if (count.type=="exon") cat("one exon, ") else if (count.type=="gene") cat("one gene, ")
 										cat("each column one RNA-Seq sample and each cell, the corresponding read counts associated with each row and column.")
 									}
@@ -521,7 +526,7 @@
 									<ul>
 										<%
 										for (cnt in contrast) {
-											cat("<li>",cnt,": ")
+											cat("<li>",cnt,": ",sep="")
 											if (!is.na(pcut) && length(which(sum.p.list[[cnt]]<pcut))==0)
 												cat("no differentially expressed genes","</li>")
 											else if (is.na(pcut))
@@ -532,11 +537,11 @@
 													cat(length(which(sum.p.list[[cnt]]<pcut)),"statistically significant genes of which",length(which(tmp>=1)),
 														"up regulated,",length(which(tmp<=-1)),"down regulated and",length(which(abs(tmp)<1)),
 														"not differentially expressed according to a p-value threshold of",pcut,"and an absolute fold change",
-														"cutoff value of 1 in log<sub>2</sub> scale")
+														"cutoff value of 1 in log<sub>2</sub> scale.")
 												}
 												else
-													cat(length(which(sum.p.list[[cnt]]<pcut)),"statistically significant, differentially expressed in at",
-													"least one condition at a p-value threshold of",pcut)
+													cat(length(which(sum.p.list[[cnt]]<pcut))," statistically significant, differentially expressed in at",
+													" least one condition at a p-value threshold of ",pcut,".",sep="")
 											}
 										}
 										%>
@@ -978,6 +983,7 @@
 							<div id="references_container"> <!-- Start references container -->
 								<%
 									refs <- unique(c(
+										report.messages$references$filein[[file.type]],
 										report.messages$references$norm[[normalization]],
 										unlist(report.messages$references$stat[statistics],use.names=FALSE),
 										unlist(report.messages$references$figure[qc.plots],use.names=FALSE),
