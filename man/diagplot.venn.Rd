@@ -49,7 +49,10 @@
   (default), \code{"png"}, \code{"jpg"}, \code{"bmp"},
   \code{"pdf"} or \code{"ps"}.}
 
-  \item{path}{the path to create output files.}
+  \item{path}{the path to create output files. If 
+  \code{"path"} is not \code{NULL}, a file with the 
+  intersections in the Venn diagrams will be produced 
+  and written in \code{"path"}.}
 
   \item{alt.names}{an optional named vector of names, e.g.
   HUGO gene symbols, alternative or complementary to the
@@ -74,8 +77,13 @@
   independently if the user grasps the logic.
 }
 \examples{
-\dontrun{
-# Not yet available...
+\donttest{
+p1 <- 0.01*matrix(runif(300),100,3)
+p2 <- matrix(runif(300),100,3)
+p <- rbind(p1,p2)
+rownames(p) <- paste("gene",1:200,sep="_")
+colnames(p) <- paste("method",1:3,sep="_")
+venn.contents <- diagplot.venn(p)
 }
 }
 \author{

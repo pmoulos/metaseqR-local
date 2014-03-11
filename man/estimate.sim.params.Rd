@@ -65,9 +65,14 @@
   (Robles et al., BMC Genomics, 2012).
 }
 \examples{
-\dontrun{
-# File "bottomly_read_counts.txt" from the ReCount database
-par.list <- estimate.sim.params("bottomly_read_counts.txt")
+\donttest{
+# Dowload locally the file "bottomly_read_counts.txt" from
+# the ReCount database
+download.file(paste("http://bowtie-bio.sourceforge.net/",
+  "recount/countTables/bottomly_count_table.txt",sep=""),
+  destfile="~/bottomly_count_table.txt")
+# Estimate simulation parameters
+par.list <- estimate.sim.params("~/bottomly_count_table.txt")
 }
 }
 \author{

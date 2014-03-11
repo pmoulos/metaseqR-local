@@ -17,7 +17,7 @@
   Internal use.
 }
 \examples{
-\dontrun{
+\donttest{
 dm3.id <- get.dataset("dm3")
 }
 }

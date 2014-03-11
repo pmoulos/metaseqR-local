@@ -13,9 +13,9 @@
   High score filtering function. Internal use.
 }
 \examples{
-\dontrun{
-filter.high(data,median(data))
-}
+data("mm9.gene.data",package="metaseqR")
+counts <- as.matrix(mm9.gene.counts[,9:12])
+f <- filter.low(counts,median(counts))
 }
 \author{
   Panagiotis Moulos

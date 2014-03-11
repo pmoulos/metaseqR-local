@@ -22,9 +22,13 @@
   2013).
 }
 \examples{
-\dontrun{
-# File "bottomly_read_counts.txt" from the ReCount database
-M <- as.matrix(read.delim("bottomly_read_counts.txt",row.names=1))
+\donttest{
+# Dowload locally the file "bottomly_count_table.txt" from
+# the ReCount database
+download.file(paste("http://bowtie-bio.sourceforge.net/",
+  "recount/countTables/bottomly_count_table.txt",sep=""),
+  destfile="~/bottomly_count_table.txt")
+M <- as.matrix(read.delim("~/bottomly_count_table.txt",row.names=1))
 D <- downsample.counts(M)
 }
 }

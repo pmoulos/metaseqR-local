@@ -943,7 +943,7 @@
   } }
 }
 \examples{
-\dontrun{
+\donttest{
 require(metaseqR)
 
 # An example pipeline with exon counts

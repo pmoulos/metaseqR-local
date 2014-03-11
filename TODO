@@ -1,6 +1,0 @@
-- Add EBSeq in statistics
-- Make the filters, normalization and statistical list arguments evaluation functions check also argument values (e.g. numeric)
-- Create interactive MA plots with highcharts
-- Add diagnostic data tables (e.g. the results of dat2save from NOISeq or the RNA composition test results).
-- For all plots, at some point return the data for the users to manipulate them e.g. in Excel
-- Add a functionality to run metaseqR with each method's default normalization algorithm (low-priority)

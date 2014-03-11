@@ -77,7 +77,7 @@
   arguments so it should not be used individually
 }
 \examples{
-\dontrun{
+\donttest{
 # Not yet available
 }
 }

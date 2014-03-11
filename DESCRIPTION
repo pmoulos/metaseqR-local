@@ -48,8 +48,8 @@ Encoding: UTF-8
 LazyLoad: yes
 LazyData: yes
 URL: http://www.fleming.gr
-biocViews: Bioinformatics, Preprocessing, HighThroughputSequencing,
-    RNAseq, DifferentialExpression
+biocViews: Software, GeneExpression, DifferentialExpression, WorkflowStep,
+    Preprocessing, QualityControl, Normalization, ReportWriting, RNASeq
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))

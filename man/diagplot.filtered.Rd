@@ -39,7 +39,7 @@
   column.
 }
 \examples{
-\dontrun{
+\donttest{
 y <- get.annotation("mm9","gene")
 x <- y[-sample(1:nrow(y),10000),]
 diagplot.filtered(x,y)

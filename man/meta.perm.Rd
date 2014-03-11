@@ -91,7 +91,7 @@
   when executed in parallel.
 }
 \examples{
-\dontrun{
+\donttest{
 # Not yet available
 }
 }

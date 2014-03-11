@@ -74,9 +74,15 @@
   expression and a significance level.
 }
 \examples{
-\dontrun{
-# Not yet available
-}
+p1 <- 0.001*matrix(runif(300),100,3)
+p2 <- matrix(runif(300),100,3)
+p <- rbind(p1,p2)
+rownames(p) <- paste("gene",1:200,sep="_")
+colnames(p) <- paste("method",1:3,sep="_")
+truth <- c(rep(1,40),rep(-1,40),rep(0,20),rep(1,10),
+  rep(2,10),rep(0,80))
+names(truth) <- rownames(p)
+roc.obj <- diagplot.roc(truth,p)
 }
 \author{
   Panagiotis Moulos

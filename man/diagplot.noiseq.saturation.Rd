@@ -34,14 +34,6 @@
   \code{\link{diagplot.metaseqr}} or
   \code{\link{diagplot.noiseq}}.
 }
-\examples{
-\dontrun{
-require(DESeq)
-data.matrix <- counts(makeExampleCountDataSet())
-biotype=c(rep("protein_coding",nrow(data.matrix)/2),rep("ncRNA",nrow(data.matrix)/2))
-diagplot.noiseq.saturation(data.matrix,"x11",biotype)
-}
-}
 \author{
   Panagiotis Moulos
 }

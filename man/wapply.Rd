@@ -17,6 +17,17 @@
   excessive coding for control of single or parallel code
   execution. Internal use.
 }
+\examples{
+\donttest{
+multic <- check.parallel(0.8)
+# Test meaningful only in machines where parallel computation 
+# supported
+if (multic) {
+  system.time(r<-wapply(TRUE,1:10,function(x) runif(1e+6)))
+  system.time(r<-wapply(FALSE,1:10,function(x) runif(1e+6)))
+}
+}
+}
 \author{
   Panagiotis Moulos
 }

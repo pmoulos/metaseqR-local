@@ -75,10 +75,13 @@
   simulated datasets with two conditions.
 }
 \examples{
-\dontrun{
+\donttest{
 # File "bottomly_read_counts.txt" from the ReCount database
+download.file(paste("http://bowtie-bio.sourceforge.net/recount/",
+  "countTables/bottomly_count_table.txt",sep=""),
+  destfile="~/bottomly_count_table.txt")
 N <- 10000
-par.list <- estimate.sim.params("bottomly_read_counts.txt")
+par.list <- estimate.sim.params("~/bottomly_read_counts.txt")
 sim <- make.sim.data.sd(N,par.list)
 synth.data <- sim$simdata
 true.deg <- which(sim$truedeg!=0)

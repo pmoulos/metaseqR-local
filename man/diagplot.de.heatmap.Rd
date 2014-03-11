@@ -39,9 +39,9 @@ require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 contrast <- "A_vs_B"
-M <- norm.edger(data.matrix,sample.list)
+M <- normalize.edger(data.matrix,sample.list)
 p <- stat.edger(M,sample.list,contrast)
-diagplot.de.heatmap(data.matrix[p[[1]]<0.05])
+diagplot.de.heatmap(data.matrix[p[[1]]<0.05,])
 }
 }
 \author{

@@ -19,7 +19,7 @@
   function. Internal use mostly.
 }
 \examples{
-\dontrun{
+\donttest{
 sets <- c("apple","pear","banana")
 counts <- make.venn.counts(length(sets))
 }

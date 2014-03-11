@@ -13,10 +13,8 @@
   functions. Internal use.
 }
 \examples{
-\dontrun{
 i <- 1
 disp("Now running iteration ",i,"...")
-}
 }
 \author{
   Panagiotis Moulos

@@ -17,10 +17,8 @@
   metaseqR by taking the minimum p-value.
 }
 \examples{
-\dontrun{
 p <- matrix(runif(300),100,3)
 pc <- combine.minp(p)
-}
 }
 \author{
   Panagiotis Moulos

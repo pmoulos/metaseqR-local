@@ -26,116 +26,128 @@
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
-#' # Not yet implenented
+#' \dontrun{
+#' my.targets <- read.targets("my_mm9_study_bam_files.txt")
+#' sample.list <- my.targets$samples
+#' file.list <- my.targets$files
+#' gene.data <- get.annotation("mm9","gene")
+#' r2c <- read2count(files.list=file.list,file.type=my.targets$type,
+#'   annotation=gene.data)
+#' gene.counts <- r2c$counts
+#' libsize.list <- r2s$libsize
+#'}
 read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE,
-	multic=FALSE) {
-	if (!require(GenomicRanges))
-		stopwrap("The Bioconductor package GenomicRanges is required to proceed!")
-	if (file.type=="bed" && !require(rtracklayer))
-		stopwrap("The Bioconductor package rtracklayer is required to process BED files!")
-	if (file.type %in% c("sam","bam")) {
-		if (!require(Rsamtools))
-			stopwrap("The Bioconductor package Rsamtools is required to process ",
-				"BAM files!")
-		if (suppressWarnings(!require(Repitools)))
-			stopwrap("Bioconductor package Repitools is required to proceed with ",
-				"reading BAM files!")
-	}
-	
-	# Convert annotation to GRanges
-	disp("Converting annotation to GenomicRanges object...")
-	if (packageVersion("GenomicRanges")<1.14) { # Classic way
-		if (has.all.fields)
-			annotation.gr <- GRanges(
-				seqnames=Rle(annotation[,1]),
-				ranges=IRanges(start=annotation[,2],end=annotation[,3]),
-				strand=Rle(annotation[,6]),
-				name=as.character(annotation[,4]),
-				symbol=as.character(annotation[,7]),
-				biotype=as.character(annotation[,8])
-			)
-		else
-			annotation.gr <- GRanges(
-				seqnames=Rle(annotation[,1]),
-				ranges=IRanges(start=annotation[,2],end=annotation[,3]),
-				strand=Rle(annotation[,6]),
-				name=as.character(annotation[,4])
-			)
-	}
-	else # Use native method in newer versions of GenomicRanges
-		annotation.gr <- makeGRangesFromDataFrame(
-			df=annotation,
-			keep.extra.columns=TRUE,
-			seqnames.field="chromosome"
-		)
+    multic=FALSE) {
+    if (!require(GenomicRanges))
+        stopwrap("The Bioconductor package GenomicRanges is required to ",
+            "proceed!")
+    if (file.type=="bed" && !require(rtracklayer))
+        stopwrap("The Bioconductor package rtracklayer is required to process ",
+            "BED files!")
+    if (file.type %in% c("sam","bam")) {
+        if (!require(Rsamtools))
+            stopwrap("The Bioconductor package Rsamtools is required to ",
+                "process BAM files!")
+        if (suppressWarnings(!require(Repitools)))
+            stopwrap("Bioconductor package Repitools is required to proceed ",
+                "with reading BAM files!")
+    }
+    
+    # Convert annotation to GRanges
+    disp("Converting annotation to GenomicRanges object...")
+    if (packageVersion("GenomicRanges")<1.14) { # Classic way
+        if (has.all.fields)
+            annotation.gr <- GRanges(
+                seqnames=Rle(annotation[,1]),
+                ranges=IRanges(start=annotation[,2],end=annotation[,3]),
+                strand=Rle(annotation[,6]),
+                name=as.character(annotation[,4]),
+                symbol=as.character(annotation[,7]),
+                biotype=as.character(annotation[,8])
+            )
+        else
+            annotation.gr <- GRanges(
+                seqnames=Rle(annotation[,1]),
+                ranges=IRanges(start=annotation[,2],end=annotation[,3]),
+                strand=Rle(annotation[,6]),
+                name=as.character(annotation[,4])
+            )
+    }
+    else # Use native method in newer versions of GenomicRanges
+        annotation.gr <- makeGRangesFromDataFrame(
+            df=annotation,
+            keep.extra.columns=TRUE,
+            seqnames.field="chromosome"
+        )
 
-	sample.names <- as.character(sapply(files.list,names))
-	sample.files <- unlist(files.list,use.names=FALSE)
-	names(sample.files) <- sample.names
-	counts <- matrix(0,nrow=length(annotation.gr),ncol=length(sample.names))
-	rownames(counts) <- as.character(annotation[,4])
-	colnames(counts) <- sample.names
-	libsize <- vector("list",length(sample.names))
-	names(libsize) <- sample.names
-	
-	if (file.type=="bed") {
-		ret.val <- wapply(multic,sample.names,function(n,sample.files) {
-			disp("Reading bed file ",basename(sample.files[n]),
-				" for sample with name ",n,". This might take some time...")
-			bed <- import.bed(sample.files[n],trackLine=FALSE,asRangedData=FALSE)
-			disp("  Checking for chromosomes not present in the annotation...")
-			bed <- bed[which(!is.na(match(as(seqnames(bed),"character"),
-				seqlevels(annotation.gr))))]
-			libsize <- length(bed)
-			if (length(bed)>0) {
-				disp("  Counting reads overlapping with given annotation...")
-				counts <- countOverlaps(annotation.gr,bed)
-			}
-			else
-				warnwrap(paste("No reads left after annotation chromosome presence ",
-					"check for sample ",n,sep=""))
-			gc(verbose=FALSE)
-			return(list(counts=counts,libsize=libsize))
-		},sample.files)
-	}
-	else if (file.type %in% c("sam","bam")) {
-		if (file.type=="sam") {
-			for (n in sample.names) {
-				dest <- file.path(dirname(sample.files[n]),n)
-				disp("Converting sam file ",basename(sample.files[n]),
-					" to bam file ",basename(dest),"...")
-				asBam(file=sample.files[n],destination=dest,overwrite=TRUE)
-				sample.files[n] <- paste(dest,"bam",sep=".")
-			}
-		}
-		# What about paired-end? Probably collapse to single-end...
-		ret.val <- wapply(multic,sample.names,function(n,sample.files) {
-			disp("Reading bam file ",basename(sample.files[n])," for sample with name ",
-				n,". This might take some time...")
-			bam <- BAM2GRanges(sample.files[n],verbose=FALSE)
-			disp("  Checking for chromosomes not present in the annotation...")
-			bam <- bam[which(!is.na(match(as(seqnames(bam),"character"),
-				seqlevels(annotation.gr))))]
-			#bam <- bam[which(!is.na(GenomicRanges::match(seqnames(bam),
-			#	seqlevels(annotation.gr))))]
-			libsize <- length(bam)
-			if (length(bam)>0) {
-				disp("  Counting reads overlapping with given annotation...")
-				counts <- countOverlaps(annotation.gr,bam)
-			}
-			else
-				warnwrap(paste("No reads left after annotation chromosome presence ",
-					"check for sample ",n,sep=""))
-			gc(verbose=FALSE)
-			return(list(counts=counts,libsize=libsize))
-		},sample.files)
-	}
-	for (i in 1:length(ret.val)) {
-		counts[,i] <- ret.val[[i]]$counts
-		libsize[[i]] <- ret.val[[i]]$libsize
-	}
-	
-	return(list(counts=counts,libsize=libsize))
+    sample.names <- as.character(sapply(files.list,names))
+    sample.files <- unlist(files.list,use.names=FALSE)
+    names(sample.files) <- sample.names
+    counts <- matrix(0,nrow=length(annotation.gr),ncol=length(sample.names))
+    rownames(counts) <- as.character(annotation[,4])
+    colnames(counts) <- sample.names
+    libsize <- vector("list",length(sample.names))
+    names(libsize) <- sample.names
+    
+    if (file.type=="bed") {
+        ret.val <- wapply(multic,sample.names,function(n,sample.files) {
+            disp("Reading bed file ",basename(sample.files[n]),
+                " for sample with name ",n,". This might take some time...")
+            bed <- import.bed(sample.files[n],trackLine=FALSE,
+                asRangedData=FALSE)
+            disp("  Checking for chromosomes not present in the annotation...")
+            bed <- bed[which(!is.na(match(as(seqnames(bed),"character"),
+                seqlevels(annotation.gr))))]
+            libsize <- length(bed)
+            if (length(bed)>0) {
+                disp("  Counting reads overlapping with given annotation...")
+                counts <- countOverlaps(annotation.gr,bed)
+            }
+            else
+                warnwrap(paste("No reads left after annotation chromosome ",
+                    "presence check for sample ",n,sep=""))
+            gc(verbose=FALSE)
+            return(list(counts=counts,libsize=libsize))
+        },sample.files)
+    }
+    else if (file.type %in% c("sam","bam")) {
+        if (file.type=="sam") {
+            for (n in sample.names) {
+                dest <- file.path(dirname(sample.files[n]),n)
+                disp("Converting sam file ",basename(sample.files[n]),
+                    " to bam file ",basename(dest),"...")
+                asBam(file=sample.files[n],destination=dest,overwrite=TRUE)
+                sample.files[n] <- paste(dest,"bam",sep=".")
+            }
+        }
+        # What about paired-end? Probably collapse to single-end...
+        ret.val <- wapply(multic,sample.names,function(n,sample.files) {
+            disp("Reading bam file ",basename(sample.files[n])," for sample ",
+                "with name ",n,". This might take some time...")
+            bam <- BAM2GRanges(sample.files[n],verbose=FALSE)
+            disp("  Checking for chromosomes not present in the annotation...")
+            bam <- bam[which(!is.na(match(as(seqnames(bam),"character"),
+                seqlevels(annotation.gr))))]
+            #bam <- bam[which(!is.na(GenomicRanges::match(seqnames(bam),
+            #    seqlevels(annotation.gr))))]
+            libsize <- length(bam)
+            if (length(bam)>0) {
+                disp("  Counting reads overlapping with given annotation...")
+                counts <- countOverlaps(annotation.gr,bam)
+            }
+            else
+                warnwrap(paste("No reads left after annotation chromosome ",
+                    "presence check for sample ",n,sep=""))
+            gc(verbose=FALSE)
+            return(list(counts=counts,libsize=libsize))
+        },sample.files)
+    }
+    for (i in 1:length(ret.val)) {
+        counts[,i] <- ret.val[[i]]$counts
+        libsize[[i]] <- ret.val[[i]]$libsize
+    }
+    
+    return(list(counts=counts,libsize=libsize))
 }
 
 #' Creates sample list and BAM/BED file list from file
@@ -173,53 +185,55 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE,
 #' bamfile.list <- the.list$files
 #'}
 read.targets <- function(input,path=NULL) {
-	if (missing(input) || !file.exists(input))
-		stopwrap("The targets file should be a valid existing text file!")
-	tab <- read.delim(input,strip.white=TRUE)
-	samples <- as.character(tab[,1])
-	conditions <- unique(as.character(tab[,3]))
-	rawfiles <- as.character(tab[,2])
-	if (!is.null(path)) {
-		tmp <- dirname(rawfiles) # Test if there is already a path
-		if (any(tmp=="."))
-			rawfiles <- file.path(path,basename(rawfiles))
-	}
-	if (length(samples) != length(unique(samples)))
-		stopwrap("Sample names must be unique for each sample!")
-	if (length(rawfiles) != length(unique(rawfiles)))
-		stopwrap("File names must be unique for each sample!")
-	sample.list <- vector("list",length(conditions))
-	names(sample.list) <- conditions
-	for (n in conditions)
-		sample.list[[n]] <- samples[which(as.character(tab[,3])==n)]
-	file.list <- vector("list",length(conditions))
-	names(file.list) <- conditions
-	for (n in conditions) {
-		file.list[[n]] <- rawfiles[which(as.character(tab[,3])==n)]
-		names(file.list[[n]]) <- samples[which(as.character(tab[,3])==n)]
-	}
-	# Guess file type based on only one of them
-	tmp <- file.list[[1]][1]
-	if (length(grep("\\.bam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
-		type <- "bam"
-	else if (length(grep("\\.sam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
-		type <- "sam"
-	else if (length(grep("\\.bed$",tmp,ignore.case=TRUE,perl=TRUE)>0))
-		type <- "bed"
-	else
-		type <- NULL
-	return(list(samples=sample.list,files=file.list,type=type))
+    if (missing(input) || !file.exists(input))
+        stopwrap("The targets file should be a valid existing text file!")
+    tab <- read.delim(input,strip.white=TRUE)
+    samples <- as.character(tab[,1])
+    conditions <- unique(as.character(tab[,3]))
+    rawfiles <- as.character(tab[,2])
+    if (!is.null(path)) {
+        tmp <- dirname(rawfiles) # Test if there is already a path
+        if (any(tmp=="."))
+            rawfiles <- file.path(path,basename(rawfiles))
+    }
+    if (length(samples) != length(unique(samples)))
+        stopwrap("Sample names must be unique for each sample!")
+    if (length(rawfiles) != length(unique(rawfiles)))
+        stopwrap("File names must be unique for each sample!")
+    sample.list <- vector("list",length(conditions))
+    names(sample.list) <- conditions
+    for (n in conditions)
+        sample.list[[n]] <- samples[which(as.character(tab[,3])==n)]
+    file.list <- vector("list",length(conditions))
+    names(file.list) <- conditions
+    for (n in conditions) {
+        file.list[[n]] <- rawfiles[which(as.character(tab[,3])==n)]
+        names(file.list[[n]]) <- samples[which(as.character(tab[,3])==n)]
+    }
+    # Guess file type based on only one of them
+    tmp <- file.list[[1]][1]
+    if (length(grep("\\.bam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
+        type <- "bam"
+    else if (length(grep("\\.sam$",tmp,ignore.case=TRUE,perl=TRUE))>0)
+        type <- "sam"
+    else if (length(grep("\\.bed$",tmp,ignore.case=TRUE,perl=TRUE)>0))
+        type <- "bed"
+    else
+        type <- NULL
+    return(list(samples=sample.list,files=file.list,type=type))
 }
 
 #' Get precalculated statistical test weights
 #'
-#' This function returns pre-calculated weights for human, mouse and fruitfly,
-#' based on the performance of simulated datasets based on real data from the
-#' ReCount database (\url{http://bowtie-bio.sourceforge.net/recount/}).
+#' This function returns pre-calculated weights for human, chimpanzee, mouse,
+#' fruitfly and arabidopsis based on the performance of simulated datasets estimated
+#' from real data from the ReCount database (\url{http://bowtie-bio.sourceforge.net/recount/}).
+#' Currently pre-calculated weights are available only when all six statistical
+#' tests are used and for normalization with EDASeq. For other combinations, use
+#' the \code{\link{estimate.aufc.weights}} function.
 #'
-#' @param org \code{"human"}, \code{"mouse"}, \code{"fruitfly"} or \code{"arabidopsis"}.
-#' @param statistics which statistical tests are being used (see \code{link{metaseqr}}
-#' main help page).
+#' @param org \code{"human"}, \code{"mouse"}, \code{"chimpanzee"}, \code{"fruitfly"}
+#' or \code{"arabidopsis"}.
 #' @return A named vector of convex weights.
 #' @export
 #' @author Panagiotis Moulos
@@ -227,62 +241,73 @@ read.targets <- function(input,path=NULL) {
 #' \dontrun{
 #' wh <- get.weights("human",c("deseq","edger","noiseq"))
 #}
-get.weights <- function(org=c("human","mouse","fruitfly","arabidopsis"),
-	statistics=c("deseq","edger","noiseq","bayseq","limma","nbpseq")) {
-	org <- tolower(org)
-	check.text.args("org",org,c("human","mouse","fruitfly","arabidopsis"))
-	switch(org,
-		human = {
-			return(c(
-				deseq=0.05772458,
-				edger=0.14321672,
-				limma=0.34516089,
-				nbpseq=0.06108182,
-				noiseq=0.11595169,
-				bayseq=0.27686431
-			))
-		},
-		mouse = {
-			return(c(
-				deseq=0.05257695,
-				edger=0.24161354,
-				limma=0.29957277,
-				nbpseq=0.04914485,
-				noiseq=0.06847809,
-				bayseq=0.28861381
-			))
-		},
-		fruitfly = {
-			return(c(
-				deseq=0.01430269,
-				edger=0.12923339,
-				limma=0.38315685,
-				nbpseq=0.01265952,
-				noiseq=0.06778537,
-				bayseq=0.39286218
-			))
-		},
-		arabidopsis = {
-			return(c(
-				deseq=0.04926122,
-				edger=0.10130858,
-				limma=0.40842011,
-				nbpseq=0.04596652,
-				noiseq=0.09336509,
-				bayseq=0.30167848
-			))
-		},
-		chimp = {
-			return(c(
-				deseq=NULL,
-				edger=NULL,
-				limma=NULL,
-				nbpseq=NULL,
-				noiseq=NULL,
-				bayseq=NULL
-			))
-		}
-	)
+get.weights <- function(org=c("human","chimpanzee","mouse","fruitfly",
+    "arabidopsis")) {
+    org <- tolower(org)
+    check.text.args("org",org,c("human","chimpanzee","mouse","fruitfly",
+        "arabidopsis"))
+    switch(org,
+        human = {
+            return(c(
+                deseq=0.05772458,
+                edger=0.14321672,
+                limma=0.34516089,
+                nbpseq=0.06108182,
+                noiseq=0.11595169,
+                bayseq=0.27686431
+            ))
+        },
+        chimpanzee = {
+            return(c(
+                deseq=0.06026782,
+                edger=0.14964358,
+                limma=0.33500306,
+                nbpseq=0.05814585,
+                noiseq=0.11337043,
+                bayseq=0.28356925
+            ))
+        },
+        mouse = {
+            return(c(
+                deseq=0.05257695,
+                edger=0.24161354,
+                limma=0.29957277,
+                nbpseq=0.04914485,
+                noiseq=0.06847809,
+                bayseq=0.28861381
+            ))
+        },
+        fruitfly = {
+            return(c(
+                deseq=0.01430269,
+                edger=0.12923339,
+                limma=0.38315685,
+                nbpseq=0.01265952,
+                noiseq=0.06778537,
+                bayseq=0.39286218
+            ))
+        },
+        arabidopsis = {
+            return(c(
+                deseq=0.04926122,
+                edger=0.10130858,
+                limma=0.40842011,
+                nbpseq=0.04596652,
+                noiseq=0.09336509,
+                bayseq=0.30167848
+            ))
+        },
+        chimp = {
+            return(c(
+                deseq=NULL,
+                edger=NULL,
+                limma=NULL,
+                nbpseq=NULL,
+                noiseq=NULL,
+                bayseq=NULL
+            ))
+        }
+    )
 }
 
 #' Default parameters for several metaseqr functions
@@ -314,300 +339,301 @@ get.weights <- function(org=c("human","mouse","fruitfly","arabidopsis"),
 #' stat.args.edger <- get.defaults("statistics","edger")
 #'}
 get.defaults <- function(what,method=NULL) {
-	if (what %in% c("normalization","statistics") && is.null(method))
-		stopwrap("The method argument must be provided when what is ",
-			"\"normalization\" or \"statistics\"!")
-	switch(what,
-		normalization = {
-			switch(method,
-				edaseq = {
-					return(list(within.which="loess",between.which="full"))
-				},
-				deseq = {
-					return(list(locfunc=median))
-				},
-				edger = {
-					return(list(
-						method="TMM",refColumn=NULL,logratioTrim=0.3,
-						sumTrim=0.05,doWeighting=TRUE,Acutoff=-1e10,p=0.75								
-					))
-				},
-				noiseq = {
-					return(list(
-						method="tmm", # which normalization
-						long=1000,lc=1,k=1, # common arguments
-						refColumn=1,logratioTrim=0.3,sumTrim=0.05,
-						doWeighting=TRUE,Acutoff=-1e+10 # TMM normalization arguments
-					))
-				},
-				nbpseq = {
-					return(list(main.method="nbsmyth",method="AH2010",thinning=TRUE))
-				}
-			)
-		},
-		statistics = {
-			switch(method,
-				deseq = {
-					return(list(method="blind",sharingMode="fit-only",
-						fitType="local"))
-				},
-				edger = {
-					return(list(
-						main.method="classic", # classic or glm fit
-						rowsum.filter=5,prior.df=10,
-						trend="movingave",span=NULL, # classic estimateCommonDisp arguments
-						tag.method="grid",grid.length=11,grid.range=c(-6,6), # classic estimateTagwiseDisp arguments
-						offset=NULL,glm.method="CoxReid",subset=10000, # glm estimateGLMCommonDisp and estimateGLMTrendedDisp arguments
-						AveLogCPM=NULL,trend.method="auto",	# glm estimateGLMTagwiseDisp arguments
-						dispersion=NULL,offset=NULL,weights=NULL, # glmFit arguments
-						lib.size=NULL,prior.count=0.125,start=NULL,
-						method="auto",test="chisq",	# glmLRT arguments
-						abundance.trend=TRUE,robust=FALSE,
-						winsor.tail.p=c(0.05,0.1) # glmLFTest arguments
-					))
-				},
-				noiseq = {
-					return(list(
-						k=0.5,norm="n",replicates="biological",
-						factor="class",conditions=NULL,pnr=0.2,
-						nss=5,v=0.02,lc=1, # noiseq general and specific arguments
-						nclust=15,r=100,adj=1.5,
-						a0per=0.9,filter=0,depth=NULL,		
-						cv.cutoff=500,cpm=1 # noiseqbio specific arguments
-						
-					))
-				},
-				bayseq = {
-					return(list(samplesize=10000,samplingSubset=NULL,
-						equalDispersions=TRUE,estimation="QL",zeroML=FALSE,
-						consensus=FALSE,moderate=TRUE,pET="BIC",marginalise=FALSE,
-						subset=NULL,priorSubset=NULL,bootStraps=1,conv=1e-4,
-						nullData=FALSE,returnAll=FALSE,returnPD=FALSE,
-						discardSampling=FALSE,cl=NULL))
-				},
-				limma = {
-					return(list(normalize.method="none"))
-				},
-				nbpseq = {
-					return(list(
-						main.method="nbsmyth",
-						method=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
-						tests="HOA",
-						alternative="two.sided"
-					))
-				}
-			)
-		},
-		gene.filter = {
-			return(list(
-				length=list(
-					length=500
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.75
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.defaults("biotype.filter",method[1])
-			))
-		},
-		exon.filter = {
-			return(list(
-				mnrpx=list(
-					exons.per.gene=5,
-					min.exons=2,
-					frac=1/5
-				)
-			))
-		},
-		biotype.filter = {
-			switch(method,
-				hg18 = {
-					return(list(
-						unprocessed_pseudogene=TRUE,
-						pseudogene=FALSE,
-						miRNA=FALSE,
-						retrotransposed=FALSE,
-						protein_coding=FALSE,
-						processed_pseudogene=FALSE,
-						snRNA=FALSE,
-						snRNA_pseudogene=TRUE,
-						Mt_tRNA_pseudogene=TRUE,
-						miRNA_pseudogene=TRUE,
-						misc_RNA=FALSE,
-						tRNA_pseudogene=TRUE,
-						snoRNA=FALSE,
-						scRNA_pseudogene=TRUE,
-						rRNA_pseudogene=TRUE,
-						snoRNA_pseudogene=TRUE,
-						rRNA=TRUE,
-						misc_RNA_pseudogene=TRUE,
-						IG_V_gene=FALSE,
-						IG_D_gene=FALSE,
-						IG_J_gene=FALSE,
-						IG_C_gene=FALSE,
-						IG_pseudogene=TRUE,
-						scRNA=FALSE
-					))
-				},
-				hg19 = {
-					return(list(
-						pseudogene=FALSE,
-						lincRNA=FALSE,
-						protein_coding=FALSE,
-						antisense=FALSE,
-						processed_transcript=FALSE,
-						snRNA=FALSE,
-						sense_intronic=FALSE,
-						miRNA=FALSE,
-						misc_RNA=FALSE,
-						snoRNA=FALSE,
-						rRNA=TRUE,
-						polymorphic_pseudogene=FALSE,
-						sense_overlapping=FALSE,
-						three_prime_overlapping_ncrna=FALSE,
-						TR_V_gene=FALSE,
-						TR_V_pseudogene=TRUE,
-						TR_D_gene=FALSE,
-						TR_J_gene=FALSE,
-						TR_C_gene=FALSE,
-						TR_J_pseudogene=TRUE,
-						IG_C_gene=FALSE,
-						IG_C_pseudogene=TRUE,
-						IG_J_gene=FALSE,
-						IG_J_pseudogene=TRUE,
-						IG_D_gene=FALSE,
-						IG_V_gene=FALSE,
-						IG_V_pseudogene=TRUE
-					))
-				},
-				mm9 = {
-					return(list(
-						pseudogene=FALSE,
-						snRNA=FALSE,
-						protein_coding=FALSE,
-						antisense=FALSE,
-						miRNA=FALSE,
-						lincRNA=FALSE,
-						snoRNA=FALSE,
-						processed_transcript=FALSE,
-						misc_RNA=FALSE,
-						rRNA=TRUE,
-						sense_overlapping=FALSE,
-						sense_intronic=FALSE,
-						polymorphic_pseudogene=FALSE,
-						non_coding=FALSE,
-						three_prime_overlapping_ncrna=FALSE,
-						IG_C_gene=FALSE,
-						IG_J_gene=FALSE,
-						IG_D_gene=FALSE,
-						IG_V_gene=FALSE,
-						ncrna_host=FALSE
-					))
-				},
-				mm10 = {
-					return(list(
-						pseudogene=FALSE,
-						snRNA=FALSE,
-						protein_coding=FALSE,
-						antisense=FALSE,
-						miRNA=FALSE,
-						snoRNA=FALSE,
-						lincRNA=FALSE,
-						processed_transcript=FALSE,
-						misc_RNA=FALSE,
-						rRNA=TRUE,
-						sense_intronic=FALSE,
-						sense_overlapping=FALSE,
-						polymorphic_pseudogene=FALSE,
-						IG_C_gene=FALSE,
-						IG_J_gene=FALSE,
-						IG_D_gene=FALSE,
-						IG_LV_gene=FALSE,
-						IG_V_gene=FALSE,
-						IG_V_pseudogene=TRUE,
-						TR_V_gene=FALSE,
-						TR_V_pseudogene=TRUE,
-						three_prime_overlapping_ncrna=FALSE
-					))
-				},
-				dm3 = {
-					return(list(
-						protein_coding=FALSE,
-						ncRNA=FALSE,
-						snoRNA=FALSE,
-						pre_miRNA=FALSE,
-						pseudogene=FALSE,
-						snRNA=FALSE,
-						tRNA=FALSE,
-						rRNA=TRUE
-					))
-				},
-				rn5 = {
-					return(list(
-						protein_coding=FALSE,
-						pseudogene=FALSE,
-						processed_pseudogene=FALSE,
-						miRNA=FALSE,
-						rRNA=TRUE,
-						misc_RNA=FALSE
-					))
-				},
-				danrer7 = {
-					return(list(
-						antisense=FALSE,
-						protein_coding=FALSE,
-						miRNA=FALSE,
-						snoRNA=FALSE,
-						rRNA=TRUE,
-						lincRNA=FALSE,
-						processed_transcript=FALSE,
-						snRNA=FALSE,
-						pseudogene=FALSE,
-						sense_intronic=FALSE,
-						misc_RNA=FALSE,
-						polymorphic_pseudogene=FALSE,
-						IG_V_pseudogene=TRUE,
-						IG_C_pseudogene=TRUE,
-						IG_J_pseudogene=TRUE,
-						non_coding=FALSE,
-						sense_overlapping=FALSE
-					))
-				},
-				pantro4 = {
-					return(list(
-						protein_coding=FALSE,
-						pseudogene=FALSE,
-						processed_pseudogene=FALSE,
-						miRNA=FALSE,
-						rRNA=TRUE,
-						snRNA=FALSE,
-						snoRNA=FALSE,
-						misc_RNA=FALSE
-					))
-				},
-				tair10 = {
-					return(list(
-						miRNA=FALSE,
-						ncRNA=FALSE,
-						protein_coding=FALSE,
-						pseudogene=FALSE,
-						rRNA=TRUE,
-						snoRNA=FALSE,
-						snRNA=FALSE,
-						transposable_element=FALSE,
-						tRNA=FALSE
-					))
-				}
-			)
-		}
-	)
+    if (what %in% c("normalization","statistics") && is.null(method))
+        stopwrap("The method argument must be provided when what is ",
+            "\"normalization\" or \"statistics\"!")
+    switch(what,
+        normalization = {
+            switch(method,
+                edaseq = {
+                    return(list(within.which="loess",between.which="full"))
+                },
+                deseq = {
+                    return(list(locfunc=median))
+                },
+                edger = {
+                    return(list(
+                        method="TMM",refColumn=NULL,logratioTrim=0.3,
+                        sumTrim=0.05,doWeighting=TRUE,Acutoff=-1e10,p=0.75                                
+                    ))
+                },
+                noiseq = {
+                    return(list(
+                        method="tmm", # which normalization
+                        long=1000,lc=1,k=1, # common arguments
+                        refColumn=1,logratioTrim=0.3,sumTrim=0.05,
+                        doWeighting=TRUE,Acutoff=-1e+10 # TMM normalization arguments
+                    ))
+                },
+                nbpseq = {
+                    return(list(main.method="nbsmyth",method="AH2010",
+                        thinning=TRUE))
+                }
+            )
+        },
+        statistics = {
+            switch(method,
+                deseq = {
+                    return(list(method="blind",sharingMode="fit-only",
+                        fitType="local"))
+                },
+                edger = {
+                    return(list(
+                        main.method="classic", # classic or glm fit
+                        rowsum.filter=5,prior.df=10,
+                        trend="movingave",span=NULL, # classic estimateCommonDisp arguments
+                        tag.method="grid",grid.length=11,grid.range=c(-6,6), # classic estimateTagwiseDisp arguments
+                        offset=NULL,glm.method="CoxReid",subset=10000, # glm estimateGLMCommonDisp and estimateGLMTrendedDisp arguments
+                        AveLogCPM=NULL,trend.method="auto",    # glm estimateGLMTagwiseDisp arguments
+                        dispersion=NULL,offset=NULL,weights=NULL, # glmFit arguments
+                        lib.size=NULL,prior.count=0.125,start=NULL,
+                        method="auto",test="chisq",    # glmLRT arguments
+                        abundance.trend=TRUE,robust=FALSE,
+                        winsor.tail.p=c(0.05,0.1) # glmLFTest arguments
+                    ))
+                },
+                noiseq = {
+                    return(list(
+                        k=0.5,norm="n",replicates="biological",
+                        factor="class",conditions=NULL,pnr=0.2,
+                        nss=5,v=0.02,lc=1, # noiseq general and specific arguments
+                        nclust=15,r=100,adj=1.5,
+                        a0per=0.9,filter=0,depth=NULL,        
+                        cv.cutoff=500,cpm=1 # noiseqbio specific arguments
+                        
+                    ))
+                },
+                bayseq = {
+                    return(list(samplesize=10000,samplingSubset=NULL,
+                        equalDispersions=TRUE,estimation="QL",zeroML=FALSE,
+                        consensus=FALSE,moderate=TRUE,pET="BIC",
+                        marginalise=FALSE,subset=NULL,priorSubset=NULL,
+                        bootStraps=1,conv=1e-4,nullData=FALSE,returnAll=FALSE,
+                        returnPD=FALSE,discardSampling=FALSE,cl=NULL))
+                },
+                limma = {
+                    return(list(normalize.method="none"))
+                },
+                nbpseq = {
+                    return(list(
+                        main.method="nbsmyth",
+                        method=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
+                        tests="HOA",
+                        alternative="two.sided"
+                    ))
+                }
+            )
+        },
+        gene.filter = {
+            return(list(
+                length=list(
+                    length=500
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.75
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.defaults("biotype.filter",method[1])
+            ))
+        },
+        exon.filter = {
+            return(list(
+                mnrpx=list(
+                    exons.per.gene=5,
+                    min.exons=2,
+                    frac=1/5
+                )
+            ))
+        },
+        biotype.filter = {
+            switch(method,
+                hg18 = {
+                    return(list(
+                        unprocessed_pseudogene=TRUE,
+                        pseudogene=FALSE,
+                        miRNA=FALSE,
+                        retrotransposed=FALSE,
+                        protein_coding=FALSE,
+                        processed_pseudogene=FALSE,
+                        snRNA=FALSE,
+                        snRNA_pseudogene=TRUE,
+                        Mt_tRNA_pseudogene=TRUE,
+                        miRNA_pseudogene=TRUE,
+                        misc_RNA=FALSE,
+                        tRNA_pseudogene=TRUE,
+                        snoRNA=FALSE,
+                        scRNA_pseudogene=TRUE,
+                        rRNA_pseudogene=TRUE,
+                        snoRNA_pseudogene=TRUE,
+                        rRNA=TRUE,
+                        misc_RNA_pseudogene=TRUE,
+                        IG_V_gene=FALSE,
+                        IG_D_gene=FALSE,
+                        IG_J_gene=FALSE,
+                        IG_C_gene=FALSE,
+                        IG_pseudogene=TRUE,
+                        scRNA=FALSE
+                    ))
+                },
+                hg19 = {
+                    return(list(
+                        pseudogene=FALSE,
+                        lincRNA=FALSE,
+                        protein_coding=FALSE,
+                        antisense=FALSE,
+                        processed_transcript=FALSE,
+                        snRNA=FALSE,
+                        sense_intronic=FALSE,
+                        miRNA=FALSE,
+                        misc_RNA=FALSE,
+                        snoRNA=FALSE,
+                        rRNA=TRUE,
+                        polymorphic_pseudogene=FALSE,
+                        sense_overlapping=FALSE,
+                        three_prime_overlapping_ncrna=FALSE,
+                        TR_V_gene=FALSE,
+                        TR_V_pseudogene=TRUE,
+                        TR_D_gene=FALSE,
+                        TR_J_gene=FALSE,
+                        TR_C_gene=FALSE,
+                        TR_J_pseudogene=TRUE,
+                        IG_C_gene=FALSE,
+                        IG_C_pseudogene=TRUE,
+                        IG_J_gene=FALSE,
+                        IG_J_pseudogene=TRUE,
+                        IG_D_gene=FALSE,
+                        IG_V_gene=FALSE,
+                        IG_V_pseudogene=TRUE
+                    ))
+                },
+                mm9 = {
+                    return(list(
+                        pseudogene=FALSE,
+                        snRNA=FALSE,
+                        protein_coding=FALSE,
+                        antisense=FALSE,
+                        miRNA=FALSE,
+                        lincRNA=FALSE,
+                        snoRNA=FALSE,
+                        processed_transcript=FALSE,
+                        misc_RNA=FALSE,
+                        rRNA=TRUE,
+                        sense_overlapping=FALSE,
+                        sense_intronic=FALSE,
+                        polymorphic_pseudogene=FALSE,
+                        non_coding=FALSE,
+                        three_prime_overlapping_ncrna=FALSE,
+                        IG_C_gene=FALSE,
+                        IG_J_gene=FALSE,
+                        IG_D_gene=FALSE,
+                        IG_V_gene=FALSE,
+                        ncrna_host=FALSE
+                    ))
+                },
+                mm10 = {
+                    return(list(
+                        pseudogene=FALSE,
+                        snRNA=FALSE,
+                        protein_coding=FALSE,
+                        antisense=FALSE,
+                        miRNA=FALSE,
+                        snoRNA=FALSE,
+                        lincRNA=FALSE,
+                        processed_transcript=FALSE,
+                        misc_RNA=FALSE,
+                        rRNA=TRUE,
+                        sense_intronic=FALSE,
+                        sense_overlapping=FALSE,
+                        polymorphic_pseudogene=FALSE,
+                        IG_C_gene=FALSE,
+                        IG_J_gene=FALSE,
+                        IG_D_gene=FALSE,
+                        IG_LV_gene=FALSE,
+                        IG_V_gene=FALSE,
+                        IG_V_pseudogene=TRUE,
+                        TR_V_gene=FALSE,
+                        TR_V_pseudogene=TRUE,
+                        three_prime_overlapping_ncrna=FALSE
+                    ))
+                },
+                dm3 = {
+                    return(list(
+                        protein_coding=FALSE,
+                        ncRNA=FALSE,
+                        snoRNA=FALSE,
+                        pre_miRNA=FALSE,
+                        pseudogene=FALSE,
+                        snRNA=FALSE,
+                        tRNA=FALSE,
+                        rRNA=TRUE
+                    ))
+                },
+                rn5 = {
+                    return(list(
+                        protein_coding=FALSE,
+                        pseudogene=FALSE,
+                        processed_pseudogene=FALSE,
+                        miRNA=FALSE,
+                        rRNA=TRUE,
+                        misc_RNA=FALSE
+                    ))
+                },
+                danrer7 = {
+                    return(list(
+                        antisense=FALSE,
+                        protein_coding=FALSE,
+                        miRNA=FALSE,
+                        snoRNA=FALSE,
+                        rRNA=TRUE,
+                        lincRNA=FALSE,
+                        processed_transcript=FALSE,
+                        snRNA=FALSE,
+                        pseudogene=FALSE,
+                        sense_intronic=FALSE,
+                        misc_RNA=FALSE,
+                        polymorphic_pseudogene=FALSE,
+                        IG_V_pseudogene=TRUE,
+                        IG_C_pseudogene=TRUE,
+                        IG_J_pseudogene=TRUE,
+                        non_coding=FALSE,
+                        sense_overlapping=FALSE
+                    ))
+                },
+                pantro4 = {
+                    return(list(
+                        protein_coding=FALSE,
+                        pseudogene=FALSE,
+                        processed_pseudogene=FALSE,
+                        miRNA=FALSE,
+                        rRNA=TRUE,
+                        snRNA=FALSE,
+                        snoRNA=FALSE,
+                        misc_RNA=FALSE
+                    ))
+                },
+                tair10 = {
+                    return(list(
+                        miRNA=FALSE,
+                        ncRNA=FALSE,
+                        protein_coding=FALSE,
+                        pseudogene=FALSE,
+                        rRNA=TRUE,
+                        snoRNA=FALSE,
+                        snRNA=FALSE,
+                        transposable_element=FALSE,
+                        tRNA=FALSE
+                    ))
+                }
+            )
+        }
+    )
 }
 
 #' Validate normalization and statistical algorithm arguments
@@ -632,133 +658,154 @@ get.defaults <- function(what,method=NULL) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' # Not yet available
+#' normalization <- "edaseq"
+#' statistics <- "edger"
+#' norm.args <- get.defaults("normalization","edaseq")
+#' stat.args <- get.defaults("statistics","deseq")
+#' # Will return as is
+#' val <- validate.alg.args(normalization,statistics,norm.args,stat.args)
+#' val$norm.args
+#' val$stat.args
+#' # but...
+#' stat.args <- c(stat.args,my.irrelevant.arg=999)
+#' val <- validate.alg.args(normalization,statistics,norm.args,stat.args)
+#' # irrelevant argument will be removed
+#' val$norm.args
+#' val$stat.args
 #'}
 validate.alg.args <- function(normalization,statistics,norm.args,stat.args) {
-	if (normalization=="each") {
-		if (!is.null(norm.args)) {
-			for (s in statistics) {
-				if (!is.null(norm.args[[s]])) {
-					switch(s,
-						deseq = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("normalization",s,tmp)
-							norm.args[[s]] <- get.defaults("normalization",s)
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						},
-						edger = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("statistics",s,tmp)
-							norm.args[[s]] <- get.defaults("normalization",s)
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						},
-						limma = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("statistics","edger",tmp)
-							norm.args[[s]] <- get.defaults("normalization","edger")
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						},
-						nbpseq = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("statistics",s,tmp)
-							norm.args[[s]] <- get.defaults("normalization",s)
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						},
-						noiseq = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("statistics",s,tmp)
-							norm.args[[s]] <- get.defaults("normalization",s)
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						},
-						bayseq = {
-							tmp <- norm.args[[s]]
-							tmp <- validate.list.args("statistics","edger",tmp)
-							norm.args[[s]] <- get.defaults("normalization","edger")
-							if (length(tmp)>0)
-								norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
-						}
-					)
-				}
-				else {
-					switch(s,
-						deseq = {
-							norm.args[[s]] <- get.defaults(normalization,"deseq")
-						},
-						edger = {
-							norm.args[[s]] <- get.defaults(normalization,"edger")
-						},
-						limma = {
-							norm.args[[s]] <- get.defaults(normalization,"edger")
-						},
-						nbpseq = {
-							norm.args[[s]] <- get.defaults(normalization,"nbpseq")
-						},
-						noiseq = {
-							norm.args[[s]] <- get.defaults(normalization,"noiseq")
-						},
-						bayseq = {
-							norm.args[[s]] <- get.defaults(normalization,"edger")
-						}
-					)
-				}
-			}
-		}
-		else {
-			norm.args <- vector("list",length(statistics))
-			names(norm.args) <- statistics
-			for (s in statistics) {
-				switch(s,
-					deseq = {
-						norm.args[[s]] <- get.defaults(normalization,"deseq")
-					},
-					edger = {
-						norm.args[[s]] <- get.defaults(normalization,"edger")
-					},
-					limma = {
-						norm.args[[s]] <- get.defaults(normalization,"edger")
-					},
-					nbpseq = {
-						norm.args[[s]] <- get.defaults(normalization,"nbpseq")
-					},
-					noiseq = {
-						norm.args[[s]] <- get.defaults(normalization,"noiseq")
-					},
-					bayseq = {
-						norm.args[[s]] <- get.defaults(normalization,"edger")
-					}
-				)
-			}
-		}
-	}
-	else {
-		if (!is.null(norm.args))
-		{
-			tmp <- norm.args
-			tmp <- validate.list.args("normalization",normalization,tmp)
-			norm.args <- get.defaults("normalization",normalization)
-			if (length(tmp)>0)
-				norm.args <- set.arg(norm.args,tmp)
-		}
-		else
-			norm.args <- get.defaults("normalization",normalization)
-	}
-	for (s in statistics) {
-		if (!is.null(stat.args[[s]])) {
-			tmp <- stat.args[[s]]
-			tmp <- validate.list.args("statistics",s,tmp)
-			stat.args[[s]] <- get.defaults("statistics",s)
-			if (length(tmp)>0)
-				stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
-		}
-		else
-			stat.args[[s]] <- get.defaults("statistics",s)
-	}
-	return(list(norm.args=norm.args,stat.args=stat.args))
+    if (normalization=="each") {
+        if (!is.null(norm.args)) {
+            for (s in statistics) {
+                if (!is.null(norm.args[[s]])) {
+                    switch(s,
+                        deseq = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("normalization",s,tmp)
+                            norm.args[[s]] <- get.defaults("normalization",s)
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        },
+                        edger = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("statistics",s,tmp)
+                            norm.args[[s]] <- get.defaults("normalization",s)
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        },
+                        limma = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("statistics","edger",tmp)
+                            norm.args[[s]] <- get.defaults("normalization",
+                                "edger")
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        },
+                        nbpseq = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("statistics",s,tmp)
+                            norm.args[[s]] <- get.defaults("normalization",s)
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        },
+                        noiseq = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("statistics",s,tmp)
+                            norm.args[[s]] <- get.defaults("normalization",s)
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        },
+                        bayseq = {
+                            tmp <- norm.args[[s]]
+                            tmp <- validate.list.args("statistics","edger",tmp)
+                            norm.args[[s]] <- get.defaults("normalization",
+                                "edger")
+                            if (length(tmp)>0)
+                                norm.args[[s]] <- set.arg(norm.args[[s]],tmp)
+                        }
+                    )
+                }
+                else {
+                    switch(s,
+                        deseq = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "deseq")
+                        },
+                        edger = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "edger")
+                        },
+                        limma = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "edger")
+                        },
+                        nbpseq = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "nbpseq")
+                        },
+                        noiseq = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "noiseq")
+                        },
+                        bayseq = {
+                            norm.args[[s]] <- get.defaults(normalization,
+                                "edger")
+                        }
+                    )
+                }
+            }
+        }
+        else {
+            norm.args <- vector("list",length(statistics))
+            names(norm.args) <- statistics
+            for (s in statistics) {
+                switch(s,
+                    deseq = {
+                        norm.args[[s]] <- get.defaults(normalization,"deseq")
+                    },
+                    edger = {
+                        norm.args[[s]] <- get.defaults(normalization,"edger")
+                    },
+                    limma = {
+                        norm.args[[s]] <- get.defaults(normalization,"edger")
+                    },
+                    nbpseq = {
+                        norm.args[[s]] <- get.defaults(normalization,"nbpseq")
+                    },
+                    noiseq = {
+                        norm.args[[s]] <- get.defaults(normalization,"noiseq")
+                    },
+                    bayseq = {
+                        norm.args[[s]] <- get.defaults(normalization,"edger")
+                    }
+                )
+            }
+        }
+    }
+    else {
+        if (!is.null(norm.args))
+        {
+            tmp <- norm.args
+            tmp <- validate.list.args("normalization",normalization,tmp)
+            norm.args <- get.defaults("normalization",normalization)
+            if (length(tmp)>0)
+                norm.args <- set.arg(norm.args,tmp)
+        }
+        else
+            norm.args <- get.defaults("normalization",normalization)
+    }
+    for (s in statistics) {
+        if (!is.null(stat.args[[s]])) {
+            tmp <- stat.args[[s]]
+            tmp <- validate.list.args("statistics",s,tmp)
+            stat.args[[s]] <- get.defaults("statistics",s)
+            if (length(tmp)>0)
+                stat.args[[s]] <- set.arg(stat.args[[s]],tmp)
+        }
+        else
+            stat.args[[s]] <- get.defaults("statistics",s)
+    }
+    return(list(norm.args=norm.args,stat.args=stat.args))
 }
 
 #' Validate list parameters for several metaseqR functions
@@ -794,231 +841,231 @@ validate.alg.args <- function(normalization,statistics,norm.args,stat.args) {
 #' norm.args.edger <- validate.list.args("normalization","edger",norm.args.edger)
 #'}
 validate.list.args <- function(what,method=NULL,arg.list) {
-	what <- tolower(what)
-	check.text.args("what",what,c("normalization","statistics","gene.filter",
-		"exon.filter","biotype.filter"))
-	if (what %in% c("normalization","statistics") && is.null(method))
-		stopwrap("The method argument must be provided when what is ",
-			"\"normalization\" or \"statistics\"!")
-	switch(what,
-		normalization = {
-			switch(method,
-				edaseq = { 
-					valid <- names(arg.list) %in% c("within.which","between.which")
-					not.valid <- which(!valid)
-				},
-				deseq = {
-					valid <- names(arg.list) %in% c("locfunc")
-					not.valid <- which(!valid) 
-				},
-				edger = {
-					valid <- names(arg.list) %in% c("method","refColumn",
-						"logratioTrim","sumTrim","doWeighting","Acutoff","p")
-					not.valid <- which(!valid)
-				},
-				noiseq = {
-					valid <- names(arg.list) %in% c("method","long","lc","k",
-						"refColumn","logratioTrim","sumTrim","doWeighting",
-						"Acutoff")
-					not.valid <- which(!valid)
-				},
-				nbpseq = {
-					valid <- names(arg.list) %in% c("main.method","method",
-						"thinning")
-					not.valid <- which(!valid)
-				}
-			)
-			if (length(not.valid)>0) {
-				warnwrap(paste("The following",method,what,"argument names are ",
-					"invalid and will be ignored:",
-					paste(names(arg.list)[not.valid],collapse=", ")))
-				arg.list[not.valid] <- NULL
-			}
-			return(arg.list)
-		},
-		statistics = {
-			switch(method,
-				deseq = {
-					valid <- names(arg.list) %in% c("method","sharingMode","fitType")
-					not.valid <- which(!valid)
-				},
-				edger = {
-					valid <- names(arg.list) %in% c("main.method","rowsum.filter",
-						"prior.df","trend","span","tag.method","grid.length",
-						"grid.range","offset","glm.method","subset","AveLogCPM",
-						"trend.method","dispersion","offset","weights","lib.size",
-						"prior.count","start","method","test","abundance.trend",
-						"robust","winsor.tail.p")
-					not.valid <- which(!valid)
-				},
-				noiseq = {
-					valid <- names(arg.list) %in% c("k","norm","replicates",
-						"factor","conditions","pnr","nss","v","lc","nclust","r",
-						"adj","a0per","filter","depth","cv.cutoff","cpm")
-					not.valid <- which(!valid)
-				},
-				bayseq = {
-					valid <- names(arg.list) %in% c("samplesize","samplingSubset",
-						"equalDispersions","estimation","zeroML","consensus",
-						"moderate","pET","marginalise","subset","priorSubset",
-						"bootStraps","conv","nullData","returnAll","returnPD",
-						"discardSampling","cl")
-					not.valid <- which(!valid)
-				},
-				limma = {
-					valid <- names(arg.list) %in% c("normalize.method")
-					not.valid <- which(!valid)
-				},
-				nbpseq = {
-					valid <- names(arg.list) %in% c("main.method","method",
-						"tests","alternative")
-					not.valid <- which(!valid)
-				}
-			)
-			if (length(not.valid)>0) {
-				warnwrap(paste("The following",method,what,"argument names are ",
-					"invalid and will be ignored:",
-					paste(names(arg.list)[not.valid],collapse=", ")))
-				arg.list[not.valid] <- NULL
-			}
-			return(arg.list)
-		},
-		gene.filter = {
-			valid.1 <- names(arg.list) %in% c("length","avg.reads","expression",
-				"biotype")
-			not.valid.1 <- which(!valid.1)
-			if (length(not.valid.1)>0) {
-				warnwrap(paste("The following",method,what,"argument names are ",
-					"invalid and will be ignored:",
-					paste(names(arg.list)[not.valid.1],collapse=", ")))
-				arg.list[not.valid.1] <- NULL
-			}
-			if (length(arg.list)>0) {
-				for (n in names(arg.list)) {
-					switch(n,
-						length = {
-							valid.2 <- names(arg.list[[n]]) %in% c("length")
-							not.valid.2 <- which(!valid.2)
-						},
-						avg.reads = {
-							valid.2 <- names(arg.list[[n]]) %in% c("average.per.bp",
-								"quantile")
-							not.valid.2 <- which(!valid.2)
-						},
-						expression = {
-							valid.2 <- names(arg.list[[n]]) %in% c("median","mean",
-								"quantile","known","custom")
-							not.valid.2 <- which(!valid.2)
-						}
-					)
-					if (length(not.valid.2)>0) {
-						warnwrap(paste("The following",method,what,"sub-argument ",
-							"names are invalid and will be ignored:",
-							paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
-						arg.list[[n]][not.valid.2] <- NULL
-					}
-				}
-			}
-			return(arg.list)
-		},
-		exon.filter = {
-			valid.1 <- names(arg.list) %in% c("mnrpx")
-			not.valid.1 <- which(!valid.1)
-			if (length(not.valid.1)>0) {
-				warnwrap(paste("The following",method,what,"argument names are ",
-					"invalid and will be ignored:",
-					paste(names(arg.list)[not.valid.1],collapse=", ")))
-				arg.list[not.valid.1] <- NULL
-			}
-			if (length(arg.list)>0) {
-				for (n in names(arg.list)) {
-					switch(n,
-						mnrpx = {
-							valid.2 <- names(arg.list[[n]]) %in% c("exons.per.gene",
-								"min.exons","frac")
-							not.valid.2 <- which(!valid.2)
-						}
-					)
-					if (length(not.valid.2)>0) {
-						warnwrap(paste("The following",method,what,"sub-argument ",
-							"names are invalid and will be ignored:",
-							paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
-						arg.list[[n]][not.valid.2] <- NULL
-					}
-				}
-			}
-			return(arg.list)
-		},
-		biotype.filter = {
-			switch(method,
-				hg18 = {
-					valid <- names(arg.list) %in% c("unprocessed_pseudogene",
-						"pseudogene","miRNA","retrotransposed","protein_coding",
-						"processed_pseudogene","snRNA","snRNA_pseudogene",
-						"Mt_tRNA_pseudogene","miRNA_pseudogene","misc_RNA",
-						"tRNA_pseudogene","snoRNA","scRNA_pseudogene","rRNA_pseudogene",
-						"snoRNA_pseudogene","rRNA","misc_RNA_pseudogene","IG_V_gene",
-						"IG_D_gene","IG_J_gene","IG_C_gene","IG_pseudogene","scRNA")
-					not.valid <- which(!valid)
-				},
-				hg19 = {
-					valid <- names(arg.list) %in% c("pseudogene","lincRNA",
-						"protein_coding","antisense","processed_transcript",
-						"snRNA","sense_intronic","miRNA","misc_RNA","snoRNA",
-						"rRNA","polymorphic_pseudogene","sense_overlapping",
-						"three_prime_overlapping_ncrna","TR_V_gene","TR_V_pseudogene",
-						"TR_D_gene","TR_J_gene","TR_C_gene","TR_J_pseudogene",
-						"IG_C_gene","IG_C_pseudogene","IG_J_gene","IG_J_pseudogene",
-						"IG_D_gene","IG_V_gene","IG_V_pseudogene")
-					not.valid <- which(!valid)
-				},
-				mm9 = {
-					valid <- names(arg.list) %in% c("pseudogene","snRNA",
-						"protein_coding","antisense","miRNA","lincRNA","snoRNA",
-						"processed_transcript","misc_RNA","rRNA","sense_overlapping",
-						"sense_intronic","polymorphic_pseudogene","non_coding",
-						"three_prime_overlapping_ncrna","IG_C_gene","IG_J_gene",
-						"IG_D_gene","IG_V_gene","ncrna_host")
-					not.valid <- which(!valid)
-				},
-				mm10 = {
-					valid <- names(arg.list) %in% c("pseudogene","snRNA",
-						"protein_coding","antisense","miRNA","snoRNA","lincRNA",
-						"processed_transcript","misc_RNA","rRNA","sense_intronic",
-						"sense_overlapping","polymorphic_pseudogene","IG_C_gene",
-						"IG_J_gene","IG_D_gene","IG_LV_gene","IG_V_gene",
-						"IG_V_pseudogene","TR_V_gene","TR_V_pseudogene",
-						"three_prime_overlapping_ncrna")
-					not.valid <- which(!valid)
-				},
-				dm3 = {
-					valid <- names(arg.list) %in% c("protein_coding","ncRNA",
-						"snoRNA","pre_miRNA","pseudogene","snRNA","tRNA","rRNA")
-					not.valid <- which(!valid)
-				},
-				rn5 = {
-					valid <- names(arg.list) %in% c("protein_coding","pseudogene",
-						"processed_pseudogene","miRNA","rRNA","misc_RNA")
-					not.valid <- which(!valid)
-				},
-				danrer7 = {
-					valid <- names(arg.list) %in% c("antisense","protein_coding",
-						"miRNA","snoRNA","rRNA","lincRNA","processed_transcript",
-						"snRNA","pseudogene","sense_intronic","misc_RNA",
-						"polymorphic_pseudogene","IG_V_pseudogene","IG_C_pseudogene",
-						"IG_J_pseudogene","non_coding","sense_overlapping")
-					not.valid <- which(!valid)
-				}
-			)
-			if (length(not.valid)>0) {
-				warnwrap(paste("The following",method,what,"argument names are ",
-					"invalid and will be ignored:",
-					paste(names(arg.list)[not.valid],collapse=", ")))
-				arg.list[not.valid] <- NULL
-			}
-			return(arg.list)
-		}
-	)
+    what <- tolower(what)
+    check.text.args("what",what,c("normalization","statistics","gene.filter",
+        "exon.filter","biotype.filter"))
+    if (what %in% c("normalization","statistics") && is.null(method))
+        stopwrap("The method argument must be provided when what is ",
+            "\"normalization\" or \"statistics\"!")
+    switch(what,
+        normalization = {
+            switch(method,
+                edaseq = { 
+                    valid <- names(arg.list) %in% c("within.which","between.which")
+                    not.valid <- which(!valid)
+                },
+                deseq = {
+                    valid <- names(arg.list) %in% c("locfunc")
+                    not.valid <- which(!valid) 
+                },
+                edger = {
+                    valid <- names(arg.list) %in% c("method","refColumn",
+                        "logratioTrim","sumTrim","doWeighting","Acutoff","p")
+                    not.valid <- which(!valid)
+                },
+                noiseq = {
+                    valid <- names(arg.list) %in% c("method","long","lc","k",
+                        "refColumn","logratioTrim","sumTrim","doWeighting",
+                        "Acutoff")
+                    not.valid <- which(!valid)
+                },
+                nbpseq = {
+                    valid <- names(arg.list) %in% c("main.method","method",
+                        "thinning")
+                    not.valid <- which(!valid)
+                }
+            )
+            if (length(not.valid)>0) {
+                warnwrap(paste("The following",method,what,"argument names are ",
+                    "invalid and will be ignored:",
+                    paste(names(arg.list)[not.valid],collapse=", ")))
+                arg.list[not.valid] <- NULL
+            }
+            return(arg.list)
+        },
+        statistics = {
+            switch(method,
+                deseq = {
+                    valid <- names(arg.list) %in% c("method","sharingMode","fitType")
+                    not.valid <- which(!valid)
+                },
+                edger = {
+                    valid <- names(arg.list) %in% c("main.method","rowsum.filter",
+                        "prior.df","trend","span","tag.method","grid.length",
+                        "grid.range","offset","glm.method","subset","AveLogCPM",
+                        "trend.method","dispersion","offset","weights","lib.size",
+                        "prior.count","start","method","test","abundance.trend",
+                        "robust","winsor.tail.p")
+                    not.valid <- which(!valid)
+                },
+                noiseq = {
+                    valid <- names(arg.list) %in% c("k","norm","replicates",
+                        "factor","conditions","pnr","nss","v","lc","nclust","r",
+                        "adj","a0per","filter","depth","cv.cutoff","cpm")
+                    not.valid <- which(!valid)
+                },
+                bayseq = {
+                    valid <- names(arg.list) %in% c("samplesize","samplingSubset",
+                        "equalDispersions","estimation","zeroML","consensus",
+                        "moderate","pET","marginalise","subset","priorSubset",
+                        "bootStraps","conv","nullData","returnAll","returnPD",
+                        "discardSampling","cl")
+                    not.valid <- which(!valid)
+                },
+                limma = {
+                    valid <- names(arg.list) %in% c("normalize.method")
+                    not.valid <- which(!valid)
+                },
+                nbpseq = {
+                    valid <- names(arg.list) %in% c("main.method","method",
+                        "tests","alternative")
+                    not.valid <- which(!valid)
+                }
+            )
+            if (length(not.valid)>0) {
+                warnwrap(paste("The following",method,what,"argument names are ",
+                    "invalid and will be ignored:",
+                    paste(names(arg.list)[not.valid],collapse=", ")))
+                arg.list[not.valid] <- NULL
+            }
+            return(arg.list)
+        },
+        gene.filter = {
+            valid.1 <- names(arg.list) %in% c("length","avg.reads","expression",
+                "biotype")
+            not.valid.1 <- which(!valid.1)
+            if (length(not.valid.1)>0) {
+                warnwrap(paste("The following",method,what,"argument names are ",
+                    "invalid and will be ignored:",
+                    paste(names(arg.list)[not.valid.1],collapse=", ")))
+                arg.list[not.valid.1] <- NULL
+            }
+            if (length(arg.list)>0) {
+                for (n in names(arg.list)) {
+                    switch(n,
+                        length = {
+                            valid.2 <- names(arg.list[[n]]) %in% c("length")
+                            not.valid.2 <- which(!valid.2)
+                        },
+                        avg.reads = {
+                            valid.2 <- names(arg.list[[n]]) %in% c("average.per.bp",
+                                "quantile")
+                            not.valid.2 <- which(!valid.2)
+                        },
+                        expression = {
+                            valid.2 <- names(arg.list[[n]]) %in% c("median","mean",
+                                "quantile","known","custom")
+                            not.valid.2 <- which(!valid.2)
+                        }
+                    )
+                    if (length(not.valid.2)>0) {
+                        warnwrap(paste("The following",method,what,"sub-argument ",
+                            "names are invalid and will be ignored:",
+                            paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+                        arg.list[[n]][not.valid.2] <- NULL
+                    }
+                }
+            }
+            return(arg.list)
+        },
+        exon.filter = {
+            valid.1 <- names(arg.list) %in% c("mnrpx")
+            not.valid.1 <- which(!valid.1)
+            if (length(not.valid.1)>0) {
+                warnwrap(paste("The following",method,what,"argument names are ",
+                    "invalid and will be ignored:",
+                    paste(names(arg.list)[not.valid.1],collapse=", ")))
+                arg.list[not.valid.1] <- NULL
+            }
+            if (length(arg.list)>0) {
+                for (n in names(arg.list)) {
+                    switch(n,
+                        mnrpx = {
+                            valid.2 <- names(arg.list[[n]]) %in% c("exons.per.gene",
+                                "min.exons","frac")
+                            not.valid.2 <- which(!valid.2)
+                        }
+                    )
+                    if (length(not.valid.2)>0) {
+                        warnwrap(paste("The following",method,what,"sub-argument ",
+                            "names are invalid and will be ignored:",
+                            paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+                        arg.list[[n]][not.valid.2] <- NULL
+                    }
+                }
+            }
+            return(arg.list)
+        },
+        biotype.filter = {
+            switch(method,
+                hg18 = {
+                    valid <- names(arg.list) %in% c("unprocessed_pseudogene",
+                        "pseudogene","miRNA","retrotransposed","protein_coding",
+                        "processed_pseudogene","snRNA","snRNA_pseudogene",
+                        "Mt_tRNA_pseudogene","miRNA_pseudogene","misc_RNA",
+                        "tRNA_pseudogene","snoRNA","scRNA_pseudogene","rRNA_pseudogene",
+                        "snoRNA_pseudogene","rRNA","misc_RNA_pseudogene","IG_V_gene",
+                        "IG_D_gene","IG_J_gene","IG_C_gene","IG_pseudogene","scRNA")
+                    not.valid <- which(!valid)
+                },
+                hg19 = {
+                    valid <- names(arg.list) %in% c("pseudogene","lincRNA",
+                        "protein_coding","antisense","processed_transcript",
+                        "snRNA","sense_intronic","miRNA","misc_RNA","snoRNA",
+                        "rRNA","polymorphic_pseudogene","sense_overlapping",
+                        "three_prime_overlapping_ncrna","TR_V_gene","TR_V_pseudogene",
+                        "TR_D_gene","TR_J_gene","TR_C_gene","TR_J_pseudogene",
+                        "IG_C_gene","IG_C_pseudogene","IG_J_gene","IG_J_pseudogene",
+                        "IG_D_gene","IG_V_gene","IG_V_pseudogene")
+                    not.valid <- which(!valid)
+                },
+                mm9 = {
+                    valid <- names(arg.list) %in% c("pseudogene","snRNA",
+                        "protein_coding","antisense","miRNA","lincRNA","snoRNA",
+                        "processed_transcript","misc_RNA","rRNA","sense_overlapping",
+                        "sense_intronic","polymorphic_pseudogene","non_coding",
+                        "three_prime_overlapping_ncrna","IG_C_gene","IG_J_gene",
+                        "IG_D_gene","IG_V_gene","ncrna_host")
+                    not.valid <- which(!valid)
+                },
+                mm10 = {
+                    valid <- names(arg.list) %in% c("pseudogene","snRNA",
+                        "protein_coding","antisense","miRNA","snoRNA","lincRNA",
+                        "processed_transcript","misc_RNA","rRNA","sense_intronic",
+                        "sense_overlapping","polymorphic_pseudogene","IG_C_gene",
+                        "IG_J_gene","IG_D_gene","IG_LV_gene","IG_V_gene",
+                        "IG_V_pseudogene","TR_V_gene","TR_V_pseudogene",
+                        "three_prime_overlapping_ncrna")
+                    not.valid <- which(!valid)
+                },
+                dm3 = {
+                    valid <- names(arg.list) %in% c("protein_coding","ncRNA",
+                        "snoRNA","pre_miRNA","pseudogene","snRNA","tRNA","rRNA")
+                    not.valid <- which(!valid)
+                },
+                rn5 = {
+                    valid <- names(arg.list) %in% c("protein_coding","pseudogene",
+                        "processed_pseudogene","miRNA","rRNA","misc_RNA")
+                    not.valid <- which(!valid)
+                },
+                danrer7 = {
+                    valid <- names(arg.list) %in% c("antisense","protein_coding",
+                        "miRNA","snoRNA","rRNA","lincRNA","processed_transcript",
+                        "snRNA","pseudogene","sense_intronic","misc_RNA",
+                        "polymorphic_pseudogene","IG_V_pseudogene","IG_C_pseudogene",
+                        "IG_J_pseudogene","non_coding","sense_overlapping")
+                    not.valid <- which(!valid)
+                }
+            )
+            if (length(not.valid)>0) {
+                warnwrap(paste("The following",method,what,"argument names are ",
+                    "invalid and will be ignored:",
+                    paste(names(arg.list)[not.valid],collapse=", ")))
+                arg.list[not.valid] <- NULL
+            }
+            return(arg.list)
+        }
+    )
 }
 
 #' Annotation downloader
@@ -1049,45 +1096,45 @@ validate.list.args <- function(what,method=NULL,arg.list) {
 #' mm9.exons <- get.annotation("mm9","exon")
 #'}
 get.annotation <- function(org,type) {
-	if (org!="tair10")
-		mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",host=get.host(org),
-			dataset=get.dataset(org))
-	else
-		mart <- useMart(biomart="ENSEMBL_MART_PLANT",dataset=get.dataset(org))
-	#mart <- useMart(biomart="ensembl",host=get.host(org),dataset=get.dataset(org))
-	chrs.exp <- paste(get.valid.chrs(org),collapse="|")
-	if (type=="gene") {
-		bm <- getBM(attributes=get.gene.attributes(),mart=mart)
-		ann <- data.frame(
-			chromosome=paste("chr",bm$chromosome_name,sep=""),
-			start=bm$start_position,
-			end=bm$end_position,
-			gene_id=bm$ensembl_gene_id,
-			gc_content=bm$percentage_gc_content,
-			strand=ifelse(bm$strand==1,"+","-"),
-			gene_name=bm$external_gene_id,
-			biotype=bm$gene_biotype
-		)
-		rownames(ann) <- ann$gene_id
-	}
-	else if (type=="exon") {
-		bm <- getBM(attributes=get.exon.attributes(),mart=mart)
-		ann <- data.frame(
-			chromosome=paste("chr",bm$chromosome_name,sep=""),
-			start=bm$exon_chrom_start,
-			end=bm$exon_chrom_end,
-			exon_id=bm$ensembl_exon_id,
-			gene_id=bm$ensembl_gene_id,
-			strand=ifelse(bm$strand==1,"+","-"),
-			gene_name=bm$external_gene_id,
-			biotype=bm$gene_biotype
-		)
-		rownames(ann) <- ann$exon_id
-	}
-	ann <- ann[order(ann$chromosome,ann$start),]
-	ann <- ann[grep(chrs.exp,ann$chromosome),]
-	ann$chromosome <- as.character(ann$chromosome)
-	return(ann)
+    if (org!="tair10")
+        mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",host=get.host(org),
+            dataset=get.dataset(org))
+    else
+        mart <- useMart(biomart="ENSEMBL_MART_PLANT",dataset=get.dataset(org))
+    #mart <- useMart(biomart="ensembl",host=get.host(org),dataset=get.dataset(org))
+    chrs.exp <- paste(get.valid.chrs(org),collapse="|")
+    if (type=="gene") {
+        bm <- getBM(attributes=get.gene.attributes(),mart=mart)
+        ann <- data.frame(
+            chromosome=paste("chr",bm$chromosome_name,sep=""),
+            start=bm$start_position,
+            end=bm$end_position,
+            gene_id=bm$ensembl_gene_id,
+            gc_content=bm$percentage_gc_content,
+            strand=ifelse(bm$strand==1,"+","-"),
+            gene_name=bm$external_gene_id,
+            biotype=bm$gene_biotype
+        )
+        rownames(ann) <- ann$gene_id
+    }
+    else if (type=="exon") {
+        bm <- getBM(attributes=get.exon.attributes(),mart=mart)
+        ann <- data.frame(
+            chromosome=paste("chr",bm$chromosome_name,sep=""),
+            start=bm$exon_chrom_start,
+            end=bm$exon_chrom_end,
+            exon_id=bm$ensembl_exon_id,
+            gene_id=bm$ensembl_gene_id,
+            strand=ifelse(bm$strand==1,"+","-"),
+            gene_name=bm$external_gene_id,
+            biotype=bm$gene_biotype
+        )
+        rownames(ann) <- ann$exon_id
+    }
+    ann <- ann[order(ann$chromosome,ann$start),]
+    ann <- ann[grep(chrs.exp,ann$chromosome),]
+    ann$chromosome <- as.character(ann$chromosome)
+    return(ann)
 }
 
 #' Biotype converter
@@ -1100,10 +1147,11 @@ get.annotation <- function(org,type) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' hg19.bt <- get.biotypes(hg19.genes)
+#' hg18.genes <- get.annotation("hg18","gene")
+#' hg18.bt <- get.biotypes(hg18.genes)
 #'}
 get.biotypes <- function(a) {
-	return(as.character(unique(a$biotype)))
+    return(as.character(unique(a$biotype)))
 }
 
 #' Annotation downloader helper
@@ -1117,20 +1165,20 @@ get.biotypes <- function(a) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' mm9.hist <- get.host("mm9")
+#' mm9.host <- get.host("mm9")
 #'}
 get.host <- function(org) {
-	switch(org,
-		hg18 = { return("may2009.archive.ensembl.org") },
-		hg19 = { return("www.ensembl.org") },
-		mm9 = { return("may2012.archive.ensembl.org") },
-		mm10 = { return("www.ensembl.org") },
-		rn5 = { return("www.ensembl.org") },
-		dm3 = { return("www.ensembl.org") },
-		danrer7 = { return("www.ensembl.org") },
-		pantro4 = { return("www.ensembl.org") },
-		tair10 = { return("www.ensembl.org") }
-	)
+    switch(org,
+        hg18 = { return("may2009.archive.ensembl.org") },
+        hg19 = { return("www.ensembl.org") },
+        mm9 = { return("may2012.archive.ensembl.org") },
+        mm10 = { return("www.ensembl.org") },
+        rn5 = { return("www.ensembl.org") },
+        dm3 = { return("www.ensembl.org") },
+        danrer7 = { return("www.ensembl.org") },
+        pantro4 = { return("www.ensembl.org") },
+        tair10 = { return("www.ensembl.org") }
+    )
 }
 
 #' Annotation downloader helper
@@ -1147,17 +1195,17 @@ get.host <- function(org) {
 #' dm3.id <- get.dataset("dm3")
 #'}
 get.dataset <- function(org) {
-	switch(org,
-		hg18 = { return("hsapiens_gene_ensembl") },
-		hg19 = { return("hsapiens_gene_ensembl") },
-		mm9 = { return("mmusculus_gene_ensembl") },
-		mm10 = { return("mmusculus_gene_ensembl") },
-		rn5 = { return("rnorvegicus_gene_ensembl") },
-		dm3 = { return("dmelanogaster_gene_ensembl") },
-		danrer7 = { return("drerio_gene_ensembl") },
-		pantro4 = { return("ptroglodytes_gene_ensembl") },
-		tair10 = { return("athaliana_eg_gene") }
-	)
+    switch(org,
+        hg18 = { return("hsapiens_gene_ensembl") },
+        hg19 = { return("hsapiens_gene_ensembl") },
+        mm9 = { return("mmusculus_gene_ensembl") },
+        mm10 = { return("mmusculus_gene_ensembl") },
+        rn5 = { return("rnorvegicus_gene_ensembl") },
+        dm3 = { return("dmelanogaster_gene_ensembl") },
+        danrer7 = { return("drerio_gene_ensembl") },
+        pantro4 = { return("ptroglodytes_gene_ensembl") },
+        tair10 = { return("athaliana_eg_gene") }
+    )
 }
 
 #' Annotation downloader helper
@@ -1175,68 +1223,68 @@ get.dataset <- function(org) {
 #'}
 get.valid.chrs <- function(org)
 {
-	switch(org,
-		hg18 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
-				"chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
-			))
-		},
-		hg19 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
-				"chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
-			))
-		},
-		mm9 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-				"chr8","chr9","chrX","chrY"
-			))
-		},
-		mm10 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-				"chr8","chr9","chrX","chrY"
-			))
-		},
-		rn5 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-				"chr8","chr9","chrX"
-			))
-		},
-		dm3 = {
-			return(c(
-				"chr2L","chr2LHet","chr2R","chr2RHet","chr3L","chr3LHet","chr3R",
-				"chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet","chrYHet"
-			))
-		},
-		danrer7 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr23",
-				"chr24","chr25","chr3","chr4","chr5","chr6","chr7","chr8","chr9"
-			))
-		},
-		pantro4 = {
-			return(c(
-				"chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-				"chr17","chr18","chr19","chr20","chr21","chr22","chr2A","chr2B",
-				"chr3","chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
-			))
-		},
-		tair10 = {
-			return(c(
-				"chr1","chr2","chr3","chr4","chr5"
-			))
-		}
-	)
+    switch(org,
+        hg18 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
+                "chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
+            ))
+        },
+        hg19 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
+                "chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
+            ))
+        },
+        mm9 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
+                "chr8","chr9","chrX","chrY"
+            ))
+        },
+        mm10 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
+                "chr8","chr9","chrX","chrY"
+            ))
+        },
+        rn5 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
+                "chr8","chr9","chrX"
+            ))
+        },
+        dm3 = {
+            return(c(
+                "chr2L","chr2LHet","chr2R","chr2RHet","chr3L","chr3LHet","chr3R",
+                "chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet","chrYHet"
+            ))
+        },
+        danrer7 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr23",
+                "chr24","chr25","chr3","chr4","chr5","chr6","chr7","chr8","chr9"
+            ))
+        },
+        pantro4 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr20","chr21","chr22","chr2A","chr2B",
+                "chr3","chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
+            ))
+        },
+        tair10 = {
+            return(c(
+                "chr1","chr2","chr3","chr4","chr5"
+            ))
+        }
+    )
 }
 
 #' Annotation downloader helper
@@ -1253,16 +1301,16 @@ get.valid.chrs <- function(org)
 #' gene.attr <- get.gene.attributes()
 #'}
 get.gene.attributes <- function() {
-	return(c(
-		"chromosome_name",
-		"start_position",
-		"end_position",
-		"ensembl_gene_id",
-		"percentage_gc_content",
-		"strand",
-		"external_gene_id",
-		"gene_biotype"
-	))
+    return(c(
+        "chromosome_name",
+        "start_position",
+        "end_position",
+        "ensembl_gene_id",
+        "percentage_gc_content",
+        "strand",
+        "external_gene_id",
+        "gene_biotype"
+    ))
 }
 
 #' Annotation downloader helper
@@ -1279,16 +1327,16 @@ get.gene.attributes <- function() {
 #' exon.attr <- get.exon.attributes()
 #'}
 get.exon.attributes <- function() {
-	return(c(
-		"chromosome_name",
-		"exon_chrom_start",
-		"exon_chrom_end",
-		"ensembl_exon_id",
-		"strand",
-		"ensembl_gene_id",
-		"external_gene_id",
-		"gene_biotype"
-	))
+    return(c(
+        "chromosome_name",
+        "exon_chrom_start",
+        "exon_chrom_end",
+        "ensembl_exon_id",
+        "strand",
+        "ensembl_gene_id",
+        "external_gene_id",
+        "gene_biotype"
+    ))
 }
 
 #' Group together a more strict biotype filter
@@ -1305,160 +1353,160 @@ get.exon.attributes <- function() {
 #' sf <- get.strict.biofilter("hg18")
 #'}
 get.strict.biofilter <- function(org) {
-	switch(org,
-		hg18 = {
-			return(list(
-				unprocessed_pseudogene=TRUE,
-				pseudogene=TRUE,
-				miRNA=FALSE,
-				retrotransposed=FALSE,
-				protein_coding=FALSE,
-				processed_pseudogene=TRUE,
-				snRNA=FALSE,
-				snRNA_pseudogene=TRUE,
-				Mt_tRNA_pseudogene=TRUE,
-				miRNA_pseudogene=TRUE,
-				misc_RNA=TRUE,
-				tRNA_pseudogene=TRUE,
-				snoRNA=TRUE,
-				scRNA_pseudogene=TRUE,
-				rRNA_pseudogene=TRUE,
-				snoRNA_pseudogene=TRUE,
-				rRNA=TRUE,
-				misc_RNA_pseudogene=TRUE,
-				IG_V_gene=FALSE,
-				IG_D_gene=FALSE,
-				IG_J_gene=FALSE,
-				IG_C_gene=FALSE,
-				IG_pseudogene=TRUE,
-				scRNA=FALSE
-			))
-		},
-		hg19 = {
-			return(list(
-				pseudogene=TRUE,
-				lincRNA=FALSE,
-				protein_coding=FALSE,
-				antisense=FALSE,
-				processed_transcript=FALSE,
-				snRNA=FALSE,
-				sense_intronic=FALSE,
-				miRNA=FALSE,
-				misc_RNA=FALSE,
-				snoRNA=TRUE,
-				rRNA=TRUE,
-				polymorphic_pseudogene=TRUE,
-				sense_overlapping=FALSE,
-				three_prime_overlapping_ncrna=FALSE,
-				TR_V_gene=FALSE,
-				TR_V_pseudogene=TRUE,
-				TR_D_gene=FALSE,
-				TR_J_gene=FALSE,
-				TR_C_gene=FALSE,
-				TR_J_pseudogene=TRUE,
-				IG_C_gene=FALSE,
-				IG_C_pseudogene=TRUE,
-				IG_J_gene=FALSE,
-				IG_J_pseudogene=TRUE,
-				IG_D_gene=FALSE,
-				IG_V_gene=FALSE,
-				IG_V_pseudogene=TRUE
-			))
-		},
-		mm9 = {
-			return(list(
-				pseudogene=TRUE,
-				snRNA=FALSE,
-				protein_coding=FALSE,
-				antisense=FALSE,
-				miRNA=FALSE,
-				lincRNA=FALSE,
-				snoRNA=TRUE,
-				processed_transcript=FALSE,
-				misc_RNA=TRUE,
-				rRNA=TRUE,
-				sense_overlapping=FALSE,
-				sense_intronic=FALSE,
-				polymorphic_pseudogene=TRUE,
-				non_coding=FALSE,
-				three_prime_overlapping_ncrna=FALSE,
-				IG_C_gene=FALSE,
-				IG_J_gene=FALSE,
-				IG_D_gene=FALSE,
-				IG_V_gene=FALSE,
-				ncrna_host=FALSE
-			))
-		},
-		mm10 = {
-			return(list(
-				pseudogene=TRUE,
-				snRNA=FALSE,
-				protein_coding=FALSE,
-				antisense=FALSE,
-				miRNA=FALSE,
-				snoRNA=TRUE,
-				lincRNA=FALSE,
-				processed_transcript=FALSE,
-				misc_RNA=TRUE,
-				rRNA=TRUE,
-				sense_intronic=FALSE,
-				sense_overlapping=FALSE,
-				polymorphic_pseudogene=TRUE,
-				IG_C_gene=FALSE,
-				IG_J_gene=FALSE,
-				IG_D_gene=FALSE,
-				IG_LV_gene=FALSE,
-				IG_V_gene=FALSE,
-				IG_V_pseudogene=TRUE,
-				TR_V_gene=FALSE,
-				TR_V_pseudogene=TRUE,
-				three_prime_overlapping_ncrna=FALSE
-			))
-		},
-		dm3 = {
-			return(list(
-				protein_coding=FALSE,
-				ncRNA=FALSE,
-				snoRNA=TRUE,
-				pre_miRNA=FALSE,
-				pseudogene=TRUE,
-				snRNA=FALSE,
-				tRNA=FALSE,
-				rRNA=TRUE
-			))
-		},
-		rn5 = {
-			return(list(
-				protein_coding=FALSE,
-				pseudogene=TRUE,
-				processed_pseudogene=FALSE,
-				miRNA=FALSE,
-				rRNA=TRUE,
-				misc_RNA=TRUE
-			))
-		},
-		danrer7 = {
-			return(list(
-				antisense=FALSE,
-				protein_coding=FALSE,
-				miRNA=FALSE,
-				snoRNA=TRUE,
-				rRNA=TRUE,
-				lincRNA=FALSE,
-				processed_transcript=FALSE,
-				snRNA=FALSE,
-				pseudogene=TRUE,
-				sense_intronic=FALSE,
-				misc_RNA=TRUE,
-				polymorphic_pseudogene=TRUE,
-				IG_V_pseudogene=TRUE,
-				IG_C_pseudogene=TRUE,
-				IG_J_pseudogene=TRUE,
-				non_coding=FALSE,
-				sense_overlapping=FALSE
-			))
-		}
-	)
+    switch(org,
+        hg18 = {
+            return(list(
+                unprocessed_pseudogene=TRUE,
+                pseudogene=TRUE,
+                miRNA=FALSE,
+                retrotransposed=FALSE,
+                protein_coding=FALSE,
+                processed_pseudogene=TRUE,
+                snRNA=FALSE,
+                snRNA_pseudogene=TRUE,
+                Mt_tRNA_pseudogene=TRUE,
+                miRNA_pseudogene=TRUE,
+                misc_RNA=TRUE,
+                tRNA_pseudogene=TRUE,
+                snoRNA=TRUE,
+                scRNA_pseudogene=TRUE,
+                rRNA_pseudogene=TRUE,
+                snoRNA_pseudogene=TRUE,
+                rRNA=TRUE,
+                misc_RNA_pseudogene=TRUE,
+                IG_V_gene=FALSE,
+                IG_D_gene=FALSE,
+                IG_J_gene=FALSE,
+                IG_C_gene=FALSE,
+                IG_pseudogene=TRUE,
+                scRNA=FALSE
+            ))
+        },
+        hg19 = {
+            return(list(
+                pseudogene=TRUE,
+                lincRNA=FALSE,
+                protein_coding=FALSE,
+                antisense=FALSE,
+                processed_transcript=FALSE,
+                snRNA=FALSE,
+                sense_intronic=FALSE,
+                miRNA=FALSE,
+                misc_RNA=FALSE,
+                snoRNA=TRUE,
+                rRNA=TRUE,
+                polymorphic_pseudogene=TRUE,
+                sense_overlapping=FALSE,
+                three_prime_overlapping_ncrna=FALSE,
+                TR_V_gene=FALSE,
+                TR_V_pseudogene=TRUE,
+                TR_D_gene=FALSE,
+                TR_J_gene=FALSE,
+                TR_C_gene=FALSE,
+                TR_J_pseudogene=TRUE,
+                IG_C_gene=FALSE,
+                IG_C_pseudogene=TRUE,
+                IG_J_gene=FALSE,
+                IG_J_pseudogene=TRUE,
+                IG_D_gene=FALSE,
+                IG_V_gene=FALSE,
+                IG_V_pseudogene=TRUE
+            ))
+        },
+        mm9 = {
+            return(list(
+                pseudogene=TRUE,
+                snRNA=FALSE,
+                protein_coding=FALSE,
+                antisense=FALSE,
+                miRNA=FALSE,
+                lincRNA=FALSE,
+                snoRNA=TRUE,
+                processed_transcript=FALSE,
+                misc_RNA=TRUE,
+                rRNA=TRUE,
+                sense_overlapping=FALSE,
+                sense_intronic=FALSE,
+                polymorphic_pseudogene=TRUE,
+                non_coding=FALSE,
+                three_prime_overlapping_ncrna=FALSE,
+                IG_C_gene=FALSE,
+                IG_J_gene=FALSE,
+                IG_D_gene=FALSE,
+                IG_V_gene=FALSE,
+                ncrna_host=FALSE
+            ))
+        },
+        mm10 = {
+            return(list(
+                pseudogene=TRUE,
+                snRNA=FALSE,
+                protein_coding=FALSE,
+                antisense=FALSE,
+                miRNA=FALSE,
+                snoRNA=TRUE,
+                lincRNA=FALSE,
+                processed_transcript=FALSE,
+                misc_RNA=TRUE,
+                rRNA=TRUE,
+                sense_intronic=FALSE,
+                sense_overlapping=FALSE,
+                polymorphic_pseudogene=TRUE,
+                IG_C_gene=FALSE,
+                IG_J_gene=FALSE,
+                IG_D_gene=FALSE,
+                IG_LV_gene=FALSE,
+                IG_V_gene=FALSE,
+                IG_V_pseudogene=TRUE,
+                TR_V_gene=FALSE,
+                TR_V_pseudogene=TRUE,
+                three_prime_overlapping_ncrna=FALSE
+            ))
+        },
+        dm3 = {
+            return(list(
+                protein_coding=FALSE,
+                ncRNA=FALSE,
+                snoRNA=TRUE,
+                pre_miRNA=FALSE,
+                pseudogene=TRUE,
+                snRNA=FALSE,
+                tRNA=FALSE,
+                rRNA=TRUE
+            ))
+        },
+        rn5 = {
+            return(list(
+                protein_coding=FALSE,
+                pseudogene=TRUE,
+                processed_pseudogene=FALSE,
+                miRNA=FALSE,
+                rRNA=TRUE,
+                misc_RNA=TRUE
+            ))
+        },
+        danrer7 = {
+            return(list(
+                antisense=FALSE,
+                protein_coding=FALSE,
+                miRNA=FALSE,
+                snoRNA=TRUE,
+                rRNA=TRUE,
+                lincRNA=FALSE,
+                processed_transcript=FALSE,
+                snRNA=FALSE,
+                pseudogene=TRUE,
+                sense_intronic=FALSE,
+                misc_RNA=TRUE,
+                polymorphic_pseudogene=TRUE,
+                IG_V_pseudogene=TRUE,
+                IG_C_pseudogene=TRUE,
+                IG_J_pseudogene=TRUE,
+                non_coding=FALSE,
+                sense_overlapping=FALSE
+            ))
+        }
+    )
 }
 
 #' Return several analysis options given an analysis preset
@@ -1483,244 +1531,244 @@ get.strict.biofilter <- function(org) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' strict.preset <- get.preset.opts("strict.basic")
+#' strict.preset <- get.preset.opts("strict.basic","mm9")
 #'}
 get.preset.opts <- function(preset,org) {
-	# Override filter rules and maybe norm.args and stat.args
-	switch(preset,
-		all.basic = {
-			exon.filters <- NULL
-			gene.filters <- NULL
-			pcut <- NA
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean")
-		},
-		all.normal = {
-			exon.filters <- NULL
-			gene.filters <- NULL
-			pcut <- NA
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean","sd","cv")
-		},
-		all.full = {
-			exon.filters <- NULL
-			gene.filters <- NULL
-			pcut <- NA
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts","flags")
-			export.scale <- c("natural","log2","log10","vst")
-			export.values <- c("raw","normalized")
-			export.stats <- c("mean","median","sd","mad","cv","rcv")
-		},
-		medium.basic = {
-			exon.filters <- list(
-				min.active.exons=list(
-					exons.per.gene=5,
-					min.exons=2,
-					frac=1/5
-				)
-			)
-			gene.filters <- list(
-				length=list(
-					length=500
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.25
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.defaults("biotype.filter",org[1])
-			)
-			pcut <- 0.05
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean")
-		},
-		medium.normal = {
-			exon.filters <- list(
-				min.active.exons=list(
-					exons.per.gene=5,
-					min.exons=2,
-					frac=1/5
-				)
-			)
-			gene.filters <- list(
-				length=list(
-					length=500
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.25
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.defaults("biotype.filter",org[1])
-			)
-			pcut <- 0.05
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean","sd","cv")
-		},
-		medium.full = {
-			exon.filters <- list(
-				min.active.exons=list(
-					exons.per.gene=5,
-					min.exons=2,
-					frac=1/5
-				)
-			)
-			gene.filters <- list(
-				length=list(
-					length=500
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.25
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.defaults("biotype.filter",org[1])
-			)
-			pcut <- 0.05
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts","flags")
-			export.scale <- c("natural","log2","log10","vst")
-			export.values <- c("raw","normalized")
-			export.stats <- c("mean","median","sd","mad","cv","rcv")
-		},
-		strict.basic = {
-			exon.filters=list(
-				min.active.exons=list(
-					exons.per.gene=4,
-					min.exons=2,
-					frac=1/4
-				)
-			)
-			gene.filters=list(
-				length=list(
-					length=750
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.5
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.strict.biofilter(org[1])
-			)
-			pcut <- 0.01
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean")
-		},
-		strict.normal = {
-			exon.filters=list(
-				min.active.exons=list(
-					exons.per.gene=4,
-					min.exons=2,
-					frac=1/4
-				)
-			)
-			gene.filters=list(
-				length=list(
-					length=750
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.5
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.strict.biofilter(org[1])
-			)
-			pcut <- 0.01
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts")
-			export.scale <- c("natural","log2")
-			export.values <- c("normalized")
-			export.stats <- c("mean","sd","cv")
-		},
-		strict.full = {
-			exon.filters=list(
-				min.active.exons=list(
-					exons.per.gene=4,
-					min.exons=2,
-					frac=1/4
-				)
-			)
-			gene.filters=list(
-				length=list(
-					length=750
-				),
-				avg.reads=list(
-					average.per.bp=100,
-					quantile=0.5
-				),
-				expression=list(
-					median=TRUE,
-					mean=FALSE,
-					quantile=NA,
-					known=NA,
-					custom=NA
-				),
-				biotype=get.strict.biofilter(org[1])
-			)
-			pcut <- 0.01
-			export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-				"adj.meta.p.value","fold.change","stats","counts","flags")
-			export.scale <- c("natural","log2","log10","vst")
-			export.values <- c("raw","normalized")
-			export.stats <- c("mean","median","sd","mad","cv","rcv")
-		}
-	)
-	preset.opts <- list(
-		exon.filters=exon.filters,
-		gene.filters=gene.filters,
-		pcut=pcut,
-		export.what=export.what,
-		export.scale=export.scale,
-		export.values=export.values,
-		export.stats=export.stats
-	)
-	return(preset.opts)
+    # Override filter rules and maybe norm.args and stat.args
+    switch(preset,
+        all.basic = {
+            exon.filters <- NULL
+            gene.filters <- NULL
+            pcut <- NA
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean")
+        },
+        all.normal = {
+            exon.filters <- NULL
+            gene.filters <- NULL
+            pcut <- NA
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean","sd","cv")
+        },
+        all.full = {
+            exon.filters <- NULL
+            gene.filters <- NULL
+            pcut <- NA
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.scale <- c("natural","log2","log10","vst")
+            export.values <- c("raw","normalized")
+            export.stats <- c("mean","median","sd","mad","cv","rcv")
+        },
+        medium.basic = {
+            exon.filters <- list(
+                min.active.exons=list(
+                    exons.per.gene=5,
+                    min.exons=2,
+                    frac=1/5
+                )
+            )
+            gene.filters <- list(
+                length=list(
+                    length=500
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.25
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.defaults("biotype.filter",org[1])
+            )
+            pcut <- 0.05
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean")
+        },
+        medium.normal = {
+            exon.filters <- list(
+                min.active.exons=list(
+                    exons.per.gene=5,
+                    min.exons=2,
+                    frac=1/5
+                )
+            )
+            gene.filters <- list(
+                length=list(
+                    length=500
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.25
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.defaults("biotype.filter",org[1])
+            )
+            pcut <- 0.05
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean","sd","cv")
+        },
+        medium.full = {
+            exon.filters <- list(
+                min.active.exons=list(
+                    exons.per.gene=5,
+                    min.exons=2,
+                    frac=1/5
+                )
+            )
+            gene.filters <- list(
+                length=list(
+                    length=500
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.25
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.defaults("biotype.filter",org[1])
+            )
+            pcut <- 0.05
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.scale <- c("natural","log2","log10","vst")
+            export.values <- c("raw","normalized")
+            export.stats <- c("mean","median","sd","mad","cv","rcv")
+        },
+        strict.basic = {
+            exon.filters=list(
+                min.active.exons=list(
+                    exons.per.gene=4,
+                    min.exons=2,
+                    frac=1/4
+                )
+            )
+            gene.filters=list(
+                length=list(
+                    length=750
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.5
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.strict.biofilter(org[1])
+            )
+            pcut <- 0.01
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean")
+        },
+        strict.normal = {
+            exon.filters=list(
+                min.active.exons=list(
+                    exons.per.gene=4,
+                    min.exons=2,
+                    frac=1/4
+                )
+            )
+            gene.filters=list(
+                length=list(
+                    length=750
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.5
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.strict.biofilter(org[1])
+            )
+            pcut <- 0.01
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts")
+            export.scale <- c("natural","log2")
+            export.values <- c("normalized")
+            export.stats <- c("mean","sd","cv")
+        },
+        strict.full = {
+            exon.filters=list(
+                min.active.exons=list(
+                    exons.per.gene=4,
+                    min.exons=2,
+                    frac=1/4
+                )
+            )
+            gene.filters=list(
+                length=list(
+                    length=750
+                ),
+                avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.5
+                ),
+                expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+                ),
+                biotype=get.strict.biofilter(org[1])
+            )
+            pcut <- 0.01
+            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
+                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.scale <- c("natural","log2","log10","vst")
+            export.values <- c("raw","normalized")
+            export.stats <- c("mean","median","sd","mad","cv","rcv")
+        }
+    )
+    preset.opts <- list(
+        exon.filters=exon.filters,
+        gene.filters=gene.filters,
+        pcut=pcut,
+        export.what=export.what,
+        export.scale=export.scale,
+        export.values=export.values,
+        export.stats=export.stats
+    )
+    return(preset.opts)
 }
 
 #' Calculates fold changes
@@ -1751,26 +1799,26 @@ get.preset.opts <- function(preset,org) {
 #'   Treatment=c("T1","T2")),data.matrix)
 #'}
 make.fold.change <- function(contrast,sample.list,data.matrix,log.offset=1) {
-	conds <- strsplit(contrast,"_vs_")[[1]]
-	fold.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
-	for (i in 2:length(conds)) { # First condition is ALWAYS reference
-		samples.nom <- sample.list[[conds[i]]]
-		samples.denom <- sample.list[[conds[1]]]
-		nom <- data.matrix[,match(samples.nom,colnames(data.matrix))]
-		denom <- data.matrix[,match(samples.denom,colnames(data.matrix))]
-		if (!is.matrix(nom)) nom <- as.matrix(nom) # Cover the case with no replicates...
-		if (!is.matrix(denom)) denom <- as.matrix(denom)
-		mean.nom <- apply(nom,1,mean)
-		mean.denom <- apply(denom,1,mean)
-		#mean.nom <- ifelse(mean.nom==0,log.offset,mean.nom)
-		if (any(mean.nom==0)) mean.nom <- mean.nom + log.offset
-		#mean.denom <- ifelse(mean.denom==0,log.offset,mean.denom)
-		if (any(mean.denom==0)) mean.denom <- mean.denom + log.offset
-		fold.mat[,i-1] <- mean.nom/mean.denom
-	}
-	rownames(fold.mat) <- rownames(data.matrix)
-	colnames(fold.mat) <- paste(conds[1],"_vs_",conds[2:length(conds)],sep="")
-	return(fold.mat)
+    conds <- strsplit(contrast,"_vs_")[[1]]
+    fold.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
+    for (i in 2:length(conds)) { # First condition is ALWAYS reference
+        samples.nom <- sample.list[[conds[i]]]
+        samples.denom <- sample.list[[conds[1]]]
+        nom <- data.matrix[,match(samples.nom,colnames(data.matrix))]
+        denom <- data.matrix[,match(samples.denom,colnames(data.matrix))]
+        if (!is.matrix(nom)) nom <- as.matrix(nom) # Cover the case with no replicates...
+        if (!is.matrix(denom)) denom <- as.matrix(denom)
+        mean.nom <- apply(nom,1,mean)
+        mean.denom <- apply(denom,1,mean)
+        #mean.nom <- ifelse(mean.nom==0,log.offset,mean.nom)
+        if (any(mean.nom==0)) mean.nom <- mean.nom + log.offset
+        #mean.denom <- ifelse(mean.denom==0,log.offset,mean.denom)
+        if (any(mean.denom==0)) mean.denom <- mean.denom + log.offset
+        fold.mat[,i-1] <- mean.nom/mean.denom
+    }
+    rownames(fold.mat) <- rownames(data.matrix)
+    colnames(fold.mat) <- paste(conds[1],"_vs_",conds[2:length(conds)],sep="")
+    return(fold.mat)
 }
 
 #' HTML report helper
@@ -1795,14 +1843,14 @@ make.fold.change <- function(contrast,sample.list,data.matrix,log.offset=1) {
 #' the.cells <- make.html.cells(data.matrix)
 #'}
 make.html.cells <- function(mat,type="numeric",digits=3) {
-	if (type=="numeric")
-		tmp <- format(mat,digits=digits)
-		#tmp <- formatC(mat,digits=digits,format="f")
-	else
-		tmp <- mat
-	if (!is.matrix(tmp)) tmp <- as.matrix(tmp)
-	tmp <- apply(tmp,c(1,2),function(x) paste("<td>",x,"</td>",sep=""))
-	return(tmp)
+    if (type=="numeric")
+        tmp <- format(mat,digits=digits)
+        #tmp <- formatC(mat,digits=digits,format="f")
+    else
+        tmp <- mat
+    if (!is.matrix(tmp)) tmp <- as.matrix(tmp)
+    tmp <- apply(tmp,c(1,2),function(x) paste("<td>",x,"</td>",sep=""))
+    return(tmp)
 }
 
 #' HTML report helper
@@ -1826,9 +1874,9 @@ make.html.cells <- function(mat,type="numeric",digits=3) {
 #' the.rows <- make.html.rows(the.cells)
 #'}
 make.html.rows <- function(mat) {
-	tmp <- apply(mat,1,paste,collapse="")
-	tmp <- paste("<tr>",tmp,"</tr>",sep="")
-	return(tmp)
+    tmp <- apply(mat,1,paste,collapse="")
+    tmp <- paste("<tr>",tmp,"</tr>",sep="")
+    return(tmp)
 }
 
 #' HTML report helper
@@ -1852,10 +1900,10 @@ make.html.rows <- function(mat) {
 #' the.header <- make.html.header(the.cells[1,])
 #'}
 make.html.header <- function(h) {
-	tmp <- paste("<th>",h,"</th>",sep="")
-	tmp <- paste(tmp,collapse="")
-	tmp <- paste("<tr>",tmp,"</tr>",sep="")
-	return(tmp)
+    tmp <- paste("<th>",h,"</th>",sep="")
+    tmp <- paste(tmp,collapse="")
+    tmp <- paste("<tr>",tmp,"</tr>",sep="")
+    return(tmp)
 }
 
 #' HTML report helper
@@ -1880,8 +1928,8 @@ make.html.header <- function(h) {
 #' the.body <- make.html.body(the.rows)
 #'}
 make.html.body <- function(mat) {
-	tmp <- paste(mat,collapse="")
-	return(tmp)
+    tmp <- paste(mat,collapse="")
+    return(tmp)
 }
 
 #' HTML report helper
@@ -1911,15 +1959,15 @@ make.html.body <- function(mat) {
 #' the.table <- make.html.table(the.body,the.header,id="my_table")
 #'}
 make.html.table <- function(b,h=NULL,id=NULL) {
-	if (!is.null(id))
-		html <- paste("<table id=\"",id,"\" class=\"datatable\">",sep="")
-	else
-		html <- "<table class=\"datatable\">"
-	if (!is.null(h))
-		html <- paste(html,"<thead>",h,"</thead>",sep="")
-	html <- paste(html,"<tbody>",b,"</tbody></table>",sep="")
-	return(html)
-}	
+    if (!is.null(id))
+        html <- paste("<table id=\"",id,"\" class=\"datatable\">",sep="")
+    else
+        html <- "<table class=\"datatable\">"
+    if (!is.null(h))
+        html <- paste(html,"<thead>",h,"</thead>",sep="")
+    html <- paste(html,"<tbody>",b,"</tbody></table>",sep="")
+    return(html)
+}    
 
 #' Calculates several transformation of counts
 #'
@@ -1948,27 +1996,27 @@ make.html.table <- function(b,h=NULL,id=NULL) {
 #' head(tr$vst)
 #'}
 make.transformation <- function(data.matrix,export.scale,log.offset=1) {
-	mat <- vector("list",length(export.scale))
-	names(mat) <- export.scale
-	if (!is.matrix(data.matrix)) data.matrix <- as.matrix(data.matrix)
-	for (scl in export.scale) {
-		switch(scl,
-			natural = {
-				mat[[scl]] <- data.matrix
-			},
-			log2 = {
-				mat[[scl]] <- nat2log(data.matrix,base=2,off=log.offset)
-			},
-			log10 = {
-				mat[[scl]] <- nat2log(data.matrix,base=10,off=log.offset)
-			},
-			vst = {
-				fit <- vsn2(data.matrix,verbose=FALSE)
-				mat[[scl]] <- predict(fit,newdata=data.matrix)
-			}
-		)
-	}
-	return(mat)
+    mat <- vector("list",length(export.scale))
+    names(mat) <- export.scale
+    if (!is.matrix(data.matrix)) data.matrix <- as.matrix(data.matrix)
+    for (scl in export.scale) {
+        switch(scl,
+            natural = {
+                mat[[scl]] <- data.matrix
+            },
+            log2 = {
+                mat[[scl]] <- nat2log(data.matrix,base=2,off=log.offset)
+            },
+            log10 = {
+                mat[[scl]] <- nat2log(data.matrix,base=10,off=log.offset)
+            },
+            vst = {
+                fit <- vsn2(data.matrix,verbose=FALSE)
+                mat[[scl]] <- predict(fit,newdata=data.matrix)
+            }
+        )
+    }
+    return(mat)
 }
 
 #' Calculates several statistices on read counts
@@ -1999,47 +2047,47 @@ make.transformation <- function(data.matrix,export.scale,log.offset=1) {
 #' st <- make.stat(c("C1","C2"),tr,c("mean","sd"),c("log2","vst"))
 #'}
 make.stat <- function(samples,data.list,stat,export.scale) {
-	stat.result <- vector("list",length(export.scale))
-	names(stat.result) <- export.scale
-	for (scl in export.scale) {
-		stat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
-		if (!is.matrix(stat.data)) stat.data <- as.matrix(stat.data)
-		switch(stat,
-			mean = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(round(mean(x))) else return(mean(x))
-				},scl)
-			},
-			median = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(round(median(x))) else return(median(x))
-				},scl)
-			},
-			sd = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(ceiling(sd(x))) else return(sd(x))
-				},scl)
-			},
-			mad = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(ceiling(mad(x))) else return(mad(x))
-				},scl)
-			},
-			cv = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(ceiling(sd(x))/round(mean(x)))
-					else return(sd(x)/mean(x))
-				},scl)
-			},
-			rcv = {
-				stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-					if (s=="natural") return(ceiling(mad(x))/round(median(x))) 
-					else return(mad(x)/median(x))
-				},scl)
-			}
-		)
-	}
-	return(do.call("cbind",stat.result))
+    stat.result <- vector("list",length(export.scale))
+    names(stat.result) <- export.scale
+    for (scl in export.scale) {
+        stat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
+        if (!is.matrix(stat.data)) stat.data <- as.matrix(stat.data)
+        switch(stat,
+            mean = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(round(mean(x))) else return(mean(x))
+                },scl)
+            },
+            median = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(round(median(x))) else return(median(x))
+                },scl)
+            },
+            sd = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(ceiling(sd(x))) else return(sd(x))
+                },scl)
+            },
+            mad = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(ceiling(mad(x))) else return(mad(x))
+                },scl)
+            },
+            cv = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(ceiling(sd(x))/round(mean(x)))
+                    else return(sd(x)/mean(x))
+                },scl)
+            },
+            rcv = {
+                stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
+                    if (s=="natural") return(ceiling(mad(x))/round(median(x))) 
+                    else return(mad(x)/median(x))
+                },scl)
+            }
+        )
+    }
+    return(do.call("cbind",stat.result))
 }
 
 #' Results output build helper
@@ -2070,17 +2118,17 @@ make.stat <- function(samples,data.list,stat,export.scale) {
 #' head(tr$vst)
 #'}
 make.matrix <- function(samples,data.list,export.scale="natural") {
-	mat <- vector("list",length(export.scale))
-	names(mat) <- export.scale
-	for (scl in export.scale) {
-		mat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
-		if (!is.matrix(mat.data)) {
-			mat.data <- as.matrix(mat.data)
-			colnames(mat.data) <- samples
-		}
-		mat[[scl]] <- mat.data
-	}
-	return(do.call("cbind",mat))
+    mat <- vector("list",length(export.scale))
+    names(mat) <- export.scale
+    for (scl in export.scale) {
+        mat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
+        if (!is.matrix(mat.data)) {
+            mat.data <- as.matrix(mat.data)
+            colnames(mat.data) <- samples
+        }
+        mat[[scl]] <- mat.data
+    }
+    return(do.call("cbind",mat))
 }
 
 #' Create contrast lists from contrast vectors
@@ -2112,22 +2160,22 @@ make.matrix <- function(samples,data.list,export.scale="natural") {
 #' cl
 #'}
 make.contrast.list <- function(contrast,sample.list) {
-	# Construction
-	contrast.list <- vector("list",length(contrast))
-	names(contrast.list) <- contrast
-	# First break the contrast vector
-	cnts <- strsplit(contrast,"_vs_")
-	names(cnts) <- names(contrast.list)
-	# Create list members
-	for (n in names(contrast.list)) {
-		contrast.list[[n]] <- vector("list",length(cnts[[n]]))
-		for (i in 1:length(cnts[[n]])) {
-			contrast.list[[n]][[i]] <- rep(cnts[[n]][i],
-				length(sample.list[[cnts[[n]][i]]]))
-			names(contrast.list[[n]][[i]]) <- sample.list[[cnts[[n]][[i]]]]
-		}
-	}
-	return(contrast.list)
+    # Construction
+    contrast.list <- vector("list",length(contrast))
+    names(contrast.list) <- contrast
+    # First break the contrast vector
+    cnts <- strsplit(contrast,"_vs_")
+    names(cnts) <- names(contrast.list)
+    # Create list members
+    for (n in names(contrast.list)) {
+        contrast.list[[n]] <- vector("list",length(cnts[[n]]))
+        for (i in 1:length(cnts[[n]])) {
+            contrast.list[[n]][[i]] <- rep(cnts[[n]][i],
+                length(sample.list[[cnts[[n]][i]]]))
+            names(contrast.list[[n]][[i]]) <- sample.list[[cnts[[n]][[i]]]]
+        }
+    }
+    return(contrast.list)
 }
 
 #' Creates sample list from file
@@ -2151,19 +2199,19 @@ make.contrast.list <- function(contrast,sample.list) {
 #' sample.list <- make.sample.list("targets.txt")
 #'}
 make.sample.list <- function(input) {
-	if (missing(input) || !file.exists(input))
-		stopwrap("File to make sample list from should be a valid existing ",
-			"text file!")
-	tab <- read.delim(input)
-	samples <- as.character(tab[,1])
-	conditions <- unique(as.character(tab[,2]))
-	if (length(samples) != length(unique(samples)))
-		stopwrap("Sample names must be unique for each sample!")
-	sample.list <- vector("list",length(conditions))
-	names(sample.list) <- conditions
-	for (n in conditions)
-		sample.list[[n]] <- samples[which(as.character(tab[,2]))==n]
-	return(sample.list)
+    if (missing(input) || !file.exists(input))
+        stopwrap("File to make sample list from should be a valid existing ",
+            "text file!")
+    tab <- read.delim(input)
+    samples <- as.character(tab[,1])
+    conditions <- unique(as.character(tab[,2]))
+    if (length(samples) != length(unique(samples)))
+        stopwrap("Sample names must be unique for each sample!")
+    sample.list <- vector("list",length(conditions))
+    names(sample.list) <- conditions
+    for (n in conditions)
+        sample.list[[n]] <- samples[which(as.character(tab[,2]))==n]
+    return(sample.list)
 }
 
 #' Project path constructor
@@ -2175,31 +2223,31 @@ make.sample.list <- function(input) {
 #' @return A list with project path elements.
 #' @author Panagiotis Moulos
 make.project.path <- function(path,f=NULL) {
-	if (is.na(path) || is.null(path)) {
-		if (!is.data.frame(f) && !is.null(f) && file.exists(f))
-			main.path <- file.path(dirname(f),paste("metaseqr_result_",
-				format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
-		else
-			main.path <- file.path(getwd(),paste("metaseqr_result_",
-				format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
-		project.path <- make.path.struct(main.path)
-	}
-	else {
-		success <- tryCatch(
-			if (!file.exists(path)) dir.create(path,recursive=TRUE) else TRUE,
-			error=function(e) {
-				disp("Cannot create ",path,"! Is it a valid system path? Is there ",
-					"a write permissions problem? Reverting to automatic creation...")
-				return(FALSE)
-			},
-			finally=""
-		)
-		if (success)
-			project.path <- make.path.struct(path)
-		else
-			project.path <- make.project.path(NA,f)
-	}
-	return(project.path)
+    if (is.na(path) || is.null(path)) {
+        if (!is.data.frame(f) && !is.null(f) && file.exists(f))
+            main.path <- file.path(dirname(f),paste("metaseqr_result_",
+                format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
+        else
+            main.path <- file.path(getwd(),paste("metaseqr_result_",
+                format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
+        project.path <- make.path.struct(main.path)
+    }
+    else {
+        success <- tryCatch(
+            if (!file.exists(path)) dir.create(path,recursive=TRUE) else TRUE,
+            error=function(e) {
+                disp("Cannot create ",path,"! Is it a valid system path? Is there ",
+                    "a write permissions problem? Reverting to automatic creation...")
+                return(FALSE)
+            },
+            finally=""
+        )
+        if (success)
+            project.path <- make.path.struct(path)
+        else
+            project.path <- make.project.path(NA,f)
+    }
+    return(project.path)
 }
 
 #' Project path constructor helper
@@ -2211,18 +2259,18 @@ make.project.path <- function(path,f=NULL) {
 #' members are the samples belonging to each condition.
 #' @author Panagiotis Moulos
 make.path.struct <- function(main.path) {
-	project.path <- list(
-		main=main.path,
-		lists=file.path(main.path,"lists"),
-		plots=file.path(main.path,"plots"),
-		qc=file.path(main.path,"plots","qc"),
-		normalization=file.path(main.path,"plots","normalization"),
-		statistics=file.path(main.path,"plots","statistics")
-	)
-	for (p in names(project.path))
-		if (!file.exists(project.path[[p]]))
-			dir.create(project.path[[p]],recursive=TRUE)
-	return(project.path)
+    project.path <- list(
+        main=main.path,
+        lists=file.path(main.path,"lists"),
+        plots=file.path(main.path,"plots"),
+        qc=file.path(main.path,"plots","qc"),
+        normalization=file.path(main.path,"plots","normalization"),
+        statistics=file.path(main.path,"plots","statistics")
+    )
+    for (p in names(project.path))
+        if (!file.exists(project.path[[p]]))
+            dir.create(project.path[[p]],recursive=TRUE)
+    return(project.path)
 }
 
 #' Intitialize output list
@@ -2233,9 +2281,9 @@ make.path.struct <- function(main.path) {
 #' @return An empty named list.
 #' @author Panagiotis Moulos
 make.export.list <- function(con) {
-	f <- vector("list",length(con))
-	names(f) <- con
-	return(f)
+    f <- vector("list",length(con))
+    names(f) <- con
+    return(f)
 }
 
 #' Optimize rectangular grid plots
@@ -2254,21 +2302,21 @@ make.export.list <- function(con) {
 #' g2 <- make.grid(11) # Returns c(4,3)
 #'}
 make.grid <- function(n) {
-	m <- 0
-	while (n > m*m)
-		m <- m+1
-	if (n < m*m) {
-		k <- m-1
-		if (n > m*k)
-			k <- k+1
-		else {
-			while (n > m*k)
-				k=k-1
-		}
-	}
-	else
-		k <- m
-	return(c(m,k))
+    m <- 0
+    while (n > m*m)
+        m <- m+1
+    if (n < m*m) {
+        k <- m-1
+        if (n > m*k)
+            k <- k+1
+        else {
+            while (n > m*k)
+                k=k-1
+        }
+    }
+    else
+        k <- m
+    return(c(m,k))
 }
 
 #' Initializer of report messages
@@ -2280,568 +2328,568 @@ make.grid <- function(n) {
 #' @return An named list with messages for each input option.
 #' @author Panagiotis Moulos
 make.report.messages <- function(lang) {
-	switch(lang,
-		en = {
-			messages <- list(
-				org=list(
-					hg18="human (<em>Homo sapiens</em>), genome version alias hg18",
-					hg19="human (<em>Homo sapiens</em>), genome version alias hg19",
-					mm9="mouse (<em>Mus musculus</em>), genome version alias mm9",
-					mm10="mouse (<em>Mus musculus</em>), genome version alias mm10",
-					rno5="rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
-					dm3="fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
-					danrer7="zebrafish (<em>Danio rerio</em>), genome version alias danrer7"
-				),
-				whenfilter=list(
-					prenorm="before normalization",
-					postnorm="after normalization"
-				),
-				norm=list(
-					edaseq="EDASeq",
-					deseq="DESeq",
-					edger="edgeR",
-					noiseq="NOISeq",
-					nbpseq="NBPSeq",
-					each="the same as the corresponding statistical test"
-				),
-				stat=list(
-					deseq="DESeq",
-					edger="edgeR",
-					noiseq="NOISeq",
-					bayseq="baySeq",
-					limma="limma",
-					nbpseq="NBPSeq"
-				),
-				meta=list(
-					intersection="intersection of individual results",
-					union="union of individual results",
-					fisher="Fisher's method (R package MADAM)",
-					fperm="Fisher's method with permutations (R package MADAM)",
-					dperm.min="samples permutation based method with minimum p-values",
-					dperm.max="samples permutation based method with maximum p-values",
-					dperm.weight="samples permutation based method with weighted p-values",
-					minp="minimum p-value across results",
-					maxp="maximum p-value across results",
-					weight="weighted p-value across results",
-					simes="Simes correction and combination method",
-					whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
-					none="no meta-analysis, p-values from the first supplied statistical algorithm"
-				),
-				adjust=list(
-					holm="Holm FWER",
-					hochberg="Hochberg DFR",
-					hommel="Hommel FWER",
-					bonferroni="Bonferroni FWER",
-					bh="Benjamini-Hochberg FDR",
-					by="Benjamini-Yekutiely FDR",
-					fdr="Benjamini-Hochberg FDR",
-					none="no multiple test correction",
-					qvalue="Storey-Tibshirani FDR"
-				),
-				plots=list(
-					mds="multidimensional scaling",
-					biodetection="biotype detection",
-					countsbio="biotype counts",
-					saturation="sample and biotype saturation",
-					rnacomp="RNA composition",
-					boxplot="boxplots",
-					gcbias="GC-content bias",
-					lengthbias="transcript length bias",
-					meandiff="mean-difference plot",
-					meanvar="mean-variance plot",
-					deheatmap="DEG heatmap",
-					volcano="volcano plot",
-					biodist="DEG biotype detection",
-					filtered="filtered biotypes",
-					correl="correlation heatmap and correlogram",
-					pairwise="pairwise scatterplots between samples",
-					venn="Venn diagrams"
-				),
-				export=list(
-					annotation="Annotation",
-					p.value="p-value",
-					adj.p.value="Adjusted p-value (FDR)",
-					fold.change="Fold change",
-					stats="Statistics",
-					counts="Read counts",
-					natural="Natural scale",
-					log2="log2 scale",
-					log10="log10 scale",
-					vst="Variance stabilization transformation",
-					raw="Raw values",
-					normalized="Normalized values",
-					mean="Mean",
-					median="Median",
-					sd="Standard deviation",
-					mad="Median Absolute Deviation (MAD)",
-					cv="Coefficient of Variation",
-					rcv="Robust Coefficient of Variation"
-				),
-				preset=list(
-					all.basic="use all genes and export all genes and basic annotation and statistics elements",
-					all.normal="use all genes and export all genes and normal annotation and statistics elements",
-					all.full="use all genes and export all genes and all available annotation and statistics elements",
-					medium.basic="apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
-					medium.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-					medium.full="apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
-					strict.basic="apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
-					strict.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-					strict.full="apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
-				),
-				explain=list(
-					mds=paste(
-						"The Multi-Dimensional Scaling (MDS) plots comprise a means",
-						"of visualizing the level of similarity of individual cases",
-						"of a dataset. It is similar to Principal Component Analysis",
-						"(PCA), but instead of using the covariance matrix to find",
-						"similarities among cases, MDS uses absolute distance metrics",
-						"such as the classical Euclidean distance. Because of the",
-						"relative linear relations among sequencing samples, it",
-						"provides a more realistic clustering among samples. MDS",
-						"serves quality control and it can be interpreted as follows:",
-						"when the distance among samples of the same biological",
-						"condition in the MDS space is small, this is an indication",
-						"of high correlation and reproducibility among them. When",
-						"this distance is larger or heterogeneous (e.g. the 3rd",
-						"sample of a triplicate set is further from the other 2),",
-						"this comprises an indication of low correlation and",
-						"reproducibility among samples. It can help exclude poor",
-						"samples from further analysis.",collapse=" "
-					),
-					biodetection=paste(
-						"The biotype detection bar diagrams are a set of quality",
-						"control charts that show the percentage of each biotype",
-						"in the genome (i.e. in the whole set of features provided,",
-						"for example, protein coding genes, non coding RNAs or",
-						"pseudogenes) in grey bars, which proportion has been",
-						"detected in a sample before normalization and after a",
-						"basic filtering by removing features with zero counts in",
-						"red lined bars, and the percentage of each biotype within",
-						"the sample in solid red bars. The difference between grey",
-						"bars and solid red bars is that the grey bars show the",
-						"percentage of a feature in the genome while the solid red",
-						"bars show the percentage in the sample. Thus, the solid",
-						"red bars may be sometimes higher than the grey bars because",
-						"certain features (e.g. protein coding genes) may be",
-						"detected within a sample with a higher proportion",
-						"relatively to their presence in the genome, as compared",
-						"with other features. For example, while the percentage",
-						"of protein coding genes in the whole genome is already",
-						"higher than other biotypes, this percentage is expected",
-						"to be even higher in an RNA-Seq experiment where one",
-						"expects protein-coding genes to exhibit greater abundance.",
-						"The vertical green line separates the most abundant",
-						"biotypes (in the left-hand side, corresponding to the",
-						"left axis scale) from the rest (in the right-hand side,",
-						"corresponding to the right axis scale). Otherwise, the",
-						"lower abundance biotypes would be indistiguishable.",
-						"Unexpected outcomes in this quality control chart (e.g.",
-						"very low detection of protein coding genes) would signify",
-						"possible low quality of a sample.",collapse=" "
-					),
-					countsbio=paste(
-						"The biotype detection counts boxplots are a set of quality",
-						"control charts that depict both the biological classification",
-						"for the detected features and the actual distribution of",
-						"the read counts for each biological type. The boxplot",
-						"comprises a means of summarizing the read counts distribution",
-						"of a sample in the form of a bar with extending lines,",
-						"as commonly used way of graphically presenting groups of",
-						"numerical data. A boxplot also indicates which observations,",
-						"if any, might be considered outliers and is able to visually",
-						"show different types of populations, without making any",
-						"assumptions of the underlying statistical distribution.",
-						"The spacings between the different parts of the box help",
-						"indicate variance, skewness and identify outliers. The",
-						"thick bar inside the colored box is the median of the",
-						"observations while the box extends over the Interquartile",
-						"Range of the observations. The whiskers extend up (down)",
-						"to +/-1.5xIQR. Unexpected outcomes (e.g. protein coding",
-						"read count distribution similar to pseudogene read count",
-						"distribution) indicates poor sample quality.",collapse=" "
-					),
-					saturation=paste(
-						"The read and biotype saturation plots are a set of quality",
-						"control charts that depict the read count saturation",
-						"levels at several sequencing depths. Thus, they comprise",
-						"a means of assessing whether the sequencing depth of an",
-						"RNA-Seq experiment is sufficient in order to detect the",
-						"biological features under investigation. These quality",
-						"control charts are separated in two subgroups: the first",
-						"subgroup (read saturation per biotype for all samples)",
-						"is a set of plots, one for each biological feature (e.g.",
-						"protein coding, pseudogene, lincRNA, etc.), that depict",
-						"the number of detected features in different sequencing",
-						"depths and for all samples in the same plot. The second",
-						"subgroup (read saturation per sample for all biotypes)",
-						"is a set of plots similar to the above, but this time,",
-						"there is one pair of plots with two panels for each sample,",
-						"presenting all biological features. The left panel depicts",
-						"the saturation levels for the less abundatnt features,",
-						"while the right panel, the saturation for the more abundant",
-						"features, as placing them all together would make the",
-						"less abundant features indistinguishable. All the saturation",
-						"plots should be interpreted as follows: if the read counts",
-						"for a biotype tend to be saturated, the respective curve",
-						"should tend to reach a plateau in higher depths. Otherwise,",
-						"more sequencing is needed for the specific biotype.",
-						collapse=" "
-					),
-					readnoise=paste(
-						"The read noise plots depict the percentage of biological",
-						"features detected when subsampling the total number of",
-						"reads. Very steep curves in read noise plots indicate",
-						"that although the sequencing depth reaches its maximum,",
-						"a relatively small percentage of total features is detected,",
-						"indicating that the level of background noise is relatively",
-						"high. Less steep RNA composition curves, indicate less noise.",
-						"When a sample's curve deviate from the rest, it could",
-						"indicate lower or higher quality, depending on the curves",
-						"of the rest of the samples.",collapse=" "
-					),
-					correl=paste(
-						"The sample correlation plots depict the accordance among",
-						"the RNA-Seq samples, as this is manifested through the",
-						"read counts table used with the metaseqr pipeline, with",
-						"two representations that both use the correlation matrix",
-						"(a matrix which depicts all the pairwise correlations",
-						"between each pair of samples) of the read counts matrix.",
-						"The first one is a correlation clustered heatmap which",
-						"depicts the correlations among samples as color-scaled",
-						"image and the hierarchical clustering tree depicts the",
-						"grouping of the samples according to their correlation.",
-						"Samples from the same group that are not clustered together",
-						"comprises and indication that there might be a quality",
-						"problem with the dataset. The second is a 'correlogram'",
-						"plot, where again the samples are hierarchically clustered",
-						"and grouped but this time correlations are presented as",
-						"ellipses inside each cell. Each cell represents a pairwise",
-						"comparison and each correlation coefficient is represented",
-						"by an ellipse whose 'diameter', direction and color",
-						"depict the accordance for that pair of samples. Highly",
-						"correlated samples are depicted as ellipses with narrow",
-						"diameter while while poorly correlated samples are",
-						"depicted as ellipses with wide diameters. Also, highly",
-						"correlated samples are depicted as ellipses with a ",
-						"left-to-right upwards direction while poorly correlated",
-						"samples are depicted as ellipses with a right-to-left",
-						"upwards direction.",collapse=" "
-					),
-					pairwise=paste(
-						"The pairwise comparison plots are split in three parts:",
-						"the upper diagonal consists of simple scatterplots for",
-						"all pairwise sample comparisons, together with their",
-						"pearson correlation coefficient. It is a simple measure",
-						"of between sample correlation using all the available",
-						"data points instead of only the correlation matrix. The",
-						"lower diagonal, consist of mean-difference plots for all",
-						"pairwise sample comparisons. A mean-difference plot (or",
-						"a Bland-Altman plots) is a method of data plotting used",
-						"in analyzing the agreement between two different",
-						"assays/variables. In this graphical method the differences",
-						"(or alternatively the ratios) between the two variables",
-						"are plotted against the averages of the two. Such a plot",
-						"is useful, for example, to analyze data with strong",
-						"correlation between x and y axes, when the (x,y) dots on",
-						"the plot are close to the diagonal x=y. In this case, the",
-						"value of the transformed variable X is about the same as",
-						"x and y and the variable Y shows the difference between",
-						"x and y. In both represantations, irregular shapes of the",
-						"red smoother lines are an indication of poor correlation",
-						"between samples or of other systematic bias sources,",
-						"which is usually corrected through data normalization.",
-						collapse=" "
-					),
-					rnacomp=paste(
-						"The RNA composition plots depict the differences in the",
-						"distributions of reads in the same biological features",
-						"across samples. The following is taken from the NOISeq",
-						"vignette: <em>'...when two samples have different RNA",
-						"composition, the distribution of sequencing reads across",
-						"the features is different in such a way that although",
-						"a feature had the same number of read counts in both",
-						"samples, it would not mean that it was equally expressed",
-						"in both... To check if this bias is present in the data,",
-						"the RNA composition plot and the correponding diagnostic",
-						"test can be used. In this case, each sample s is compared",
-						"to the reference sample r (which can be arbitrarily",
-						"chosen). To do that, M values are computed as",
-						"log2(counts_sample = counts_reference). If no bias is",
-						"present, it should be expected that the median of M",
-						"values for each comparison is 0. Otherwise, it would be",
-						"indicating that expression levels in one of the samples",
-						"tend to be higher than in the other, and this could lead",
-						"to false discoveries when computing differencial expression.",
-						"Confidence intervals for the M median are also computed by",
-						"bootstrapping. If value 0 does not fall inside the interval,",
-						"it means that the deviation of the sample with regard",
-						"to the reference sample is statistically significant.",
-						"Therefore, a normalization procedure is required.'</em>",
-						collapse=" "
-					),
-					boxplot=paste(
-						"The boxplot comprises a means of summarizing the read",
-						"counts distribution of a sample in the form of a bar",
-						"with extending lines, as a commonly used way of",
-						"graphically presenting groups of numerical data. A",
-						"boxplot also indicates which observations, if any, might",
-						"be considered outliers and is able to visually show",
-						"different types of populations, without making any",
-						"assumptions of the underlying statistical distribution.",
-						"The spacings between the different parts of the box help",
-						"indicate variance, skewness and identify outliers. The",
-						"thick bar inside the colored box is the median of the",
-						"observations while the box extends over the Interquartile",
-						"Range of the observations. The whiskers extend up (down)",
-						"to +/-1.5xIQR. Boxplots at similar levels indicate good",
-						"quality of the normalization. When after normalization",
-						"boxplots remain at different levels, maybe another",
-						"normalization algorithm may have to be examined.",
-						"The un-normalized boxplots show the need for data",
-						"normalization in order for the data from different",
-						"samples to follow the same underlying distribution and",
-						"statistical testing becoming possible.",collapse=" "
-					),
-					gcbias=paste(
-						"The GC-content bias plot is a quality control chart that",
-						"shows the possible dependence of the read counts (in log2",
-						"scale) under a gene to the GC content percentage of that",
-						"gene. In order for the statistical tests to be able to",
-						"detect statistical significance which occurs due to real",
-						"biological effects and not by other systematic biases",
-						"present in the data (e.g. a possible GC-content bias),",
-						"the latter should be accounted for by the applied",
-						"normalization algorithm. Although the tests are performed",
-						"for each gene across biological conditions one could assume",
-						"that the GC content does not represent a bias as it's the",
-						"same for the tested gene across samples and conditions.",
-						"However, Risso et al. (2011) showed that the GC-content",
-						"could have an impact in the statistical testing procedure.",
-						"The GC-content bias plot depicts the dependence of the",
-						"read counts to the GC content before and after normalization.",
-						"The smoothing lines for each sample, should be as 'straight'",
-						"as possible after normalization. In addition, if the",
-						"smoothing lines differ significantly among biological",
-						"conditions it would constitute a possible quality warning.",
-						collapse=" "
-					),
-					lengthbias=paste(
-						"The gene/transcript length bias plot is a quality control",
-						"chart that shows the possible dependence of the read counts",
-						"(in log2 scale) under a gene to the length that gene (whole",
-						"gene or sum of exons depending on the analysis). In order",
-						"for the statistical tests to be able to detect statistical",
-						"significance which occurs due to real biological effects",
-						"and not by other systematic biases present in the data",
-						"(e.g. a possible length bias), the latter should be accounted",
-						"for by the applied normalization algorithm. Although the",
-						"tests are performed for each gene across bioogical conditions,",
-						"one could assume that the gene length does not represent",
-						"a bias as it's the same for the tested gene across samples",
-						"and conditions. However, it has been shown in several",
-						"studies that the gene length could have an impact in the",
-						"statistical testing procedure. The length bias plot",
-						"depicts the dependence of the read counts to the",
-						"gene/transcript length before and after normalization.",
-						"The smoothing lines for each sample, should be as 'straight'",
-						"as possible after normalization. In addition, if the",
-						"smoothing lines differ significantly among biological",
-						"conditions it would constitute a possible quality warning.",
-						collapse=" "
-					),
-					meandiff=paste(
-						"A mean-difference plot (or a Bland-Altman plot) is a",
-						"method of data plotting used in analyzing the agreement",
-						"between two different assays/variables. In this graphical",
-						"method the differences (or alternatively the ratios)",
-						"between the two variables are plotted against the averages",
-						"of the two. Such a plot is useful, for example, to analyze",
-						"data with strong correlation between x and y axes, when",
-						"the (x,y) dots on the plot are close to the diagonal x=y.",
-						"In this case, the value of the transformed variable X is",
-						"about the same as x and y and the variable Y shows the",
-						"difference between x and y. When the data cloud in a mean",
-						"difference plot is centered around the horizontal zero line,",
-						"this is an indication of good data quality and good",
-						"normalization results. On the other hand, when the data",
-						"cloud deviates from the center line or has a 'banana'",
-						"shape, this constitutes an indication of systematic biases",
-						"present in the data and that either the chosen normalization",
-						"algorithm has not worked well, or that data are not",
-						"normalized. The smoothing curve that traverses the data",
-						"(red curve) summarizes the above trends.",collapse=" "
-					),
-					meanvar=paste(
-						"The mean-variance plot comprises a graphical means to",
-						"display a possible relationship between the means of",
-						"gene expression (counts) values and their variances",
-						"across replicates of the same biological condition. Thus",
-						"data can be inspected for possible overdispersion (greater",
-						"variability in a dataset than would be expected based on",
-						"a given simple statistical model). In such plots for",
-						"RNA-Seq data, overdispersion is usually manifested as",
-						"increasing variance with increasing gene expression",
-						"(counts) and it is summarized through a smoothing curve",
-						"(red curve). The following is taken from the EDASeq package",
-						"vignette: '<em>...although the Poisson distribution",
-						"is a natural and simple way to model count data, it has",
-						"the limitation of assuming equality of the mean and",
-						"variance. For this reason, the negative binomial",
-						"distribution has been proposed as an alternative when the",
-						"data show over-dispersion...'</em> If overdispersion is",
-						"not present, the data cloud is expected to be evenly",
-						"scattered around the smoothing curve.",collapse=" "
-					),
-					deheatmap=paste(
-						"The Differentially Expressed Genes (DEGs) heatmaps depict",
-						"how well samples from different conditions cluster",
-						"together according to their expression values after",
-						"normalization and statistical testing, for each requested",
-						"statistical contrast. If samples from the same biological",
-						"condition do not cluster together, this would comprise",
-						"a warning sign regarding the quality of the samples. In",
-						"addition, DEG heatmaps provide an initial view of",
-						"possible clusters of co-expressed genes.",collapse=" "
-					),
-					volcano=paste(
-						"A volcano plot is a scatterplot that is often used when",
-						"analysing high-throughput -omics data (e.g. microarray",
-						"data, RNA-Seq data) to give an overview of interesting",
-						"genes. The log2 fold change is plotted on the x-axis and",
-						"the negative log10 p-value is plotted on the y-axis. A",
-						"volcano plot combines the results of a statistical test",
-						"(aka, p-values) with the magnitude of the change enabling",
-						"quick visual identification of those genes that display",
-						"large-magnitude changes that are also statistically",
-						"significant. The horizontal dashed line sets the threshold",
-						"for statistical significance, while the vertical dashed",
-						"lines set the thresholds for biological significance. You",
-						"should also keep in mind that when using more than one",
-						"statistical algorithm and performing meta-analysis, the",
-						"volcano plots become harder to interpret. This happens",
-						"because the genes that have stronger evidence of being",
-						"differentially expressed obtain lower p-values while the",
-						"rest either remain at similar levels or obtain higher",
-						"p-values. The result is a 'warped' volcano plot, with two",
-						"main data clouds: one in the upper part of the plot, and",
-						"one in the lower part of the plot. You can always zoom in",
-						"when using interacting mode (the default).",collapse=" "
-					),
-					biodist=paste(
-						"The chromosome and biotype distributions bar diagram for",
-						"Differentially Expressed Genes (DEGs) is split in two",
-						"panels: i) on the left panel DEGs are distributed per",
-						"chromosome and the percentage of each chromosome in the",
-						"genome is presented in grey bars, the percentage of DEGs",
-						"in each chromosome is presented in red lined bars and the",
-						"percentage of certain chromosomes in the distribution of",
-						"DEGs is presented in solid red bars. ii) on the right panel,",
-						"DEGs are distributed per biotype and the percentage of",
-						"each biotype in the genome (i.e. in the whole set of",
-						"features provided, for example, protein coding genes, non",
-						"coding RNAs or pseudogenes) is presented in grey bars,",
-						"the percentage of DEGs in each biotype is presented in",
-						"blue lined bars and the percentage of each biotype in",
-						"DEGs is presented in solid blue lines. The vertical green",
-						"line separates the most abundant biotypes (in the left-hand",
-						"side, corresponding to the left axis scale), from the rest",
-						"(in the right-hand side, corresponding to the right axis",
-						"scale). Otherwise, the lower abundance, biotypes would be",
-						"indistinguishable.",collapse=" "
-					),
-					filtered=paste(
-						"The chromosome and biotype distribution of filtered genes",
-						"is a quality control chart with two rows and four panels:",
-						"on the left panel of the first row, the bar chart depicts",
-						"the numbers of filtered genes per chromosome (actual numbers",
-						"shown above the bars). On the right panel of the first row,",
-						"the bar chart depicts the numbers of filtered genes per",
-						"biotype (actual numbers shown above the bars). On the left",
-						"panel of the second row, the bar chart depicts the fraction",
-						"of the filtered genes to the total genes per chromosome",
-						"(actual percentages shown above the bars). On the right",
-						"panel of the second row, the bar chart depicts the fraction",
-						"of the filtered genes to the total genes per biotype",
-						"(actual percentages shown above the bars). This plot",
-						"should indicate possible quality problems when for example",
-						"the filtered genes for a specific chromosome (or the",
-						"fraction) is extremely higher than the rest. Generally,",
-						"the fractions per chromosome should be uniform and the",
-						"fractions per biotype should be proportional to the biotype",
-						"fraction relative to the genome.",collapse=" "
-					),
-					venn=paste(
-						"The Venn diagrams are an intuitive way of presenting",
-						"overlaps between lists, based on the overlap of basic",
-						"geometrical shapes. The numbers of overlapping genes per",
-						"statistical algorithm are shown in the different areas",
-						"of the Venn diagrams, one for each contrast.",collapse=" "
-					)
-				),
-				references=list(
-					filein=list(
-						sam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
-						bam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
-						bed="Lawrence, M., Gentleman, R., Carey, V. (2009). rtracklayer: an R package for interfacing with genome browsers. Bioinformatics 25(14), 1841-1842."
-					),
-					norm=list(
-						edaseq="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
-						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
-						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						nbpseq="Di, Y, Schafer, D., Cumbie, J.S., and Chang, J.H. (2011). The NBP Negative Binomial Model for Assessing Differential Gene Expression from RNA-Seq. Statistical Applications in Genetics and Molecular Biology 10(1), 1-28.",
-						none=NULL
-					),
-					stat=list(
-						deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
-						edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
-						noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						limma="Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.",
-						bayseq="Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.",
-						nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
-						ebseq="Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043"
-					),
-					meta=list(
-						fisher="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
-						fperm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
-						whitlock=c(
-							"Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
-							"Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
-						),
-						weight="Genovese, C.R., Roeder, K., Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika 93 (3): 509-524.",
-						simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.",
-						none=NULL
-					),
-					multiple=list(
-						BH="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
-						fdr="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
-						BY="Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.",
-						bonferroni="Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.",
-						holm="Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics 6, 65-70.",
-						hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
-						hochberg="Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests of significance. Biometrika 75, 800-803.",
-						qvalue="Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445."
-					),
-					figure=list(
-						mds="Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012). htSeqTools: high-throughput sequencing quality control, processing and visualization in R. Bioinformatics 28, 589-590.",
-						biodetection="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						countsbio="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						saturation="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						readnoise="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						gcbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-						lengthbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-						meandiff="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-						meanvar="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-						rnacomp="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						biodist="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-						venn="Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics 12, 35.",
-						filtered=NULL
-					)
-				)
-			)
-		}
-	)
-	return(messages)
+    switch(lang,
+        en = {
+            messages <- list(
+                org=list(
+                    hg18="human (<em>Homo sapiens</em>), genome version alias hg18",
+                    hg19="human (<em>Homo sapiens</em>), genome version alias hg19",
+                    mm9="mouse (<em>Mus musculus</em>), genome version alias mm9",
+                    mm10="mouse (<em>Mus musculus</em>), genome version alias mm10",
+                    rno5="rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
+                    dm3="fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
+                    danrer7="zebrafish (<em>Danio rerio</em>), genome version alias danrer7"
+                ),
+                whenfilter=list(
+                    prenorm="before normalization",
+                    postnorm="after normalization"
+                ),
+                norm=list(
+                    edaseq="EDASeq",
+                    deseq="DESeq",
+                    edger="edgeR",
+                    noiseq="NOISeq",
+                    nbpseq="NBPSeq",
+                    each="the same as the corresponding statistical test"
+                ),
+                stat=list(
+                    deseq="DESeq",
+                    edger="edgeR",
+                    noiseq="NOISeq",
+                    bayseq="baySeq",
+                    limma="limma",
+                    nbpseq="NBPSeq"
+                ),
+                meta=list(
+                    intersection="intersection of individual results",
+                    union="union of individual results",
+                    fisher="Fisher's method (R package MADAM)",
+                    fperm="Fisher's method with permutations (R package MADAM)",
+                    dperm.min="samples permutation based method with minimum p-values",
+                    dperm.max="samples permutation based method with maximum p-values",
+                    dperm.weight="samples permutation based method with weighted p-values",
+                    minp="minimum p-value across results",
+                    maxp="maximum p-value across results",
+                    weight="weighted p-value across results",
+                    simes="Simes correction and combination method",
+                    whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
+                    none="no meta-analysis, p-values from the first supplied statistical algorithm"
+                ),
+                adjust=list(
+                    holm="Holm FWER",
+                    hochberg="Hochberg DFR",
+                    hommel="Hommel FWER",
+                    bonferroni="Bonferroni FWER",
+                    bh="Benjamini-Hochberg FDR",
+                    by="Benjamini-Yekutiely FDR",
+                    fdr="Benjamini-Hochberg FDR",
+                    none="no multiple test correction",
+                    qvalue="Storey-Tibshirani FDR"
+                ),
+                plots=list(
+                    mds="multidimensional scaling",
+                    biodetection="biotype detection",
+                    countsbio="biotype counts",
+                    saturation="sample and biotype saturation",
+                    rnacomp="RNA composition",
+                    boxplot="boxplots",
+                    gcbias="GC-content bias",
+                    lengthbias="transcript length bias",
+                    meandiff="mean-difference plot",
+                    meanvar="mean-variance plot",
+                    deheatmap="DEG heatmap",
+                    volcano="volcano plot",
+                    biodist="DEG biotype detection",
+                    filtered="filtered biotypes",
+                    correl="correlation heatmap and correlogram",
+                    pairwise="pairwise scatterplots between samples",
+                    venn="Venn diagrams"
+                ),
+                export=list(
+                    annotation="Annotation",
+                    p.value="p-value",
+                    adj.p.value="Adjusted p-value (FDR)",
+                    fold.change="Fold change",
+                    stats="Statistics",
+                    counts="Read counts",
+                    natural="Natural scale",
+                    log2="log2 scale",
+                    log10="log10 scale",
+                    vst="Variance stabilization transformation",
+                    raw="Raw values",
+                    normalized="Normalized values",
+                    mean="Mean",
+                    median="Median",
+                    sd="Standard deviation",
+                    mad="Median Absolute Deviation (MAD)",
+                    cv="Coefficient of Variation",
+                    rcv="Robust Coefficient of Variation"
+                ),
+                preset=list(
+                    all.basic="use all genes and export all genes and basic annotation and statistics elements",
+                    all.normal="use all genes and export all genes and normal annotation and statistics elements",
+                    all.full="use all genes and export all genes and all available annotation and statistics elements",
+                    medium.basic="apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
+                    medium.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+                    medium.full="apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
+                    strict.basic="apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
+                    strict.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
+                    strict.full="apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
+                ),
+                explain=list(
+                    mds=paste(
+                        "The Multi-Dimensional Scaling (MDS) plots comprise a means",
+                        "of visualizing the level of similarity of individual cases",
+                        "of a dataset. It is similar to Principal Component Analysis",
+                        "(PCA), but instead of using the covariance matrix to find",
+                        "similarities among cases, MDS uses absolute distance metrics",
+                        "such as the classical Euclidean distance. Because of the",
+                        "relative linear relations among sequencing samples, it",
+                        "provides a more realistic clustering among samples. MDS",
+                        "serves quality control and it can be interpreted as follows:",
+                        "when the distance among samples of the same biological",
+                        "condition in the MDS space is small, this is an indication",
+                        "of high correlation and reproducibility among them. When",
+                        "this distance is larger or heterogeneous (e.g. the 3rd",
+                        "sample of a triplicate set is further from the other 2),",
+                        "this comprises an indication of low correlation and",
+                        "reproducibility among samples. It can help exclude poor",
+                        "samples from further analysis.",collapse=" "
+                    ),
+                    biodetection=paste(
+                        "The biotype detection bar diagrams are a set of quality",
+                        "control charts that show the percentage of each biotype",
+                        "in the genome (i.e. in the whole set of features provided,",
+                        "for example, protein coding genes, non coding RNAs or",
+                        "pseudogenes) in grey bars, which proportion has been",
+                        "detected in a sample before normalization and after a",
+                        "basic filtering by removing features with zero counts in",
+                        "red lined bars, and the percentage of each biotype within",
+                        "the sample in solid red bars. The difference between grey",
+                        "bars and solid red bars is that the grey bars show the",
+                        "percentage of a feature in the genome while the solid red",
+                        "bars show the percentage in the sample. Thus, the solid",
+                        "red bars may be sometimes higher than the grey bars because",
+                        "certain features (e.g. protein coding genes) may be",
+                        "detected within a sample with a higher proportion",
+                        "relatively to their presence in the genome, as compared",
+                        "with other features. For example, while the percentage",
+                        "of protein coding genes in the whole genome is already",
+                        "higher than other biotypes, this percentage is expected",
+                        "to be even higher in an RNA-Seq experiment where one",
+                        "expects protein-coding genes to exhibit greater abundance.",
+                        "The vertical green line separates the most abundant",
+                        "biotypes (in the left-hand side, corresponding to the",
+                        "left axis scale) from the rest (in the right-hand side,",
+                        "corresponding to the right axis scale). Otherwise, the",
+                        "lower abundance biotypes would be indistiguishable.",
+                        "Unexpected outcomes in this quality control chart (e.g.",
+                        "very low detection of protein coding genes) would signify",
+                        "possible low quality of a sample.",collapse=" "
+                    ),
+                    countsbio=paste(
+                        "The biotype detection counts boxplots are a set of quality",
+                        "control charts that depict both the biological classification",
+                        "for the detected features and the actual distribution of",
+                        "the read counts for each biological type. The boxplot",
+                        "comprises a means of summarizing the read counts distribution",
+                        "of a sample in the form of a bar with extending lines,",
+                        "as commonly used way of graphically presenting groups of",
+                        "numerical data. A boxplot also indicates which observations,",
+                        "if any, might be considered outliers and is able to visually",
+                        "show different types of populations, without making any",
+                        "assumptions of the underlying statistical distribution.",
+                        "The spacings between the different parts of the box help",
+                        "indicate variance, skewness and identify outliers. The",
+                        "thick bar inside the colored box is the median of the",
+                        "observations while the box extends over the Interquartile",
+                        "Range of the observations. The whiskers extend up (down)",
+                        "to +/-1.5xIQR. Unexpected outcomes (e.g. protein coding",
+                        "read count distribution similar to pseudogene read count",
+                        "distribution) indicates poor sample quality.",collapse=" "
+                    ),
+                    saturation=paste(
+                        "The read and biotype saturation plots are a set of quality",
+                        "control charts that depict the read count saturation",
+                        "levels at several sequencing depths. Thus, they comprise",
+                        "a means of assessing whether the sequencing depth of an",
+                        "RNA-Seq experiment is sufficient in order to detect the",
+                        "biological features under investigation. These quality",
+                        "control charts are separated in two subgroups: the first",
+                        "subgroup (read saturation per biotype for all samples)",
+                        "is a set of plots, one for each biological feature (e.g.",
+                        "protein coding, pseudogene, lincRNA, etc.), that depict",
+                        "the number of detected features in different sequencing",
+                        "depths and for all samples in the same plot. The second",
+                        "subgroup (read saturation per sample for all biotypes)",
+                        "is a set of plots similar to the above, but this time,",
+                        "there is one pair of plots with two panels for each sample,",
+                        "presenting all biological features. The left panel depicts",
+                        "the saturation levels for the less abundatnt features,",
+                        "while the right panel, the saturation for the more abundant",
+                        "features, as placing them all together would make the",
+                        "less abundant features indistinguishable. All the saturation",
+                        "plots should be interpreted as follows: if the read counts",
+                        "for a biotype tend to be saturated, the respective curve",
+                        "should tend to reach a plateau in higher depths. Otherwise,",
+                        "more sequencing is needed for the specific biotype.",
+                        collapse=" "
+                    ),
+                    readnoise=paste(
+                        "The read noise plots depict the percentage of biological",
+                        "features detected when subsampling the total number of",
+                        "reads. Very steep curves in read noise plots indicate",
+                        "that although the sequencing depth reaches its maximum,",
+                        "a relatively small percentage of total features is detected,",
+                        "indicating that the level of background noise is relatively",
+                        "high. Less steep RNA composition curves, indicate less noise.",
+                        "When a sample's curve deviate from the rest, it could",
+                        "indicate lower or higher quality, depending on the curves",
+                        "of the rest of the samples.",collapse=" "
+                    ),
+                    correl=paste(
+                        "The sample correlation plots depict the accordance among",
+                        "the RNA-Seq samples, as this is manifested through the",
+                        "read counts table used with the metaseqr pipeline, with",
+                        "two representations that both use the correlation matrix",
+                        "(a matrix which depicts all the pairwise correlations",
+                        "between each pair of samples) of the read counts matrix.",
+                        "The first one is a correlation clustered heatmap which",
+                        "depicts the correlations among samples as color-scaled",
+                        "image and the hierarchical clustering tree depicts the",
+                        "grouping of the samples according to their correlation.",
+                        "Samples from the same group that are not clustered together",
+                        "comprises and indication that there might be a quality",
+                        "problem with the dataset. The second is a 'correlogram'",
+                        "plot, where again the samples are hierarchically clustered",
+                        "and grouped but this time correlations are presented as",
+                        "ellipses inside each cell. Each cell represents a pairwise",
+                        "comparison and each correlation coefficient is represented",
+                        "by an ellipse whose 'diameter', direction and color",
+                        "depict the accordance for that pair of samples. Highly",
+                        "correlated samples are depicted as ellipses with narrow",
+                        "diameter while while poorly correlated samples are",
+                        "depicted as ellipses with wide diameters. Also, highly",
+                        "correlated samples are depicted as ellipses with a ",
+                        "left-to-right upwards direction while poorly correlated",
+                        "samples are depicted as ellipses with a right-to-left",
+                        "upwards direction.",collapse=" "
+                    ),
+                    pairwise=paste(
+                        "The pairwise comparison plots are split in three parts:",
+                        "the upper diagonal consists of simple scatterplots for",
+                        "all pairwise sample comparisons, together with their",
+                        "pearson correlation coefficient. It is a simple measure",
+                        "of between sample correlation using all the available",
+                        "data points instead of only the correlation matrix. The",
+                        "lower diagonal, consist of mean-difference plots for all",
+                        "pairwise sample comparisons. A mean-difference plot (or",
+                        "a Bland-Altman plots) is a method of data plotting used",
+                        "in analyzing the agreement between two different",
+                        "assays/variables. In this graphical method the differences",
+                        "(or alternatively the ratios) between the two variables",
+                        "are plotted against the averages of the two. Such a plot",
+                        "is useful, for example, to analyze data with strong",
+                        "correlation between x and y axes, when the (x,y) dots on",
+                        "the plot are close to the diagonal x=y. In this case, the",
+                        "value of the transformed variable X is about the same as",
+                        "x and y and the variable Y shows the difference between",
+                        "x and y. In both represantations, irregular shapes of the",
+                        "red smoother lines are an indication of poor correlation",
+                        "between samples or of other systematic bias sources,",
+                        "which is usually corrected through data normalization.",
+                        collapse=" "
+                    ),
+                    rnacomp=paste(
+                        "The RNA composition plots depict the differences in the",
+                        "distributions of reads in the same biological features",
+                        "across samples. The following is taken from the NOISeq",
+                        "vignette: <em>'...when two samples have different RNA",
+                        "composition, the distribution of sequencing reads across",
+                        "the features is different in such a way that although",
+                        "a feature had the same number of read counts in both",
+                        "samples, it would not mean that it was equally expressed",
+                        "in both... To check if this bias is present in the data,",
+                        "the RNA composition plot and the correponding diagnostic",
+                        "test can be used. In this case, each sample s is compared",
+                        "to the reference sample r (which can be arbitrarily",
+                        "chosen). To do that, M values are computed as",
+                        "log2(counts_sample = counts_reference). If no bias is",
+                        "present, it should be expected that the median of M",
+                        "values for each comparison is 0. Otherwise, it would be",
+                        "indicating that expression levels in one of the samples",
+                        "tend to be higher than in the other, and this could lead",
+                        "to false discoveries when computing differencial expression.",
+                        "Confidence intervals for the M median are also computed by",
+                        "bootstrapping. If value 0 does not fall inside the interval,",
+                        "it means that the deviation of the sample with regard",
+                        "to the reference sample is statistically significant.",
+                        "Therefore, a normalization procedure is required.'</em>",
+                        collapse=" "
+                    ),
+                    boxplot=paste(
+                        "The boxplot comprises a means of summarizing the read",
+                        "counts distribution of a sample in the form of a bar",
+                        "with extending lines, as a commonly used way of",
+                        "graphically presenting groups of numerical data. A",
+                        "boxplot also indicates which observations, if any, might",
+                        "be considered outliers and is able to visually show",
+                        "different types of populations, without making any",
+                        "assumptions of the underlying statistical distribution.",
+                        "The spacings between the different parts of the box help",
+                        "indicate variance, skewness and identify outliers. The",
+                        "thick bar inside the colored box is the median of the",
+                        "observations while the box extends over the Interquartile",
+                        "Range of the observations. The whiskers extend up (down)",
+                        "to +/-1.5xIQR. Boxplots at similar levels indicate good",
+                        "quality of the normalization. When after normalization",
+                        "boxplots remain at different levels, maybe another",
+                        "normalization algorithm may have to be examined.",
+                        "The un-normalized boxplots show the need for data",
+                        "normalization in order for the data from different",
+                        "samples to follow the same underlying distribution and",
+                        "statistical testing becoming possible.",collapse=" "
+                    ),
+                    gcbias=paste(
+                        "The GC-content bias plot is a quality control chart that",
+                        "shows the possible dependence of the read counts (in log2",
+                        "scale) under a gene to the GC content percentage of that",
+                        "gene. In order for the statistical tests to be able to",
+                        "detect statistical significance which occurs due to real",
+                        "biological effects and not by other systematic biases",
+                        "present in the data (e.g. a possible GC-content bias),",
+                        "the latter should be accounted for by the applied",
+                        "normalization algorithm. Although the tests are performed",
+                        "for each gene across biological conditions one could assume",
+                        "that the GC content does not represent a bias as it's the",
+                        "same for the tested gene across samples and conditions.",
+                        "However, Risso et al. (2011) showed that the GC-content",
+                        "could have an impact in the statistical testing procedure.",
+                        "The GC-content bias plot depicts the dependence of the",
+                        "read counts to the GC content before and after normalization.",
+                        "The smoothing lines for each sample, should be as 'straight'",
+                        "as possible after normalization. In addition, if the",
+                        "smoothing lines differ significantly among biological",
+                        "conditions it would constitute a possible quality warning.",
+                        collapse=" "
+                    ),
+                    lengthbias=paste(
+                        "The gene/transcript length bias plot is a quality control",
+                        "chart that shows the possible dependence of the read counts",
+                        "(in log2 scale) under a gene to the length that gene (whole",
+                        "gene or sum of exons depending on the analysis). In order",
+                        "for the statistical tests to be able to detect statistical",
+                        "significance which occurs due to real biological effects",
+                        "and not by other systematic biases present in the data",
+                        "(e.g. a possible length bias), the latter should be accounted",
+                        "for by the applied normalization algorithm. Although the",
+                        "tests are performed for each gene across bioogical conditions,",
+                        "one could assume that the gene length does not represent",
+                        "a bias as it's the same for the tested gene across samples",
+                        "and conditions. However, it has been shown in several",
+                        "studies that the gene length could have an impact in the",
+                        "statistical testing procedure. The length bias plot",
+                        "depicts the dependence of the read counts to the",
+                        "gene/transcript length before and after normalization.",
+                        "The smoothing lines for each sample, should be as 'straight'",
+                        "as possible after normalization. In addition, if the",
+                        "smoothing lines differ significantly among biological",
+                        "conditions it would constitute a possible quality warning.",
+                        collapse=" "
+                    ),
+                    meandiff=paste(
+                        "A mean-difference plot (or a Bland-Altman plot) is a",
+                        "method of data plotting used in analyzing the agreement",
+                        "between two different assays/variables. In this graphical",
+                        "method the differences (or alternatively the ratios)",
+                        "between the two variables are plotted against the averages",
+                        "of the two. Such a plot is useful, for example, to analyze",
+                        "data with strong correlation between x and y axes, when",
+                        "the (x,y) dots on the plot are close to the diagonal x=y.",
+                        "In this case, the value of the transformed variable X is",
+                        "about the same as x and y and the variable Y shows the",
+                        "difference between x and y. When the data cloud in a mean",
+                        "difference plot is centered around the horizontal zero line,",
+                        "this is an indication of good data quality and good",
+                        "normalization results. On the other hand, when the data",
+                        "cloud deviates from the center line or has a 'banana'",
+                        "shape, this constitutes an indication of systematic biases",
+                        "present in the data and that either the chosen normalization",
+                        "algorithm has not worked well, or that data are not",
+                        "normalized. The smoothing curve that traverses the data",
+                        "(red curve) summarizes the above trends.",collapse=" "
+                    ),
+                    meanvar=paste(
+                        "The mean-variance plot comprises a graphical means to",
+                        "display a possible relationship between the means of",
+                        "gene expression (counts) values and their variances",
+                        "across replicates of the same biological condition. Thus",
+                        "data can be inspected for possible overdispersion (greater",
+                        "variability in a dataset than would be expected based on",
+                        "a given simple statistical model). In such plots for",
+                        "RNA-Seq data, overdispersion is usually manifested as",
+                        "increasing variance with increasing gene expression",
+                        "(counts) and it is summarized through a smoothing curve",
+                        "(red curve). The following is taken from the EDASeq package",
+                        "vignette: '<em>...although the Poisson distribution",
+                        "is a natural and simple way to model count data, it has",
+                        "the limitation of assuming equality of the mean and",
+                        "variance. For this reason, the negative binomial",
+                        "distribution has been proposed as an alternative when the",
+                        "data show over-dispersion...'</em> If overdispersion is",
+                        "not present, the data cloud is expected to be evenly",
+                        "scattered around the smoothing curve.",collapse=" "
+                    ),
+                    deheatmap=paste(
+                        "The Differentially Expressed Genes (DEGs) heatmaps depict",
+                        "how well samples from different conditions cluster",
+                        "together according to their expression values after",
+                        "normalization and statistical testing, for each requested",
+                        "statistical contrast. If samples from the same biological",
+                        "condition do not cluster together, this would comprise",
+                        "a warning sign regarding the quality of the samples. In",
+                        "addition, DEG heatmaps provide an initial view of",
+                        "possible clusters of co-expressed genes.",collapse=" "
+                    ),
+                    volcano=paste(
+                        "A volcano plot is a scatterplot that is often used when",
+                        "analysing high-throughput -omics data (e.g. microarray",
+                        "data, RNA-Seq data) to give an overview of interesting",
+                        "genes. The log2 fold change is plotted on the x-axis and",
+                        "the negative log10 p-value is plotted on the y-axis. A",
+                        "volcano plot combines the results of a statistical test",
+                        "(aka, p-values) with the magnitude of the change enabling",
+                        "quick visual identification of those genes that display",
+                        "large-magnitude changes that are also statistically",
+                        "significant. The horizontal dashed line sets the threshold",
+                        "for statistical significance, while the vertical dashed",
+                        "lines set the thresholds for biological significance. You",
+                        "should also keep in mind that when using more than one",
+                        "statistical algorithm and performing meta-analysis, the",
+                        "volcano plots become harder to interpret. This happens",
+                        "because the genes that have stronger evidence of being",
+                        "differentially expressed obtain lower p-values while the",
+                        "rest either remain at similar levels or obtain higher",
+                        "p-values. The result is a 'warped' volcano plot, with two",
+                        "main data clouds: one in the upper part of the plot, and",
+                        "one in the lower part of the plot. You can always zoom in",
+                        "when using interacting mode (the default).",collapse=" "
+                    ),
+                    biodist=paste(
+                        "The chromosome and biotype distributions bar diagram for",
+                        "Differentially Expressed Genes (DEGs) is split in two",
+                        "panels: i) on the left panel DEGs are distributed per",
+                        "chromosome and the percentage of each chromosome in the",
+                        "genome is presented in grey bars, the percentage of DEGs",
+                        "in each chromosome is presented in red lined bars and the",
+                        "percentage of certain chromosomes in the distribution of",
+                        "DEGs is presented in solid red bars. ii) on the right panel,",
+                        "DEGs are distributed per biotype and the percentage of",
+                        "each biotype in the genome (i.e. in the whole set of",
+                        "features provided, for example, protein coding genes, non",
+                        "coding RNAs or pseudogenes) is presented in grey bars,",
+                        "the percentage of DEGs in each biotype is presented in",
+                        "blue lined bars and the percentage of each biotype in",
+                        "DEGs is presented in solid blue lines. The vertical green",
+                        "line separates the most abundant biotypes (in the left-hand",
+                        "side, corresponding to the left axis scale), from the rest",
+                        "(in the right-hand side, corresponding to the right axis",
+                        "scale). Otherwise, the lower abundance, biotypes would be",
+                        "indistinguishable.",collapse=" "
+                    ),
+                    filtered=paste(
+                        "The chromosome and biotype distribution of filtered genes",
+                        "is a quality control chart with two rows and four panels:",
+                        "on the left panel of the first row, the bar chart depicts",
+                        "the numbers of filtered genes per chromosome (actual numbers",
+                        "shown above the bars). On the right panel of the first row,",
+                        "the bar chart depicts the numbers of filtered genes per",
+                        "biotype (actual numbers shown above the bars). On the left",
+                        "panel of the second row, the bar chart depicts the fraction",
+                        "of the filtered genes to the total genes per chromosome",
+                        "(actual percentages shown above the bars). On the right",
+                        "panel of the second row, the bar chart depicts the fraction",
+                        "of the filtered genes to the total genes per biotype",
+                        "(actual percentages shown above the bars). This plot",
+                        "should indicate possible quality problems when for example",
+                        "the filtered genes for a specific chromosome (or the",
+                        "fraction) is extremely higher than the rest. Generally,",
+                        "the fractions per chromosome should be uniform and the",
+                        "fractions per biotype should be proportional to the biotype",
+                        "fraction relative to the genome.",collapse=" "
+                    ),
+                    venn=paste(
+                        "The Venn diagrams are an intuitive way of presenting",
+                        "overlaps between lists, based on the overlap of basic",
+                        "geometrical shapes. The numbers of overlapping genes per",
+                        "statistical algorithm are shown in the different areas",
+                        "of the Venn diagrams, one for each contrast.",collapse=" "
+                    )
+                ),
+                references=list(
+                    filein=list(
+                        sam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
+                        bam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
+                        bed="Lawrence, M., Gentleman, R., Carey, V. (2009). rtracklayer: an R package for interfacing with genome browsers. Bioinformatics 25(14), 1841-1842."
+                    ),
+                    norm=list(
+                        edaseq="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+                        deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
+                        edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
+                        noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        nbpseq="Di, Y, Schafer, D., Cumbie, J.S., and Chang, J.H. (2011). The NBP Negative Binomial Model for Assessing Differential Gene Expression from RNA-Seq. Statistical Applications in Genetics and Molecular Biology 10(1), 1-28.",
+                        none=NULL
+                    ),
+                    stat=list(
+                        deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
+                        edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
+                        noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        limma="Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.",
+                        bayseq="Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.",
+                        nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
+                        ebseq="Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043"
+                    ),
+                    meta=list(
+                        fisher="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+                        fperm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+                        whitlock=c(
+                            "Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
+                            "Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
+                        ),
+                        weight="Genovese, C.R., Roeder, K., Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika 93 (3): 509-524.",
+                        simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.",
+                        none=NULL
+                    ),
+                    multiple=list(
+                        BH="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
+                        fdr="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
+                        BY="Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.",
+                        bonferroni="Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.",
+                        holm="Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics 6, 65-70.",
+                        hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
+                        hochberg="Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests of significance. Biometrika 75, 800-803.",
+                        qvalue="Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445."
+                    ),
+                    figure=list(
+                        mds="Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012). htSeqTools: high-throughput sequencing quality control, processing and visualization in R. Bioinformatics 28, 589-590.",
+                        biodetection="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        countsbio="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        saturation="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        readnoise="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        gcbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+                        lengthbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+                        meandiff="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+                        meanvar="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
+                        rnacomp="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        biodist="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
+                        venn="Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics 12, 35.",
+                        filtered=NULL
+                    )
+                )
+            )
+        }
+    )
+    return(messages)
 }
 
 #' Interactive volcano plot helper
@@ -2856,32 +2904,32 @@ make.report.messages <- function(lang) {
 #' @return A list that is later serialized to JSON.
 #' @author Panagiotis Moulos
 make.highcharts.points <- function(x,y,a) {
-	if (length(x)>0) {
-		n <- names(x)
-		x <- unname(x)
-		y <- unname(-log10(y))
-		stru <- vector("list",length(x))
-		if (is.null(a)) {
-			for (i in 1:length(x))
-				stru[[i]] <- list(
-					x=round(x[i],digits=3),
-					y=round(y[i],digits=3),
-					name=n[i]
-				)
-		}
-		else {
-			for (i in 1:length(x))
-				stru[[i]] <- list(
-					x=round(x[i],digits=3),
-					y=round(y[i],digits=3),
-					name=n[i],
-					alt_name=a[i]
-				)
-		}
-	}
-	else
-		stru <- list(x=NULL,y=NULL,name=NULL,alt_name=NULL)
-	return(stru)
+    if (length(x)>0) {
+        n <- names(x)
+        x <- unname(x)
+        y <- unname(-log10(y))
+        stru <- vector("list",length(x))
+        if (is.null(a)) {
+            for (i in 1:length(x))
+                stru[[i]] <- list(
+                    x=round(x[i],digits=3),
+                    y=round(y[i],digits=3),
+                    name=n[i]
+                )
+        }
+        else {
+            for (i in 1:length(x))
+                stru[[i]] <- list(
+                    x=round(x[i],digits=3),
+                    y=round(y[i],digits=3),
+                    name=n[i],
+                    alt_name=a[i]
+                )
+        }
+    }
+    else
+        stru <- list(x=NULL,y=NULL,name=NULL,alt_name=NULL)
+    return(stru)
 }
 
 #' Create a class vector
@@ -2894,14 +2942,19 @@ make.highcharts.points <- function(x,y,a) {
 #' @return A vector of condition names.
 #' @author Panagiotis Moulos
 #' @export
+#' @examples
+#' \dont'run{
+#' sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
+#' clv <- as.class.vector(sample.list)
+#'}
 as.class.vector <- function(sample.list) {
-	classes <- vector("list",length(sample.list))
-	names(classes) <- names(sample.list)
-	for (n in names(sample.list))
-		classes[[n]] <- rep(n,times=length(sample.list[[n]]))
-	classes <- unlist(classes,use.names=FALSE)
-	names(classes) <- unlist(sample.list,use.names=FALSE)
-	return(classes)
+    classes <- vector("list",length(sample.list))
+    names(classes) <- names(sample.list)
+    for (n in names(sample.list))
+        classes[[n]] <- rep(n,times=length(sample.list[[n]]))
+    classes <- unlist(classes,use.names=FALSE)
+    names(classes) <- unlist(sample.list,use.names=FALSE)
+    return(classes)
 }
 
 #' Argument getter
@@ -2920,7 +2973,7 @@ as.class.vector <- function(sample.list) {
 #' a <- get.arg(norm.list,c("main.method","logratioTrim"))
 #'}
 get.arg <- function(arg.list,arg.name) {
-	return(arg.list[arg.name])
+    return(arg.list[arg.name])
 }
 
 #' Argument setter
@@ -2943,19 +2996,19 @@ get.arg <- function(arg.list,arg.name) {
 #' set.arg(norm.list,list(main.method="glm",logratioTrim=0.4))
 #'}
 set.arg <- function(arg.list,arg.name,arg.value=NULL) {
-	if (is.list(arg.name))
-		arg.list[names(arg.name)] <- arg.name
-	else if (is.character(arg.name)) {
-		tmp <- vector("list",length(arg.name))
-		names(tmp) <- arg.name
-		i <- 0
-		for (n in arg.name) {
-			i <- i + 1
-			tmp[[n]] <- arg.value[i]
-		}
-		arg.list[arg.name] <- tmp
-	}
-	return(arg.list)
+    if (is.list(arg.name))
+        arg.list[names(arg.name)] <- arg.name
+    else if (is.character(arg.name)) {
+        tmp <- vector("list",length(arg.name))
+        names(tmp) <- arg.name
+        i <- 0
+        for (n in arg.name) {
+            i <- i + 1
+            tmp[[n]] <- arg.value[i]
+        }
+        arg.list[arg.name] <- tmp
+    }
+    return(arg.list)
 }
 
 #' Multiple testing correction helper
@@ -2966,13 +3019,12 @@ set.arg <- function(arg.list,arg.name,arg.value=NULL) {
 #'
 #' @param p a vector of p-values.
 #' @param m the adjustment method. See the help of \code{\link{p.adjust}}.
-#' @export
 #' @author Panagiotis Moulos
 wp.adjust <- function(p,m) {
-	if (m=="qvalue")
-		return(qvalue(p))
-	else
-		return(p.adjust(p,method=m))
+    if (m=="qvalue")
+        return(qvalue(p))
+    else
+        return(p.adjust(p,method=m))
 }
 
 #' List apply helper
@@ -2985,11 +3037,20 @@ wp.adjust <- function(p,m) {
 #' @param ... the rest arguments to \code{\link{lapply}} (or \code{mclapply})
 #' @export
 #' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' multic <- check.parallel(0.8)
+#' # Test meaningful only in machines where parallel computation supported
+#' if (multic) {
+#'   system.time(r<-wapply(TRUE,1:10,function(x) runif(1e+6)))
+#'   system.time(r<-wapply(FALSE,1:10,function(x) runif(1e+6)))
+#' }
+#'}
 wapply <- function(m,...) {
-	if (m)
-		return(mclapply(...,mc.cores=getOption("cores"),mc.set.seed=FALSE))
-	else
-		return(lapply(...))
+    if (m)
+        return(mclapply(...,mc.cores=getOption("cores"),mc.set.seed=FALSE))
+    else
+        return(lapply(...))
 }
 
 #' Filtering helper
@@ -3002,7 +3063,9 @@ wapply <- function(m,...) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' filter.low(data,median(data))
+#' data("mm9.gene.data",package="metaseqR")
+#' counts <- as.matrix(mm9.gene.counts[,9:12])
+#' f <- filter.low(counts,median(counts))
 #'}
 filter.low <- function(x,f) { return(all(x<=f)) }
 
@@ -3016,7 +3079,9 @@ filter.low <- function(x,f) { return(all(x<=f)) }
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' filter.high(data,median(data))
+#' data("mm9.gene.data",package="metaseqR")
+#' counts <- as.matrix(mm9.gene.counts[,9:12])
+#' f <- filter.high(counts,median(counts))
 #'}
 filter.high <- function(x,f) { return(all(x>=f)) }
 
@@ -3033,65 +3098,65 @@ filter.high <- function(x,f) { return(all(x>=f)) }
 #' disp("Now running iteration ",i,"...")
 #'}
 disp <- function(...) {
-	if (exists("VERBOSE")) {
-		verbose <- get("VERBOSE")
-		if (!is.null(verbose) && verbose) {
-			#cat("\n",...,sep="")
-			message("\n",...,appendLF=FALSE)
-			#flush.console()
-		}
-	}
-	else
-		message("\n",...,appendLF=FALSE)
-	if (exists("LOGGER")) {
-		logger <- get("LOGGER")
-		levalias <- c("one","two","three","four","five")
-		if (!is.null(logger)) {
-			switch(levalias[level(logger)],
-				one = { debug(logger,paste0(...)) },
-				two = { info(logger,gsub("\\n","",paste0(...))) },
-				three = { warn(logger,gsub("\\n","",paste0(...))) },
-				four = { error(logger,gsub("\\n","",paste0(...))) },
-				five = { fatal(logger,gsub("\\n","",paste0(...))) }
-			)
-		}
-	}
+    if (exists("VERBOSE")) {
+        verbose <- get("VERBOSE")
+        if (!is.null(verbose) && verbose) {
+            #cat("\n",...,sep="")
+            message("\n",...,appendLF=FALSE)
+            #flush.console()
+        }
+    }
+    else
+        message("\n",...,appendLF=FALSE)
+    if (exists("LOGGER")) {
+        logger <- get("LOGGER")
+        levalias <- c("one","two","three","four","five")
+        if (!is.null(logger)) {
+            switch(levalias[level(logger)],
+                one = { debug(logger,paste0(...)) },
+                two = { info(logger,gsub("\\n","",paste0(...))) },
+                three = { warn(logger,gsub("\\n","",paste0(...))) },
+                four = { error(logger,gsub("\\n","",paste0(...))) },
+                five = { fatal(logger,gsub("\\n","",paste0(...))) }
+            )
+        }
+    }
 }
 
 stopwrap <- function(...,t="fatal") {
-	if (exists("LOGGER")) {
-		logger <- get("LOGGER")
-		if (!is.null(logger)) {
-			if (t=="fatal")
-				fatal(logger,gsub("\\n","",paste0(...)))
-			else
-				error(logger,gsub("\\n","",paste0(...)))
-		}
-	}
-	stop(paste0(...))
+    if (exists("LOGGER")) {
+        logger <- get("LOGGER")
+        if (!is.null(logger)) {
+            if (t=="fatal")
+                fatal(logger,gsub("\\n","",paste0(...)))
+            else
+                error(logger,gsub("\\n","",paste0(...)))
+        }
+    }
+    stop(paste0(...))
 }
 
 warnwrap <- function(...) {
-	if (exists("LOGGER")) {
-		logger <- get("LOGGER")
-		if (!is.null("logger"))
-			warn(logger,gsub("\\n","",paste0(...)))
-	}
-	warning(paste0(...),call.=FALSE)
+    if (exists("LOGGER")) {
+        logger <- get("LOGGER")
+        if (!is.null("logger"))
+            warn(logger,gsub("\\n","",paste0(...)))
+    }
+    warning(paste0(...),call.=FALSE)
 }
 
 elap2human <- function(start.time) {
-	start.time <- as.POSIXct(start.time)
-	dt <- difftime(Sys.time(),start.time,units="secs")
-	ndt <- as.numeric(dt)
-	if (ndt<60)
-		format(.POSIXct(dt,tz="GMT"),"%S seconds")
-	else if (ndt>=60 && ndt<3600)
-		format(.POSIXct(dt,tz="GMT"),"%M minutes %S seconds")
-	else if (ndt>=3600 && ndt<86400)
-		format(.POSIXct(dt,tz="GMT"),"%H hours %M minutes %S seconds")
-	else if (ndt>=86400)
-		format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
+    start.time <- as.POSIXct(start.time)
+    dt <- difftime(Sys.time(),start.time,units="secs")
+    ndt <- as.numeric(dt)
+    if (ndt<60)
+        format(.POSIXct(dt,tz="GMT"),"%S seconds")
+    else if (ndt>=60 && ndt<3600)
+        format(.POSIXct(dt,tz="GMT"),"%M minutes %S seconds")
+    else if (ndt>=3600 && ndt<86400)
+        format(.POSIXct(dt,tz="GMT"),"%H hours %M minutes %S seconds")
+    else if (ndt>=86400)
+        format(.POSIXct(dt,tz="GMT"),"%d days %H hours %M minutes %S seconds")
 }
 
 ##' Fixed annotation updater
@@ -3111,39 +3176,39 @@ elap2human <- function(start.time) {
 ##' annotations.update()
 ##'}
 #annotations.update <- function() {
-#	if(!require(biomaRt))
-#		stopwrap("Bioconductor package biomaRt is required to update annotations!")
-#	VERBOSE <<- TRUE
-#	supported.types <- c("gene","exon")
-#	supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danrer7")
-#	if (exists("ANNOTATION")) {
-#		for (type in supported.types) {
-#			for (org in supported.orgs) {
-#				disp("Downloading and writing ",type,"s for ",org,"...")
-#				tryCatch({
-#					tmp <- get.annotation(org,type)
-#					var.name <- paste(org,type,sep=".")
-#					assign(var.name,tmp)
-#					#if (!file.exists(ANNOTATION$ENSEMBL[[toupper(type)]]))
-#					#	dir.create(ANNOTATION$ENSEMBL[[toupper(type)]],recursive=TRUE)
-#					#gzfh <- gzfile(file.path(ANNOTATION$ENSEMBL[[toupper(type)]],
-#					#	paste(org,".txt.gz",sep="")),"w")
-#					#write.table(tmp,gzfh,sep="\t",row.names=FALSE,quote=FALSE)
-#					#close(gzfh)},
-#					save(list=eval(parse(text="var.name")),file=file.path(ANNOTATION,
-#						paste(org,type,"rda",sep=".")),compress=TRUE)},
-#					error=function(e) {
-#						disp("!!! Probable problem with connection to Biomart...")
-#					},
-#					finally=""
-#				)
-#			}
-#		}
-#		disp("Finished!\n")
-#	}
-#	else
-#		stopwrap("metaseqr environmental variables are not properly set up! ",
-#			"Annotations cannot be updated...")
+#    if(!require(biomaRt))
+#        stopwrap("Bioconductor package biomaRt is required to update annotations!")
+#    VERBOSE <<- TRUE
+#    supported.types <- c("gene","exon")
+#    supported.orgs <- c("hg18","hg19","mm9","mm10","rn5","dm3","danrer7")
+#    if (exists("ANNOTATION")) {
+#        for (type in supported.types) {
+#            for (org in supported.orgs) {
+#                disp("Downloading and writing ",type,"s for ",org,"...")
+#                tryCatch({
+#                    tmp <- get.annotation(org,type)
+#                    var.name <- paste(org,type,sep=".")
+#                    assign(var.name,tmp)
+#                    #if (!file.exists(ANNOTATION$ENSEMBL[[toupper(type)]]))
+#                    #    dir.create(ANNOTATION$ENSEMBL[[toupper(type)]],recursive=TRUE)
+#                    #gzfh <- gzfile(file.path(ANNOTATION$ENSEMBL[[toupper(type)]],
+#                    #    paste(org,".txt.gz",sep="")),"w")
+#                    #write.table(tmp,gzfh,sep="\t",row.names=FALSE,quote=FALSE)
+#                    #close(gzfh)},
+#                    save(list=eval(parse(text="var.name")),file=file.path(ANNOTATION,
+#                        paste(org,type,"rda",sep=".")),compress=TRUE)},
+#                    error=function(e) {
+#                        disp("!!! Probable problem with connection to Biomart...")
+#                    },
+#                    finally=""
+#                )
+#            }
+#        }
+#        disp("Finished!\n")
+#    }
+#    else
+#        stopwrap("metaseqr environmental variables are not properly set up! ",
+#            "Annotations cannot be updated...")
 #}
 
 ##' Fixed annotation reader
@@ -3160,11 +3225,11 @@ elap2human <- function(start.time) {
 ##' ann <- read.annotation("hg19","gene")
 ##'}
 #read.annotation <- function(org,type) {
-#	data(list=paste(org,type,sep="."))
-#	ann <- eval(parse(text=paste(org,type,sep=".")))
-#	if (type=="gene")
-#		rownames(ann) <- ann$gene_id
-#	else if (type=="exon")
-#		rownames(ann) <- ann$exon_id
-#	return(ann)
+#    data(list=paste(org,type,sep="."))
+#    ann <- eval(parse(text=paste(org,type,sep=".")))
+#    if (type=="gene")
+#        rownames(ann) <- ann$gene_id
+#    else if (type=="exon")
+#        rownames(ann) <- ann$exon_id
+#    return(ann)
 #}

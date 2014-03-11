@@ -9,7 +9,10 @@
 }
 \description{
   Checks existence of multiple cores and loads multicore
-  package. Internal use only.
+  package.
+}
+\examples{
+multic <- check.parallel(0.8)
 }
 \author{
   Panagiotis Moulos

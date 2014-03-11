@@ -16,7 +16,7 @@
   the number of sets. Internal use.
 }
 \examples{
-\dontrun{
+\donttest{
 sets <- c("apple","pear","banana")
 cs <- make.venn.colorscheme(length(sets))
 }

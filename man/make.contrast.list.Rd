@@ -30,12 +30,9 @@
   \code{\link{metaseqr}} arguments.
 }
 \examples{
-\dontrun{
 sample.list <- list(Control=c("C1","C2"),TreatmentA=c("TA1","TA2"),TreatmentB=c("TB1","TB2"))
-contrast <- c("Control_vs_TreatmentA","Control_vs_TreatmentA_vs_TreatmentB"),
+contrast <- c("Control_vs_TreatmentA","Control_vs_TreatmentA_vs_TreatmentB")
 cl <- make.contrast.list(contrast,sample.list)
-cl
-}
 }
 \author{
   Panagiotis Moulos

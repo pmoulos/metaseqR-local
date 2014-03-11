@@ -14,9 +14,7 @@
   Internal use.
 }
 \examples{
-\dontrun{
 exon.attr <- get.exon.attributes()
-}
 }
 \author{
   Panagiotis Moulos

@@ -15,8 +15,9 @@
   Returns biotypes as character vector. Internal use.
 }
 \examples{
-\dontrun{
-hg19.bt <- get.biotypes(hg19.genes)
+\donttest{
+hg18.genes <- get.annotation("hg18","gene")
+hg18.bt <- get.biotypes(hg18.genes)
 }
 }
 \author{

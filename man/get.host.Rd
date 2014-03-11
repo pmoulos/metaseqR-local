@@ -16,9 +16,7 @@
   different versions of annotation from. Internal use.
 }
 \examples{
-\dontrun{
 mm9.hist <- get.host("mm9")
-}
 }
 \author{
   Panagiotis Moulos

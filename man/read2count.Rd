@@ -47,7 +47,16 @@
   counts file is not available.
 }
 \examples{
-# Not yet implenented
+\dontrun{
+my.targets <- read.targets("my_mm9_study_bam_files.txt")
+sample.list <- my.targets$samples
+file.list <- my.targets$files
+gene.data <- get.annotation("mm9","gene")
+r2c <- read2count(files.list=file.list,
+  file.type=my.targets$type,annotation=gene.data)
+gene.counts <- r2c$counts
+libsize.list <- r2s$libsize
+}
 }
 \author{
   Panagiotis Moulos

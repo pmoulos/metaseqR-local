@@ -29,12 +29,10 @@
   heatmap or correlogram correlation plots.
 }
 \examples{
-\dontrun{
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 diagplot.cor(data.matrix,type="heatmap")
 diagplot.cor(data.matrix,type="correlogram")
-}
 }
 \author{
   Panagiotis Moulos

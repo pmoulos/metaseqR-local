@@ -43,7 +43,15 @@
   requirements are met.
 }
 \examples{
-#Not yet available...
+\donttest{
+# Takes some time to run...
+data("hg19.exon.data",package="metaseqR")
+gene.data <- get.annotation("hg19","gene")
+reduced.gene.data <- reduce.gene.data(hg19.exon.counts,
+  gene.data)
+multic <- check.parallel(0.4)
+gene.model <- construct.gene.model(hg19.exon.counts,
+  sample.list.hg19,gene.data,multic)
 }
 \author{
   Panagiotis Moulos

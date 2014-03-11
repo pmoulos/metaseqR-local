@@ -18,7 +18,7 @@
   only.
 }
 \examples{
-\dontrun{
+\donttest{
 graphics.open("pdf","test.pdf",width=12,height=12)
 }
 }

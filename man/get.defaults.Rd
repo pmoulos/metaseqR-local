@@ -35,10 +35,8 @@
   of each statistical and normalization method for details.
 }
 \examples{
-\dontrun{
 norm.args.edaseq <- get.defaults("normalization","edaseq")
 stat.args.edger <- get.defaults("statistics","edger")
-}
 }
 \author{
   Panagiotis Moulos

@@ -12,7 +12,7 @@
   only.
 }
 \examples{
-\dontrun{
+\donttest{
 graphics.close("pdf")
 }
 }

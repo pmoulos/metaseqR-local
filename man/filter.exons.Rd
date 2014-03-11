@@ -44,13 +44,16 @@
   \code{\link{metaseqr}}.
 }
 \examples{
-\dontrun{
-exon.counts <- data("hg18.exon.counts",package="metaseqr")
-gene.data <- get.annotation("hg18","gene")
-sample.list <- list(CON=c("CON_BR1","CON_BR2"),DOX=c("DOX_BR1","DOX_BR2"))
+\donttest{
+data("hg19.exon.data",package="metaseqR")
+exon.counts <- hg19.exon.counts
+gene.data <- get.annotation("hg19","gene")
+sample.list <- sample.list.hg19
 exon.filters <- get.defaults("exon.filter")
-the.counts <- construct.gene.model(exon.counts,sample.list,gene.data)
-filter.results <- filter.exons(the.counts,gene.data,sample.list,exon.filters)
+the.counts <- construct.gene.model(exon.counts,sample.list,
+  gene.data)
+filter.results <- filter.exons(the.counts,gene.data,
+  sample.list,exon.filters)
 }
 }
 \author{

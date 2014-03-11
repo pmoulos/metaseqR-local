@@ -38,7 +38,7 @@
   each permutation. Internal use only.
 }
 \examples{
-\dontrun{
+\donttest{
 # Not yet available
 }
 }

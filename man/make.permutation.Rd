@@ -32,8 +32,10 @@
   \code{\link{meta.perm}} function.
 }
 \examples{
-\dontrun{
-# Not yet available
+\donttest{
+data("mm9.gene.data",package="metaseqR")
+per <- make.permutation(mm9.gene.counts,sample.list.mm9,
+  "e14.5_vs_adult_8_weeks")
 }
 }
 \author{

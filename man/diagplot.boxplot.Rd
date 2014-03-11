@@ -55,16 +55,16 @@
   depending on the name argument.
 }
 \examples{
-\dontrun{
+# Non-normalized boxplot
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 diagplot.boxplot(data.matrix,sample.list)
 
+# Normalized boxplot
 norm.args <- get.defaults("normalization","deseq")
 object <- normalize.deseq(data.matrix,sample.list,norm.args)
 diagplot.boxplot(object,sample.list)
-}
 }
 \author{
   Panagiotis Moulos

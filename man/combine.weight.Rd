@@ -19,10 +19,8 @@
   metaseqR using p-value weights.
 }
 \examples{
-\dontrun{
 p <- matrix(runif(300),100,3)
 pc <- combine.weight(p,w=c(0.2,0.5,0.3))
-}
 }
 \author{
   Panagiotis Moulos

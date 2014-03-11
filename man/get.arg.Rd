@@ -20,7 +20,7 @@
   normalization arguments.
 }
 \examples{
-\dontrun{
+\donttest{
 norm.list <- get.defaults("normalization","egder")
 a <- get.arg(norm.list,c("main.method","logratioTrim"))
 }

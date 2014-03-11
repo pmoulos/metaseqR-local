@@ -41,7 +41,7 @@
   checks and ignores any invalid arguments.
 }
 \examples{
-\dontrun{
+\donttest{
 norm.args.edger <- list(method="TMM",refColumn=NULL,
   logratioTrim=0.3,sumTrim=0.05,doWeighting=TRUE,
   Bcutoff=-1e10,p=0.75)

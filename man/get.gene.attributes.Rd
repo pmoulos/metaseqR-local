@@ -14,9 +14,7 @@
   Internal use.
 }
 \examples{
-\dontrun{
 gene.attr <- get.gene.attributes()
-}
 }
 \author{
   Panagiotis Moulos

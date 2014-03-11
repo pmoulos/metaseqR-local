@@ -53,18 +53,18 @@
   HTML reporting.
 }
 \examples{
-\dontrun{
+\donttest{
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
 contrast <- "A_vs_B"
-M <- norm.edger(data.matrix,sample.list)
+M <- normalize.edger(data.matrix,sample.list)
 p <- stat.edger(M,sample.list,contrast)
 ma <- apply(M[,sample.list$A],1,mean)
 mb <- apply(M[,sample.list$B],1,mean)
-f <- log2(mb/ma)
-diagplot.volcano(f,p,con=contrast)
-j <- diagplot.volcano(f,p,con=contrast,output="json")
+f <- log2(ifelse(mb==0,1,mb)/ifelse(ma==0,1,ma))
+diagplot.volcano(f,p[[1]],con=contrast)
+j <- diagplot.volcano(f,p[[1]],con=contrast,output="json")
 }
 }
 \author{

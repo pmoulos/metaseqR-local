@@ -27,7 +27,7 @@
   normalization arguments.
 }
 \examples{
-\dontrun{
+\donttest{
 norm.list <- get.defaults("normalization","egder")
 set.arg(norm.list,list(main.method="glm",logratioTrim=0.4))
 }
@@ -35,4 +35,3 @@ set.arg(norm.list,list(main.method="glm",logratioTrim=0.4))
 \author{
   Panagiotis Moulos
 }
-

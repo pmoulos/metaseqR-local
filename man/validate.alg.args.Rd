@@ -43,8 +43,21 @@
   arguments.
 }
 \examples{
-\dontrun{
-# Not yet available
+\donttest{
+normalization <- "edaseq"
+statistics <- "edger"
+norm.args <- get.defaults("normalization","edaseq")
+stat.args <- get.defaults("statistics","deseq")
+# Will return as is
+val <- validate.alg.args(normalization,statistics,norm.args,stat.args)
+val$norm.args
+val$stat.args
+# but...
+stat.args <- c(stat.args,my.irrelevant.arg=999)
+val <- validate.alg.args(normalization,statistics,norm.args,stat.args)
+# irrelevant argument will be removed
+val$norm.args
+val$stat.args
 }
 }
 \author{

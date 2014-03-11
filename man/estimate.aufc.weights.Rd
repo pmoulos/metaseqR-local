@@ -82,8 +82,16 @@
   data.
 }
 \examples{
-\dontrun{
-# Not yet available
+\donttest{
+data("mm9.gene.data",package="metaseqR")
+multic <- check.parallel(0.8)
+weights <- estimate.aufc.weights(
+  counts=as.matrix(mm9.gene.counts[,9:12]),
+  normalization="edaseq",
+  statistics=c("deseq","edger"),
+  nsim=3,N=100,ndeg=c(10,10),top=10,model.org="mm9",
+  seed=100,multic=multic,libsize.gt=1e+5
+)
 }
 }
 \author{

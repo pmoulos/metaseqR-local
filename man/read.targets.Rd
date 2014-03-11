@@ -40,8 +40,9 @@ targets <- data.frame(sample=c("C1","C2","T1","T2"),
   filename=c("C1_raw.bam","C2_raw.bam","T1_raw.bam","T2_raw.bam"),
   condition=c("Control","Control","Treatment","Treatment"))
 path <- "/home/chakotay/bam"
-write.table(targets,file="targets.txt",sep="\\t",row.names=F,quote="")
-the.list <- read.targets("targets.txt",path=path)
+write.table(targets,file="~/targets.txt",sep="\\t",row.names=FALSE,
+  quote=FALSE)
+the.list <- read.targets("~/targets.txt",path=path)
 sample.list <- the.list$samples
 bamfile.list <- the.list$files
 }

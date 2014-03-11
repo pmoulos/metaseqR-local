@@ -19,10 +19,8 @@
   help page or in the vignette).
 }
 \examples{
-\dontrun{
 p <- matrix(runif(300),100,3)
 pc <- combine.bonferroni(p)
-}
 }
 \author{
   Panagiotis Moulos

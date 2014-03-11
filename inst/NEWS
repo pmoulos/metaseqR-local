@@ -40,3 +40,10 @@ added:
   - Improved the simulator to i) simulate length bias and ii) better length selection
 fixed:
   - Code changes to comply with Bioconductor's guidelines
+
+changes in version 0.99.1 (2014-03-11)
+added:
+  - Ability to export counts table (raw and normalized) when reading from BAM files or just normalized otherwise
+  - Valid examples for many functions
+fixed:
+  - More code and codestyle changes to comply with Bioconductor's guidelines

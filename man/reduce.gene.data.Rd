@@ -26,7 +26,12 @@
   these cases.
 }
 \examples{
-#Not yet available...
+\donttest{
+data("hg19.exon.data",package="metaseqR")
+gene.data <- get.annotation("hg19","gene")
+reduced.gene.data <- reduce.gene.data(hg19.exon.counts,
+  gene.data)
+}
 }
 \author{
   Panagiotis Moulos

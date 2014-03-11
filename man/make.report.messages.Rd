@@ -12,7 +12,7 @@
   An named list with messages for each input option.
 }
 \description{
-  Initializes metaseqr report tmeplate messages output.
+  Initializes metaseqR report tmeplate messages output.
   Internal use only.
 }
 \author{

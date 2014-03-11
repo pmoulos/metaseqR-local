@@ -27,12 +27,12 @@
   \code{\link{match.arg}}. Mostly for internal use.
 }
 \examples{
-\dontrun{
-check.text.args("count.type",count.type,c("gene","exon"),
+# OK
+check.text.args("count.type","gene",c("gene","exon"),
   multiarg=FALSE)
-check.text.args("statistics",statistics,c("deseq","edger",
-  "noiseq","bayseq","limma"), multiarg=TRUE)
-}
+## Error!
+#check.text.args("statistics","ebseq",c("deseq","edger",
+#  "noiseq","bayseq","limma"), multiarg=TRUE)
 }
 \author{
   Panagiotis Moulos

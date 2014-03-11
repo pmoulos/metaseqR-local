@@ -2,11 +2,9 @@
 \alias{check.packages}
 \title{Required packages validator}
 \usage{
-  check.packages(a, m, s, p)
+  check.packages(m, s, p)
 }
 \arguments{
-  \item{a}{multiple testing correction method.}
-  
   \item{m}{meta-analysis method.}
 
   \item{s}{data transformation method.}
@@ -18,7 +16,10 @@
   during installation or loading, are present according 
   to metaseqR input options. Internal use only.
 }
+\examples{
+check.packages(c("simes","whitlock"),c("vsn"),
+  c("gcbias","correl"))
+}
 \author{
   Panagiotis Moulos
 }
-

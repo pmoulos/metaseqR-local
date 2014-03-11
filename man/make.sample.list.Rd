@@ -21,7 +21,7 @@
   Create the main sample list from an external file.
 }
 \examples{
-\dontrun{
+\donttest{
 targets <- data.frame(sample=c("C1","C2","T1","T2"),
   condition=c("Control","Control","Treatment","Treatment"))
 write.table(targets,file="targets.txt",sep="\\t",row.names=F,quote="")

@@ -17,7 +17,7 @@
   presets of metaseqR. Internal use only.
 }
 \examples{
-\dontrun{
+\donttest{
 sf <- get.strict.biofilter("hg18")
 }
 }

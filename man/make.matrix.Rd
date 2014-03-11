@@ -30,7 +30,7 @@
   \code{\link{metaseqr}} function. Internal use.
 }
 \examples{
-\dontrun{
+\donttest{
 data.matrix <- round(1000*matrix(runif(400),100,4))
 rownames(data.matrix) <- paste("gene_",1:100,sep="")
 colnames(data.matrix) <- c("C1","C2","T1","T2")

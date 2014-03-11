@@ -34,181 +34,185 @@
 #' environment. See the main \code{\link{metaseqr}} help page.
 #' @return A named list with combined p-values. The names are the contrasts and
 #' the list members are combined p-value vectors, one for each contrast.
-#' @export
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' # Not yet available
+#' # This function is not exported
 #'}
-meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min",
-	"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight","none"),
-	counts,sample.list,statistics,stat.args,libsize.list,nperm=10000,
-	weight=rep(1/length(statistics),length(statistics)),reprod=TRUE,
-	multic=FALSE) {
-	check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
-		"dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
-		"none"))
-	contrast <- names(cp.list)
-	disp("Performing meta-analysis with ",meta.p)
-	switch(meta.p,
-		fisher = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				tmp <- fisher.method(x,p.corr="none",zero.sub=.Machine$double.xmin)
-				return(tmp$p.value)
-			})
-		},
-		fperm = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				if (multic)
-					tmp <- fisher.method.perm(x,p.corr="none",B=nperm,
-						mc.cores=getOption("cores"),zero.sub=1e-32)
-				else
-					tmp <- fisher.method.perm(x,p.corr="none",B=nperm,zero.sub=1e-32)
-				return(tmp$p.value)
-			})
-		},
-		whitlock = {
-			sum.p.list <- wapply(multic,cp.list,function(x) 
-				return(apply(x,1,combine.test,method="z.transform")))
-		},
-		simes = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,combine.simes))
-			})
-		},
-		bonferroni = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,combine.bonferroni))
-			})
-		},
-		minp = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,combine.minp))
-			})
-		},
-		maxp = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,combine.maxp))
-			})
-		},
-		weight = {
-			sum.p.list <- wapply(multic,cp.list,function(x) {
-				return(apply(x,1,combine.weight,weight))
-			})
-		},
-		dperm.min = {
-			sum.p.list <- vector("list",length(cp.list))
-			names(sum.p.list) <- names(cp.list)
-			conl <- as.list(contrast)
-			names(conl) <- contrast
-			temp.p.list <- wapply(multic,conl,meta.perm,
-				counts=counts,sample.list=sample.list,
-				statistics=statistics,stat.args=stat.args,
-				libsize.list=libsize.list,
-				nperm=nperm,weight=weight,
-				select="min",reprod=reprod,
-				multic=multic)
-			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
-				x[which(is.na(x))] <- 1
-				switch(m,
-					min = {
-						return(apply(x,1,min))
-					},
-					max = {
-						return(apply(x,1,max))
-					},
-					weight = {
-						return(apply(x,1,function(p,w) return(prod(p^w)),w))
-					}
-				)
-			},"min")
-			for (cc in names(original.p.list))
-			{
-				pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
-				ly <- ncol(pc)
-				sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
-					return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
-			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
-		},
-		dperm.max = {
-			sum.p.list <- vector("list",length(cp.list))
-			names(sum.p.list) <- names(cp.list)
-			conl <- as.list(contrast)
-			names(conl) <- contrast
-			temp.p.list <- wapply(multic,conl,meta.perm,
-				counts=counts,sample.list=sample.list,
-				statistics=statistics,stat.args=stat.args,
-				libsize.list=libsize.list,
-				nperm=nperm,weight=weight,
-				select="max",reprod=reprod,
-				multic=multic)
-			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
-				switch(m,
-					min = {
-						return(apply(x,1,min))
-					},
-					max = {
-						return(apply(x,1,max))
-					},
-					weight = {
-						return(apply(x,1,function(p,w) return(prod(p^w)),w))
-					}
-				)
-			},"max")
-			for (cc in names(original.p.list))
-			{
-				pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
-				ly <- ncol(pc)
-				sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
-					return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
-			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
-		},
-		dperm.weight = {
-			sum.p.list <- vector("list",length(cp.list))
-			names(sum.p.list) <- names(cp.list)
-			conl <- as.list(contrast)
-			names(conl) <- contrast
-			temp.p.list <- wapply(multic,conl,meta.perm,
-				counts=counts,sample.list=sample.list,
-				statistics=statistics,stat.args=stat.args,
-				libsize.list=libsize.list,
-				nperm=nperm,weight=weight,
-				select="weight",reprod=reprod,
-				multic=multic)
-			original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
-				switch(m,
-					min = {
-						return(apply(x,1,min))
-					},
-					max = {
-						return(apply(x,1,max))
-					},
-					weight = {
-						return(apply(x,1,function(p,w) { return(prod(p^w)) },w))
-					}
-				)
-			},"weight",weight)
-			for (cc in names(original.p.list))
-			{
-				pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
-				ly <- ncol(pc)
-				sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
-					return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
-			}
-			#assign("perm.list",temp.p.list,envir=.GlobalEnv)
-			#assign("o.list",original.p.list,envir=.GlobalEnv)
-		},
-		none = {
-			# A default value must be there to use with volcanos, we say the one
-			# of the first statistic in order of input
-			sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
-		}
-	)
-	return(sum.p.list)
+meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher",
+    "dperm.min","dperm.max","dperm.weight","fperm","whitlock","minp","maxp",
+    "weight","none"),counts,sample.list,statistics,stat.args,libsize.list,
+    nperm=10000,weight=rep(1/length(statistics),length(statistics)),
+    reprod=TRUE,multic=FALSE) {
+    check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
+        "dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
+        "none"))
+    contrast <- names(cp.list)
+    disp("Performing meta-analysis with ",meta.p)
+    switch(meta.p,
+        fisher = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                tmp <- fisher.method(x,p.corr="none",
+                    zero.sub=.Machine$double.xmin)
+                return(tmp$p.value)
+            })
+        },
+        fperm = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                if (multic)
+                    tmp <- fisher.method.perm(x,p.corr="none",B=nperm,
+                        mc.cores=getOption("cores"),zero.sub=1e-32)
+                else
+                    tmp <- fisher.method.perm(x,p.corr="none",B=nperm,
+                        zero.sub=.Machine$double.xmin)
+                return(tmp$p.value)
+            })
+        },
+        whitlock = {
+            sum.p.list <- wapply(multic,cp.list,function(x) 
+                return(apply(x,1,combine.test,method="z.transform")))
+        },
+        simes = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                return(apply(x,1,combine.simes))
+            })
+        },
+        bonferroni = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                return(apply(x,1,combine.bonferroni))
+            })
+        },
+        minp = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                return(apply(x,1,combine.minp))
+            })
+        },
+        maxp = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                return(apply(x,1,combine.maxp))
+            })
+        },
+        weight = {
+            sum.p.list <- wapply(multic,cp.list,function(x) {
+                return(apply(x,1,combine.weight,weight))
+            })
+        },
+        dperm.min = {
+            sum.p.list <- vector("list",length(cp.list))
+            names(sum.p.list) <- names(cp.list)
+            conl <- as.list(contrast)
+            names(conl) <- contrast
+            temp.p.list <- wapply(multic,conl,meta.perm,
+                counts=counts,sample.list=sample.list,
+                statistics=statistics,stat.args=stat.args,
+                libsize.list=libsize.list,
+                nperm=nperm,weight=weight,
+                select="min",reprod=reprod,
+                multic=multic)
+            original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
+                x[which(is.na(x))] <- 1
+                switch(m,
+                    min = {
+                        return(apply(x,1,min))
+                    },
+                    max = {
+                        return(apply(x,1,max))
+                    },
+                    weight = {
+                        return(apply(x,1,function(p,w) return(prod(p^w)),
+                            w))
+                    }
+                )
+            },"min")
+            for (cc in names(original.p.list))
+            {
+                pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
+                ly <- ncol(pc)
+                sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
+                    return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
+            }
+            #assign("perm.list",temp.p.list,envir=.GlobalEnv)
+            #assign("o.list",original.p.list,envir=.GlobalEnv)
+        },
+        dperm.max = {
+            sum.p.list <- vector("list",length(cp.list))
+            names(sum.p.list) <- names(cp.list)
+            conl <- as.list(contrast)
+            names(conl) <- contrast
+            temp.p.list <- wapply(multic,conl,meta.perm,
+                counts=counts,sample.list=sample.list,
+                statistics=statistics,stat.args=stat.args,
+                libsize.list=libsize.list,
+                nperm=nperm,weight=weight,
+                select="max",reprod=reprod,
+                multic=multic)
+            original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
+                switch(m,
+                    min = {
+                        return(apply(x,1,min))
+                    },
+                    max = {
+                        return(apply(x,1,max))
+                    },
+                    weight = {
+                        return(apply(x,1,function(p,w) return(prod(p^w)),
+                            w))
+                    }
+                )
+            },"max")
+            for (cc in names(original.p.list))
+            {
+                pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
+                ly <- ncol(pc)
+                sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
+                    return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
+            }
+            #assign("perm.list",temp.p.list,envir=.GlobalEnv)
+            #assign("o.list",original.p.list,envir=.GlobalEnv)
+        },
+        dperm.weight = {
+            sum.p.list <- vector("list",length(cp.list))
+            names(sum.p.list) <- names(cp.list)
+            conl <- as.list(contrast)
+            names(conl) <- contrast
+            temp.p.list <- wapply(multic,conl,meta.perm,
+                counts=counts,sample.list=sample.list,
+                statistics=statistics,stat.args=stat.args,
+                libsize.list=libsize.list,
+                nperm=nperm,weight=weight,
+                select="weight",reprod=reprod,
+                multic=multic)
+            original.p.list <- wapply(multic,cp.list,function(x,m,w=NULL) {
+                switch(m,
+                    min = {
+                        return(apply(x,1,min))
+                    },
+                    max = {
+                        return(apply(x,1,max))
+                    },
+                    weight = {
+                        return(apply(x,1,function(p,w) {return(prod(p^w))},
+                            w))
+                    }
+                )
+            },"weight",weight)
+            for (cc in names(original.p.list))
+            {
+                pc <- cbind(temp.p.list[[cc]],original.p.list[[cc]])
+                ly <- ncol(pc)
+                sum.p.list[[cc]] <- apply(pc,1,function(y,m) 
+                    return(length(which(y[1:(m-1)]<y[m]))/(m-1)),ly)
+            }
+            #assign("perm.list",temp.p.list,envir=.GlobalEnv)
+            #assign("o.list",original.p.list,envir=.GlobalEnv)
+        },
+        none = {
+            # A default value must be there to use with volcanos, we say the one
+            # of the first statistic in order of input
+            sum.p.list <- wapply(multic,cp.list,function(x) return(x[,1]))
+        }
+    )
+    return(sum.p.list)
 }
 
 #' Permutation tests for meta-analysis
@@ -260,53 +264,53 @@ meta.test <- function(cp.list,meta.p=c("simes","bonferroni","fisher","dperm.min"
 #' user can supply his/her own seeds.
 #' @return A vector of meta p-values
 #' @author Panagiotis Moulos
-#' @export
 #' @examples
 #' \dontrun{
-#' # Not yet available
+#' # This function is not exported
 #'}
-meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,libsize.list,
-	nperm=10000,weight=rep(1/ncol(counts),ncol(counts)),select=c("min","max","weight"),
-	replace="auto",reprod=TRUE,multic=FALSE) {
-	check.text.args("select",select,c("min","max","weight"))
-	if (replace=="auto") {
-		if (ncol(counts)<=6)
-			replace=FALSE
-		else
-			replace=TRUE
-	}
-	# We will construct relist in a way so that we can assign seeds for random
-	# number generation and track progress at the same time
-	if (is.logical(reprod)) {
-		relist <- vector("list",nperm)
-		if (reprod) {
-			relist <- wapply(multic,seq_along(relist),function(i) 
-				{return(list(seed=i,prog=i))})
-		}
-		else
-			relist <- wapply(multic,seq_along(relist),function(i) 
-				{return(list(seed=round(1e+6*runif(1)),prog=i))})
-	}
-	else if (is.numeric(reprod)) {
-		if (length(reprod) != nperm)
-			stopwrap("When reprod is numeric, it must have the same length as nperm!")
-		relist <- wapply(multic,seq_along(reprod),function(i) 
-			{return(list(seed=reprod[i],prog=i))})
-	}
-	else
-		stopwrap("reprod must be either a logical or a numeric vector!")
-	disp("  Resampling procedure started...")
-	# In this case, we must not use wapply as we want to be able to track progress
-	# through mc.preschedule...
-	if (multic)
-		pp <- mclapply(relist,meta.worker,counts,sample.list,contrast,statistics,
-			replace,stat.args,libsize.list,select,weight,mc.preschedule=FALSE,
-			mc.cores=getOption("cores"))
-	else
-		pp <- lapply(relist,meta.worker,counts,sample.list,contrast,statistics,
-			replace,stat.args,libsize.list,select,weight)
-	disp("  Resampling procedure ended...")
-	return(do.call("cbind",pp))
+meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,
+    libsize.list,nperm=10000,weight=rep(1/ncol(counts),ncol(counts)),
+    select=c("min","max","weight"),replace="auto",reprod=TRUE,multic=FALSE) {
+    check.text.args("select",select,c("min","max","weight"))
+    if (replace=="auto") {
+        if (ncol(counts)<=6)
+            replace=FALSE
+        else
+            replace=TRUE
+    }
+    # We will construct relist in a way so that we can assign seeds for random
+    # number generation and track progress at the same time
+    if (is.logical(reprod)) {
+        relist <- vector("list",nperm)
+        if (reprod) {
+            relist <- wapply(multic,seq_along(relist),function(i) 
+                {return(list(seed=i,prog=i))})
+        }
+        else
+            relist <- wapply(multic,seq_along(relist),function(i) 
+                {return(list(seed=round(1e+6*runif(1)),prog=i))})
+    }
+    else if (is.numeric(reprod)) {
+        if (length(reprod) != nperm)
+            stopwrap("When reprod is numeric, it must have the same length as ",
+                "nperm!")
+        relist <- wapply(multic,seq_along(reprod),function(i) 
+            {return(list(seed=reprod[i],prog=i))})
+    }
+    else
+        stopwrap("reprod must be either a logical or a numeric vector!")
+    disp("  Resampling procedure started...")
+    # In this case, we must not use wapply as we want to be able to track progress
+    # through mc.preschedule...
+    if (multic)
+        pp <- mclapply(relist,meta.worker,counts,sample.list,contrast,
+            statistics,replace,stat.args,libsize.list,select,weight,
+            mc.preschedule=FALSE,mc.cores=getOption("cores"))
+    else
+        pp <- lapply(relist,meta.worker,counts,sample.list,contrast,statistics,
+            replace,stat.args,libsize.list,select,weight)
+    disp("  Resampling procedure ended...")
+    return(do.call("cbind",pp))
 }
 
 #' Permutation tests helper
@@ -328,58 +332,58 @@ meta.perm <- function(contrast,counts,sample.list,statistics,stat.args,libsize.l
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' # Not yet available
+#' # This function is not exported
 #'}
 meta.worker <- function(x,co,sl,cnt,s,r,sa,ll,el,w) {
-	set.seed(x$seed)
-	disp("    running permutation #",x$prog)
-	pl <- make.permutation(co,sl,cnt,r)
-	ppmat <- matrix(NA,nrow(co),length(s))
-	colnames(ppmat) <- s
-	for (alg in s) {
-		#disp("      running permutation tests with: ",alg)
-		tcl <- make.contrast.list(pl$contrast,pl$sample.list)
-		switch(alg,
-			deseq = {
-				p.list <- suppressMessages(stat.deseq(pl$counts,pl$sample.list,
-					tcl,sa[[alg]]))
-			},
-			edger = {
-				p.list <- suppressMessages(stat.edger(pl$counts,pl$sample.list,
-					tcl,sa[[alg]]))
-			},
-			noiseq = {
-				p.list <- suppressMessages(stat.noiseq(pl$counts,pl$sample.list,
-					tcl,sa[[alg]]))
-			},
-			bayseq = {
-				p.list <- suppressMessages(stat.bayseq(pl$counts,pl$sample.list,
-					tcl,sa[[alg]],ll))
-			},
-			limma = {
-				p.list <- suppressMessages(stat.limma(pl$counts,pl$sample.list,
-					tcl,sa[[alg]]))
-			},
-			nbpseq = {
-				p.list <- suppressMessages(stat.nbpseq(pl$counts,pl$sample.list,
-					tcl,sa[[alg]],ll))
-			}
-		)
-		ppmat[,alg] <- as.numeric(p.list[[1]])
-	}
-	ppmat[which(is.na(ppmat))] <- 1
-	switch(el,
-		min = {
-			p.iter <- apply(ppmat,1,min)
-		},
-		max = {
-			p.iter <- apply(ppmat,1,max)
-		},
-		weight = {
-			p.iter <- apply(ppmat,1,function(p,w) return(prod(p^w)),w)
-		}
-	)
-	return(p.iter)
+    set.seed(x$seed)
+    disp("    running permutation #",x$prog)
+    pl <- make.permutation(co,sl,cnt,r)
+    ppmat <- matrix(NA,nrow(co),length(s))
+    colnames(ppmat) <- s
+    for (alg in s) {
+        #disp("      running permutation tests with: ",alg)
+        tcl <- make.contrast.list(pl$contrast,pl$sample.list)
+        switch(alg,
+            deseq = {
+                p.list <- suppressMessages(stat.deseq(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]]))
+            },
+            edger = {
+                p.list <- suppressMessages(stat.edger(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]]))
+            },
+            noiseq = {
+                p.list <- suppressMessages(stat.noiseq(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]]))
+            },
+            bayseq = {
+                p.list <- suppressMessages(stat.bayseq(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]],ll))
+            },
+            limma = {
+                p.list <- suppressMessages(stat.limma(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]]))
+            },
+            nbpseq = {
+                p.list <- suppressMessages(stat.nbpseq(pl$counts,pl$sample.list,
+                    tcl,sa[[alg]],ll))
+            }
+        )
+        ppmat[,alg] <- as.numeric(p.list[[1]])
+    }
+    ppmat[which(is.na(ppmat))] <- 1
+    switch(el,
+        min = {
+            p.iter <- apply(ppmat,1,min)
+        },
+        max = {
+            p.iter <- apply(ppmat,1,max)
+        },
+        weight = {
+            p.iter <- apply(ppmat,1,function(p,w) return(prod(p^w)),w)
+        }
+    )
+    return(p.iter)
 }
 
 #' Combine p-values with Simes' method
@@ -398,13 +402,13 @@ meta.worker <- function(x,co,sl,cnt,s,r,sa,ll,el,w) {
 #' pc <- combine.simes(p)
 #'}
 combine.simes <- function(p) {
-	ze <- which(p==0)
-	if (length(ze)>0)
-		p[ze] <- 0.1*min(p[-ze])
-	m <- length(p)
-	y <- sort(p)
-	s <- min(m*(y/(1:m)))
-	return(min(c(s,1)))
+    ze <- which(p==0)
+    if (length(ze)>0)
+        p[ze] <- 0.1*min(p[-ze])
+    m <- length(p)
+    y <- sort(p)
+    s <- min(m*(y/(1:m)))
+    return(min(c(s,1)))
 }
 
 #' Combine p-values with Bonferroni's method
@@ -423,11 +427,11 @@ combine.simes <- function(p) {
 #' pc <- combine.bonferroni(p)
 #'}
 combine.bonferroni <- function(p) {
-	ze <- which(p==0)
-	if (length(ze)>0)
-		p[ze] <- 0.1*min(p[-ze])
-	b <- length(p)*min(p)
-	return(min(c(1,b)))
+    ze <- which(p==0)
+    if (length(ze)>0)
+        p[ze] <- 0.1*min(p[-ze])
+    b <- length(p)*min(p)
+    return(min(c(1,b)))
 }
 
 #' Combine p-values using weights
@@ -446,10 +450,10 @@ combine.bonferroni <- function(p) {
 #' pc <- combine.weight(p,w=c(0.2,0.5,0.3))
 #'}
 combine.weight <- function(p,w) {
-	ze <- which(p==0)
-	if (length(ze)>0)
-		p[ze] <- 0.1*min(p[-ze])
-	return(prod(p^w))
+    ze <- which(p==0)
+    if (length(ze)>0)
+        p[ze] <- 0.1*min(p[-ze])
+    return(prod(p^w))
 }
 
 #' Combine p-values using the minimum p-value

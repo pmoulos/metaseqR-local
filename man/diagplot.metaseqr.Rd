@@ -117,17 +117,18 @@
   functions of the whole package.
 }
 \examples{
-\dontrun{
+\donttest{
 require(DESeq)
 data.matrix <- counts(makeExampleCountDataSet())
 sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
+contrast <- "A_vs_B"
 diagplot.metaseqr(data.matrix,sample.list,diagplot.type=c("mds","boxplot"))
 
 norm.args <- get.defaults("normalization","deseq")
 object <- normalize.deseq(data.matrix,sample.list,norm.args)
 diagplot.metaseqr(object,sample.list,diagplot.type="boxplot")
 
-p <- stat.deseq(object)
+p <- stat.deseq(object,sample.list)
 diagplot.metaseqr(object,sample.list,contrast.list=contrast,p.list=p,
     diagplot.type="volcano")
 }

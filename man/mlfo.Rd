@@ -21,7 +21,7 @@
   BMC Genomics, 2012). Internal use.
 }
 \examples{
-\dontrun{
+\donttest{
 # Not yet available
 }
 }

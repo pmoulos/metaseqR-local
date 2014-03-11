@@ -36,13 +36,15 @@
 }
 \examples{
 \dontrun{
-gene.counts <- data("mm9.gene.counts",package="metaseqr")
-sample.list=list(e15.5=c("e15.5_1","e15.5_2"),P0.5=c("P0.5_1","P0.5_2"),
-  P60=c("P60_1","P60_2"))
-gene.counts <- normalize.edger(gene.counts,sample.list)
+data("mm9.gene.data",package="metaseqR")
+gene.counts <- mm9.gene.counts
+sample.list <- sample.list.mm9
+gene.counts <- normalize.edger(as.matrix(gene.counts[,9:12]),
+  sample.list)
 gene.data <- get.annotation("mm9","gene")
-gene.filters <- get.defaults("gene.filter")
-filter.results <- filter.genes(gene.counts,gene.data,sample.list,gene.filters)
+gene.filters <- get.defaults("gene.filter","mm9")
+filter.results <- filter.genes(gene.counts,gene.data,
+  gene.filters)
 }
 }
 \author{

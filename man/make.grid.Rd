@@ -18,7 +18,7 @@
   grid positions if n < m x m.
 }
 \examples{
-\dontrun{
+\donttest{
 g1 <- make.grid(16) # Returns c(4,4)
 g2 <- make.grid(11) # Returns c(4,3)
 }

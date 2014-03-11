@@ -16,9 +16,7 @@
   annotation download. Internal use.
 }
 \examples{
-\dontrun{
 hg18.chr <- get.valid.chrs("hg18")
-}
 }
 \author{
   Panagiotis Moulos

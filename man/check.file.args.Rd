@@ -14,7 +14,14 @@
   Checks if a file exists for specific arguments requiring
   a file input. Internal use only.
 }
+\examples{
+# OK
+check.file.args("file",system.file("metaseqr_report.html",
+  package="metaseqR"))
+## Error!
+#check.file.args("file",system.file("metaseqr_report.htm",
+#  package="metaseqR"))
+}
 \author{
   Panagiotis Moulos
 }
-

@@ -30,9 +30,7 @@
   keyword. It is intended mostly for internal use.
 }
 \examples{
-\dontrun{
-strict.preset <- get.preset.opts("strict.basic")
-}
+strict.preset <- get.preset.opts("strict.basic","mm9")
 }
 \author{
   Panagiotis Moulos

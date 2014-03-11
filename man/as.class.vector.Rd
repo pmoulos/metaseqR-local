@@ -15,6 +15,10 @@
   Creates a class vector from a sample list. Internal to
   the \code{stat.*} functions. Mostly internal use.
 }
+\examples{
+sample.list <- list(A=c("A1","A2"),B=c("B1","B2","B3"))
+clv <- as.class.vector(sample.list)
+}
 \author{
   Panagiotis Moulos
 }

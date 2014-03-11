@@ -22,7 +22,7 @@
   mostly.
 }
 \examples{
-\dontrun{
+\donttest{
 sets <- c("apple","pear","banana")
 pairs <- make.venn.pairs(sets)
 }

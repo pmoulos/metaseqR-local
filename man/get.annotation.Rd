@@ -38,7 +38,7 @@
   chromosome M.
 }
 \examples{
-\dontrun{
+\donttest{
 hg19.genes <- get.annotation("hg19","gene")
 mm9.exons <- get.annotation("mm9","exon")
 }
