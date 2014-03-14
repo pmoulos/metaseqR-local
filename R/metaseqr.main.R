@@ -9,7 +9,7 @@
 #' non-essential information for a typical differential gene expression analysis 
 #' as well as a preliminary expression filtering based on the exon counts, if an 
 #' exon read count file is provided. iii) performs data normalization with one of 
-#' currently widely used algorithms, including EDASeq (Risso et al., 2011), DESeq 
+#' currently widely used algorithms, including EDASeq (Risso et al., 2011), DESeq re
 #' (Anders and Huber, 2010), edgeR (Robinson et al., 2010), NOISeq (Tarazona et 
 #' al., 2012) or no normalization iv) performs a second stage of filtering based 
 #' on the normalized gene expression according to several gene filters v) performs
@@ -307,13 +307,22 @@
 #' counts, condition-wise. It can be one or more of \code{"mean"}, \code{"median"},
 #' \code{"sd"}, \code{"mad"}, \code{"cv"} for the Coefficient of Variation,
 #' \code{"rcv"} for a robust version of CV where the median and the MAD are used
-#' instead of the mean and the standard deviation. 
+#' instead of the mean and the standard deviation.
+#' @param export.counts.table exports also the calculated read counts table when
+#' input is read from bam files and exports also the normalized count table in
+#' all cases. Defaults to \code{FALSE}.
 #' @param restrict.cores in case of parallel execution of several subfunctions,
 #' the fraction of the available cores to use. In some cases if all available cores
 #' are used (\code{restrict.cores=1} and the system does not have sufficient RAM,
 #' the pipeline running machine might significantly slow down.
 #' @param report a logical value controlling whether to produce a summary report
 #' or not. Defaults to \code{TRUE}.
+#' @param report.top a fraction of top statistically significant genes to append
+#' to the HTML report. This helps in keeping the size of the report as small as
+#' possible, as appending the total gene list might create a huge HTML file. Users
+#' can always retrieve the whole gene lists from the report links. Defaults to
+#' \code{0.1} (top 10% of statistically significant genes). Set to \code{NULL}
+#' to report all the statistically significant genes.
 #' @param report.template an HTML template to use for the report. Do not change
 #' this unless you know what you are doing.
 #' @param verbose print informative messages during execution? Defaults to
@@ -654,8 +663,6 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' require(metaseqR)
-#'
 #' # An example pipeline with exon counts
 #' data("hg19.exon.data",package="metaseqR")
 #' metaseqr(
@@ -809,8 +816,10 @@ metaseqr <- function(
     export.scale=c("natural","log2","log10","vst"),
     export.values=c("raw","normalized"),
     export.stats=c("mean","median","sd","mad","cv","rcv"),
+    export.counts.table=FALSE,
     restrict.cores=0.6,
     report=TRUE,
+    report.top=0.1,
     report.template="default",
     verbose=TRUE,
     run.log=TRUE,
@@ -967,6 +976,8 @@ metaseqr <- function(
     if (!is.na(log.offset)) check.num.args("log.offset",log.offset,"numeric",0,
         "gt")
     check.num.args("nperm",nperm,"numeric",10,"gt")
+    if (!is.null(report.top))
+        check.num.args("report.top",report.top,"numeric",c(0,1),"both")
     if (!is.null(contrast)) check.contrast.format(contrast,sample.list)
     if ("bayseq" %in% statistics) libsize.list <- check.libsize(libsize.list,
         sample.list)
@@ -984,12 +995,12 @@ metaseqr <- function(
                 "\"embedded\"!")
         if (is.na(name.col) && !is.na(gene.filters$expression$known))
         {
-            warnwrap("The column that contains the HUGO gene symbols "
+            warnwrap("The column that contains the HUGO gene symbols ",
                 "(\"bt.col\") is missing with embedded annotation! Gene name ",
                 "expression filter will not be available...")
             gene.filters$expression$known=NA
             if ("volcano" %in% qc.plots)
-                warnwrap("The column that contains the HUGO gene symbols "
+                warnwrap("The column that contains the HUGO gene symbols ",
                     "(\"bt.col\") is missing with embedded annotation! ",
                     "Interactive volcano plots will not contain gene names...")
         }
@@ -1254,6 +1265,17 @@ metaseqr <- function(
                     exon.counts <- r2c$counts
                     if (is.null(libsize.list))
                         libsize.list <- r2c$libsize
+                    if (export.counts.table) {
+                        disp("Exporting raw read counts table to ",
+                            file.path(PROJECT.PATH[["lists"]],
+                            "raw_counts_table.txt.gz"))
+                        res.file <- file.path(PROJECT.PATH[["lists"]],
+                            "raw_counts_table.txt.gz")
+                        gzfh <- gzfile(res.file,"w")
+                        write.table(cbind(exon.data[rownames(exon.counts),],
+                            exon.counts),gzfh,sep="\t",row.names=FALSE,
+                            quote=FALSE)
+                    }
                 }
             }
         }
@@ -1388,6 +1410,18 @@ metaseqr <- function(
                     gene.counts <- r2c$counts
                     if (is.null(libsize.list))
                         libsize.list <- r2c$libsize
+                    if (export.counts.table) {
+                        disp("Exporting raw read counts table to ",
+                            file.path(PROJECT.PATH[["lists"]],
+                            "raw_counts_table.txt.gz"))
+                        res.file <- file.path(PROJECT.PATH[["lists"]],
+                            "raw_counts_table.txt.gz")
+                        gzfh <- gzfile(res.file,"w")
+                        write.table(cbind(gene.data[rownames(gene.counts),],
+                            gene.counts),gzfh,sep="\t",row.names=FALSE,
+                            quote=FALSE)
+                        close(gzfh)
+                    }
                 }
             }
         }
@@ -1821,6 +1855,21 @@ metaseqr <- function(
         # We don't need the matrix case
     )
 
+    # Now that everything is a matrix, export the normalized counts if asked
+    if (export.counts.table) {
+        disp("Exporting and compressing normalized read counts table to ",
+            file.path(PROJECT.PATH[["lists"]],"normalized_counts_table.txt"))
+        expo <- cbind(
+            rbind(gene.data.expr,gene.data.filtered),
+            rbind(norm.genes.expr,gene.counts.zero,gene.counts.dead)
+        )
+        res.file <- file.path(PROJECT.PATH[["lists"]],
+            "normalized_counts_table.txt.gz")
+        gzfh <- gzfile(res.file,"w")
+        write.table(expo,gzfh,sep="\t",row.names=FALSE,quote=FALSE)
+        close(gzfh)
+    }
+
     # Calculate meta-statistics, if more than one statistical algorithm has been used
     if (length(statistics)>1)
     {
@@ -2027,7 +2076,12 @@ metaseqr <- function(
         if (report)
         {
             the.html.header <- make.html.header(the.export$headers)
-            the.html.rows <- make.html.rows(export.html)
+            if (!is.null(report.top)) {
+                topi <- round(report.top*nrow(export.html))
+                the.html.rows <- make.html.rows(export.html[1:topi,])
+            }
+            else
+                the.html.rows <- make.html.rows(export.html)
             the.html.body <- make.html.body(the.html.rows)
             the.html.table <- make.html.table(the.html.body,the.html.header,
                 id=paste("table_",counter,sep=""))

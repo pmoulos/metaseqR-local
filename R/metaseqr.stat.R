@@ -432,7 +432,7 @@ stat.limma <- function(object,sample.list,contrast.list=NULL,stat.args=NULL) {
 #' ends <- starts + lengths
 #' gc=runif(nrow(data.matrix)),
 #' gene.data <- data.frame(
-#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2))
+#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2)),
 #'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
 #' )
 #' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)

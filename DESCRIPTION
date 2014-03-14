@@ -23,18 +23,19 @@ Imports:
     brew,
     rjson
 Suggests:
-	BiocGenerics,
-	GenomicRanges,
-	rtracklayer,
-	Rsamtools,
-	Repitools,
+    BiocGenerics,
+    GenomicRanges,
+    rtracklayer,
+    Rsamtools,
+    Repitools,
     MADAM,
     survcomp,
     vsn,
     VennDiagram,
     knitr,
     zoo,
-    log4r
+    log4r,
+    RUnit
 Enhances:
     parallel,
     TCC
@@ -53,8 +54,8 @@ biocViews: Software, GeneExpression, DifferentialExpression, WorkflowStep,
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 0.99.0
-Date: 2014-02-27
+Version: 0.99.2
+Date: 2014-03-14
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'

@@ -27,7 +27,8 @@
 #' calculate area under the false discovery curve.
 #' @param model.org the organism from which the data are derived. It must be one
 #' of \code{\link{metaseqr}} supported organisms.
-#' @param seed a list of seed for reproducible simulations. Defaults to \code{NULL}.
+#' @param seed a number to be used as seed for reproducible simulations. Defaults
+#' to \code{NULL} (NOT reproducible results!).
 #' @param draw.fpc draw the averaged false discovery curves? Default to \code{FALSE}.
 #' @param multic whether to run in parallel (if package \code{parallel} is present
 #' or not.
@@ -53,17 +54,26 @@ estimate.aufc.weights <- function(counts,normalization,statistics,nsim=10,
     seed=NULL,draw.fpc=FALSE,multic=FALSE,...) {
     if (!require(zoo))
         stopwrap("R pacakage zoo is required in order to estimate AUFC weights!")
-    if (ncol(counts)<4)
-        stopwrap("Cannot estimate AUFC weights with an initial dataset with less ",
-            "than 4 samples!")
-    else if (ncol(counts)>=4 && ncol(counts)<10) {
-        reind <- sample(1:ncol(counts),20,replace=TRUE)
-        counts <- counts[,reind]
-    }
+
     if (is.null(seed)) {
         seed.start <- round(100*runif(1))
         seed.end <- seed.start + nsim - 1
         seed <- as.list(seed.start:seed.end)
+    }
+    else {
+        set.seed(seed)
+        seed.start <- round(100*runif(1))
+        seed.end <- seed.start + nsim - 1
+        seed <- as.list(seed.start:seed.end)
+    }
+    
+    if (ncol(counts)<4)
+        stopwrap("Cannot estimate AUFC weights with an initial dataset with less ",
+            "than 4 samples!")
+    else if (ncol(counts)>=4 && ncol(counts)<10) {
+        set.seed(seed.start)
+        reind <- sample(1:ncol(counts),20,replace=TRUE)
+        counts <- counts[,reind]
     }
     par.list <- estimate.sim.params(counts,...)
 
@@ -411,8 +421,8 @@ estimate.sim.params <- function(real.counts,libsize.gt=3e+6,rowmeans.gt=5,
     low.lib <- which(apply(mat,2,sum)<libsize.gt)
     if (length(low.lib)==ncol(mat))
         stopwrap("Cannot estimate simulation parameters as the library sizes ",
-		    "are too small! Try lowering the value of the libsize.gt ",
-		    "parameter...")
+            "are too small! Try lowering the value of the libsize.gt ",
+            "parameter...")
     if (length(low.lib)>0)
         mat <- mat[,-low.lib]
     disp("Downsampling counts...")

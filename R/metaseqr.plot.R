@@ -2656,7 +2656,27 @@ diagplot.ftd <- function(truth,p,type="fpc",N=2000,output="x11",path=NULL,
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' # Not yet available
+#' p11 <- 0.001*matrix(runif(300),100,3)
+#' p12 <- matrix(runif(300),100,3)
+#' p21 <- 0.001*matrix(runif(300),100,3)
+#' p22 <- matrix(runif(300),100,3)
+#' p31 <- 0.001*matrix(runif(300),100,3)
+#' p32 <- matrix(runif(300),100,3)
+#' p1 <- rbind(p11,p21)
+#' p2 <- rbind(p12,p22)
+#' p3 <- rbind(p31,p32)
+#' rownames(p1) <- rownames(p2) <- rownames(p3) <-
+#'  paste("gene",1:200,sep="_")
+#' colnames(p1) <- colnames(p2) <- colnames(p3) <-
+#'   paste("method",1:3,sep="_")
+#' truth <- c(rep(1,40),rep(-1,40),rep(0,20),
+#'  rep(1,10),rep(2,10),rep(0,80))
+#' names(truth) <- rownames(p1)
+#' ftd.obj.1 <- diagplot.ftd(truth,p1,N=100,draw=FALSE)
+#' ftd.obj.2 <- diagplot.ftd(truth,p2,N=100,draw=FALSE)
+#' ftd.obj.3 <- diagplot.ftd(truth,p3,N=100,draw=FALSE)
+#' ftd.obj <- list(ftd.obj.1,ftd.obj.2,ftd.obj.3)
+#' avg.ftd.obj <- diagplot.avg.ftd(ftd.obj)
 #'}
 diagplot.avg.ftd <- function(ftdr.obj,output="x11",path=NULL,draw=TRUE,...) {
     y.name <- list(
@@ -2882,15 +2902,15 @@ nat2log <- function(x,base=2,off=1) {
 cddat <- function (input) {
     if (inherits(input,"eSet") == FALSE)
         stopwrap("The input data must be an eSet object.\n")
-    if (!is.null(Biobase::assayData(input)$exprs)) {
-        if (ncol(Biobase::assayData(input)$exprs) < 2)
+    if (!is.null(assayData(input)$exprs)) {
+        if (ncol(assayData(input)$exprs) < 2)
             stopwrap("The input object should have at least two samples.\n")
-        datos <- Biobase::assayData(input)$exprs
+        datos <- assayData(input)$exprs
     }
     else {
-        if (ncol(Biobase::assayData(input)$counts) < 2)
+        if (ncol(assayData(input)$counts) < 2)
             stopwrap("The input object should have at least two samples.\n")
-        datos <- Biobase::assayData(input)$counts
+        datos <- assayData(input)$counts
     }
     datos <- datos[which(rowSums(datos) > 0),]
     nu <- nrow(datos) # number of detected features

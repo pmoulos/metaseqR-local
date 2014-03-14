@@ -33,9 +33,9 @@
 #' lengths <- round(1000*runif(nrow(data.matrix)))
 #' starts <- round(1000*runif(nrow(data.matrix)))
 #' ends <- starts + lengths
-#' gc=runif(nrow(data.matrix)),
+#' gc <- runif(nrow(data.matrix))
 #' gene.data <- data.frame(
-#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2))
+#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2)),
 #'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
 #' )
 #' norm.data.matrix <- normalize.edaseq(data.matrix,sample.list,gene.data=gene.data)
@@ -237,7 +237,7 @@ normalize.edger <- function(gene.counts,sample.list,norm.args=NULL,
 #' ends <- starts + lengths
 #' gc=runif(nrow(data.matrix)),
 #' gene.data <- data.frame(
-#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2))
+#'   chromosome=c(rep("chr1",nrow(data.matrix)/2),rep("chr2",nrow(data.matrix)/2)),
 #'   start=starts,end=ends,gene_id=rownames(data.matrix),gc_content=gc
 #' )
 #' norm.data.matrix <- normalize.noiseq(data.matrix,sample.list,gene.data)

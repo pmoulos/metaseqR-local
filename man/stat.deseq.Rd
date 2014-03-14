@@ -2,41 +2,41 @@
 \alias{stat.deseq}
 \title{Statistical testing with DESeq}
 \usage{
-  stat.deseq(object, sample.list, contrast.list = NULL,
-    stat.args = NULL)
+    stat.deseq(object, sample.list, contrast.list = NULL,
+        stat.args = NULL)
 }
 \arguments{
-  \item{object}{a matrix or an object specific to each
-  normalization algorithm supported by metaseqR, containing
-  normalized counts. Apart from matrix (also for NOISeq),
-  the object can be a SeqExpressionSet (EDASeq),
-  CountDataSet (DESeq) or DGEList (edgeR).}
+    \item{object}{a matrix or an object specific to each
+    normalization algorithm supported by metaseqR, containing
+    normalized counts. Apart from matrix (also for NOISeq),
+    the object can be a SeqExpressionSet (EDASeq),
+    CountDataSet (DESeq) or DGEList (edgeR).}
 
-  \item{sample.list}{the list containing condition names
-  and the samples under each condition.}
+    \item{sample.list}{the list containing condition names
+    and the samples under each condition.}
 
-  \item{contrast.list}{a named structured list of contrasts
-  as returned by \code{\link{make.contrast.list}} or just
-  the vector of contrasts as defined in the main help page
-  of \code{\link{metaseqr}}.}
+    \item{contrast.list}{a named structured list of contrasts
+    as returned by \code{\link{make.contrast.list}} or just
+    the vector of contrasts as defined in the main help page
+    of \code{\link{metaseqr}}.}
 
-  \item{stat.args}{a list of DESeq statistical algorithm
-  parameters. See the result of
-  \code{get.defaults("statistics",} \code{"deseq")} for an
-  example and how you can modify it. It is not required
-  when the input object is already a CountDataSet from
-  DESeq normalization as the dispersions are already
-  estimated.}
+    \item{stat.args}{a list of DESeq statistical algorithm
+    parameters. See the result of
+    \code{get.defaults("statistics",} \code{"deseq")} for an
+    example and how you can modify it. It is not required
+    when the input object is already a CountDataSet from
+    DESeq normalization as the dispersions are already
+    estimated.}
 }
 \value{
-  A named list of p-values, whose names are the names of
-  the contrasts.
+    A named list of p-values, whose names are the names of
+    the contrasts.
 }
 \description{
-  This function is a wrapper over DESeq statistical
-  testing. It accepts a matrix of normalized gene counts or
-  an S4 object specific to each normalization algorithm
-  supported by metaseqR.
+    This function is a wrapper over DESeq statistical
+    testing. It accepts a matrix of normalized gene counts or
+    an S4 object specific to each normalization algorithm
+    supported by metaseqR.
 }
 \examples{
 \donttest{
@@ -49,6 +49,6 @@ p <- stat.deseq(norm.data.matrix,sample.list,contrast)
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

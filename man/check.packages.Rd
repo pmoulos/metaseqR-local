@@ -2,24 +2,24 @@
 \alias{check.packages}
 \title{Required packages validator}
 \usage{
-  check.packages(m, s, p)
+    check.packages(m, s, p)
 }
 \arguments{
-  \item{m}{meta-analysis method.}
+    \item{m}{meta-analysis method.}
 
-  \item{s}{data transformation method.}
-  
-  \item{p}{QC plot types.}
+    \item{s}{data transformation method.}
+    
+    \item{p}{QC plot types.}
 }
 \description{
-  Checks if all the any required packages, not attached 
-  during installation or loading, are present according 
-  to metaseqR input options. Internal use only.
+    Checks if all the any required packages, not attached 
+    during installation or loading, are present according 
+    to metaseqR input options. Internal use only.
 }
 \examples{
 check.packages(c("simes","whitlock"),c("vsn"),
-  c("gcbias","correl"))
+    c("gcbias","correl"))
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }

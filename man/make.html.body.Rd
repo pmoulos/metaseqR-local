@@ -2,22 +2,22 @@
 \alias{make.html.body}
 \title{HTML report helper}
 \usage{
-  make.html.body(mat)
+    make.html.body(mat)
 }
 \arguments{
-  \item{mat}{the character vector produced by
-  \code{\link{make.html.rows}}.}
+    \item{mat}{the character vector produced by
+    \code{\link{make.html.rows}}.}
 }
 \value{
-  A character vector with the body of mat formatted in
-  html.
+    A character vector with the body of mat formatted in
+    html.
 }
 \description{
-  Returns a character vector with an html formatted table.
-  Essentially, it collapses the input rows to a single
-  character and puts a <tbody></tbody> tag set around. It
-  is meant to be applied to the output of
-  \code{\link{make.html.rows}}. Internal use.
+    Returns a character vector with an html formatted table.
+    Essentially, it collapses the input rows to a single
+    character and puts a <tbody></tbody> tag set around. It
+    is meant to be applied to the output of
+    \code{\link{make.html.rows}}. Internal use.
 }
 \examples{
 \donttest{
@@ -31,6 +31,6 @@ the.body <- make.html.body(the.rows)
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

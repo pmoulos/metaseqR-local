@@ -41,9 +41,15 @@ added:
 fixed:
   - Code changes to comply with Bioconductor's guidelines
 
-changes in version 0.99.1 (2014-03-11)
+changes in version 0.99.1 (2014-03-12)
 added:
   - Ability to export counts table (raw and normalized) when reading from BAM files or just normalized otherwise
   - Valid examples for many functions
+fixed:
+  - More code and codestyle changes to comply with Bioconductor's guidelines
+
+changes in version 0.99.2 (2014-03-14)
+added:
+  - Ability to display only the top x% of significant genes to avoid excessively big reports
 fixed:
   - More code and codestyle changes to comply with Bioconductor's guidelines

@@ -2,25 +2,25 @@
 \alias{make.html.cells}
 \title{HTML report helper}
 \usage{
-  make.html.cells(mat, type = "numeric", digits = 3)
+    make.html.cells(mat, type = "numeric", digits = 3)
 }
 \arguments{
-  \item{mat}{the data matrix (numeric or character)}
+    \item{mat}{the data matrix (numeric or character)}
 
-  \item{type}{the type of data in the matrix
-  (\code{"numeric"} or \code{"character"})}
+    \item{type}{the type of data in the matrix
+    (\code{"numeric"} or \code{"character"})}
 
-  \item{digits}{the number of digits on the right of the
-  decimal points to pass to \code{\link{formatC}}. It has
-  meaning when \code{type="numeric"}.}
+    \item{digits}{the number of digits on the right of the
+    decimal points to pass to \code{\link{formatC}}. It has
+    meaning when \code{type="numeric"}.}
 }
 \value{
-  A character matrix with html formatted cells.
+    A character matrix with html formatted cells.
 }
 \description{
-  Returns a character matrix with html formatted table
-  cells. Essentially, it converts the input data to text
-  and places them in a <td></td> tag set. Internal use.
+    Returns a character matrix with html formatted table
+    cells. Essentially, it converts the input data to text
+    and places them in a <td></td> tag set. Internal use.
 }
 \examples{
 \donttest{
@@ -31,6 +31,6 @@ the.cells <- make.html.cells(data.matrix)
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

@@ -73,13 +73,13 @@ Briefly, to run metaseqr you need:
 
 \begin{itemize}
  \item A text tab delimited file in a spreadsheet like format containing at least
-  unique gene identifiers (corresponding to one of metaseqR's supported formats,
-  for the time being Ensembl)
+    unique gene identifiers (corresponding to one of metaseqR's supported formats,
+    for the time being Ensembl)
  \item A list of statistical contrasts for which you wish to check differential
-  expression
+    expression
  \item An internet connection so that the interactive parts of the report can be
-  properly rendered, as the report template points to external Content Delivery
-  Networks (CDNs) distributing the appropriate JavaScript
+    properly rendered, as the report template points to external Content Delivery
+    Networks (CDNs) distributing the appropriate JavaScript
 \end{itemize}
 
 Everything else (e.g. genomic regions annotation etc.) can be handled by the
@@ -119,42 +119,42 @@ command window:
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
-	counts=mm9.gene.counts,
-	sample.list=sample.list.mm9,
-	contrast=c("e14.5_vs_adult_8_weeks"),
-	libsize.list=libsize.list.mm9,
-	annotation="download",
-	org="mm9",
-	count.type="gene",
-	normalization="edger",
-	statistics="edger",
-	pcut=0.05,
-	fig.format=c("png","pdf"),
-	export.what=c("annotation","p.value","meta.p.value",
-	  "adj.meta.p.value","fold.change"),
-	export.scale=c("natural","log2"),
-	export.values="normalized",
-	export.stats=c("mean","sd","cv"),
-	export.where="~/metaseqr_test",
-	restrict.cores=0.8,
-	gene.filters=list(
-		length=list(
-			length=500
-		),
-		avg.reads=list(
-			average.per.bp=100,
-			quantile=0.25
-		),
-		expression=list(
-			median=TRUE,
-			mean=FALSE,
-			quantile=NA,
-			known=NA,
-			custom=NA
-		),
-		biotype=get.defaults("biotype.filter","mm9")
-	),
-	out.list=TRUE
+       counts=mm9.gene.counts,
+       sample.list=sample.list.mm9,
+       contrast=c("e14.5_vs_adult_8_weeks"),
+       libsize.list=libsize.list.mm9,
+       annotation="download",
+       org="mm9",
+       count.type="gene",
+       normalization="edger",
+       statistics="edger",
+       pcut=0.05,
+       fig.format=c("png","pdf"),
+       export.what=c("annotation","p.value","meta.p.value",
+          "adj.meta.p.value","fold.change"),
+       export.scale=c("natural","log2"),
+       export.values="normalized",
+       export.stats=c("mean","sd","cv"),
+       export.where="~/metaseqr_test",
+       restrict.cores=0.8,
+       gene.filters=list(
+             length=list(
+                    length=500
+             ),
+             avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.25
+             ),
+             expression=list(
+                    median=TRUE,
+                    mean=FALSE,
+                    quantile=NA,
+                    known=NA,
+                    custom=NA
+             ),
+             biotype=get.defaults("biotype.filter","mm9")
+       ),
+       out.list=TRUE
 )
 @
 
@@ -175,26 +175,26 @@ normalization:
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
-	counts=mm9.gene.counts,
-	sample.list=sample.list.mm9,
-	contrast=c("e14.5_vs_adult_8_weeks"),
-	libsize.list=libsize.list.mm9,
-	annotation="download",
-	org="mm9",
-	count.type="gene",
-	when.apply.filter="prenorm",
-	normalization="edaseq",
-	statistics=c("deseq","edger"),
-	meta.p="fisher",
-	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","readnoise","filtered",
-		"correl","pairwise","boxplot","gcbias","lengthbias","meandiff",
-		"meanvar","rnacomp","deheatmap","volcano","biodist","venn"
-	),
-	fig.format=c("png","pdf"),
-	preset="medium.normal",
-	export.where="~/metaseqr_test2",
-	out.list=TRUE
+       counts=mm9.gene.counts,
+       sample.list=sample.list.mm9,
+       contrast=c("e14.5_vs_adult_8_weeks"),
+       libsize.list=libsize.list.mm9,
+       annotation="download",
+       org="mm9",
+       count.type="gene",
+       when.apply.filter="prenorm",
+       normalization="edaseq",
+       statistics=c("deseq","edger"),
+       meta.p="fisher",
+       qc.plots=c(
+             "mds","biodetection","countsbio","saturation","readnoise","filtered",
+             "correl","pairwise","boxplot","gcbias","lengthbias","meandiff",
+             "meanvar","rnacomp","deheatmap","volcano","biodist","venn"
+       ),
+       fig.format=c("png","pdf"),
+       preset="medium.normal",
+       export.where="~/metaseqr_test2",
+       out.list=TRUE
 )
 @
 
@@ -205,19 +205,19 @@ evaluated here):
 library(metaseqR)
 data("mm9.gene.data",package="metaseqR")
 result <- metaseqr(
-	counts=mm9.gene.counts,
-	sample.list=sample.list.mm9,
-	contrast=c("e14.5_vs_adult_8_weeks"),
-	libsize.list=libsize.list.mm9,
-	annotation="download",
-	org="mm9",
-	count.type="gene",
-	normalization="edaseq",
-	statistics=c("deseq","edger"),
-	meta.p="fisher",
-	fig.format=c("png","pdf"),
-	preset="medium.normal",
-	out.list=TRUE
+       counts=mm9.gene.counts,
+       sample.list=sample.list.mm9,
+       contrast=c("e14.5_vs_adult_8_weeks"),
+       libsize.list=libsize.list.mm9,
+       annotation="download",
+       org="mm9",
+       count.type="gene",
+       normalization="edaseq",
+       statistics=c("deseq","edger"),
+       meta.p="fisher",
+       fig.format=c("png","pdf"),
+       preset="medium.normal",
+       out.list=TRUE
 )
 @
 
@@ -231,43 +231,43 @@ of RAM available, consider setting restrict.cores to something like 0.2):
 # A full example pipeline with exon counts
 data("hg19.exon.data",package="metaseqR")
 metaseqr(
-	counts=hg19.exon.counts,
-	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
-	  "normal_vs_paracancerous_vs_cancerous"),
-	libsize.list=libsize.list.hg19,
-	id.col=4,
-	annotation="download",
-	org="hg19",
-	count.type="exon",
-	normalization="edaseq",
-	statistics="deseq",
-	pcut=0.05,
-	qc.plots=c(
-		"mds","biodetection","countsbio","saturation","rnacomp","pairwise",
-		"boxplot","gcbias","lengthbias","meandiff","meanvar","correl",
-		"deheatmap","volcano","biodist","filtered"
-	),
-	fig.format=c("png","pdf"),
-	export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
-	export.scale=c("natural","log2","log10","vst"),
-	export.values=c("raw","normalized"),
-	export.stats=c("mean","median","sd","mad","cv","rcv"),
-	restrict.cores=0.8,
-	gene.filters=list(
-		length=list(
-			length=500
-		),
-		avg.reads=list(
-			average.per.bp=100,
-			quantile=0.25
-		),
-		expression=list(
-			median=TRUE,
-			mean=FALSE
-		),
-		biotype=get.defaults("biotype.filter","hg19")
-	)
+       counts=hg19.exon.counts,
+       sample.list=sample.list.hg19,
+       contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+          "normal_vs_paracancerous_vs_cancerous"),
+       libsize.list=libsize.list.hg19,
+       id.col=4,
+       annotation="download",
+       org="hg19",
+       count.type="exon",
+       normalization="edaseq",
+       statistics="deseq",
+       pcut=0.05,
+       qc.plots=c(
+             "mds","biodetection","countsbio","saturation","rnacomp","pairwise",
+             "boxplot","gcbias","lengthbias","meandiff","meanvar","correl",
+             "deheatmap","volcano","biodist","filtered"
+       ),
+       fig.format=c("png","pdf"),
+       export.what=c("annotation","p.value","adj.p.value","fold.change","stats","counts"),
+       export.scale=c("natural","log2","log10","vst"),
+       export.values=c("raw","normalized"),
+       export.stats=c("mean","median","sd","mad","cv","rcv"),
+       restrict.cores=0.8,
+       gene.filters=list(
+             length=list(
+                    length=500
+             ),
+             avg.reads=list(
+                    average.per.bp=100,
+                    quantile=0.25
+             ),
+             expression=list(
+                    median=TRUE,
+                    mean=FALSE
+             ),
+             biotype=get.defaults("biotype.filter","hg19")
+       )
 )
 @
 
@@ -277,19 +277,19 @@ or in a more simplified version
 # A full example pipeline with exon counts
 data("hg19.exon.data",package="metaseqR")
 metaseqr(
-	counts=hg19.exon.counts,
-	sample.list=sample.list.hg19,
-	contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
-	  "normal_vs_paracancerous_vs_cancerous"),
-	libsize.list=libsize.list.hg19,
-	id.col=4,
-	annotation="download",
-	org="hg19",
-	count.type="exon",
-	normalization="edaseq",
-	statistics="deseq",
-	preset="medium.normal",
-	restrict.cores=0.8
+       counts=hg19.exon.counts,
+       sample.list=sample.list.hg19,
+       contrast=c("normal_vs_paracancerous","normal_vs_cancerous",
+          "normal_vs_paracancerous_vs_cancerous"),
+       libsize.list=libsize.list.hg19,
+       id.col=4,
+       annotation="download",
+       org="hg19",
+       count.type="exon",
+       normalization="edaseq",
+       statistics="deseq",
+       preset="medium.normal",
+       restrict.cores=0.8
 )
 @
 
@@ -332,57 +332,57 @@ help(metaseqr)
 The metaseqR package currently supports three methods of data input:
 
 \begin{enumerate}
-  \item Aligned reads in SAM/BAM or BED format. In this case, the input files are
-   passed to the metaseqr pipeline through a simply structured tab-delimited text
-   file. This file contains in its first column unique names that are used to
-   identify each sample, the SAM/BAM/ BED file names (preferably with their full
-   path) in the second column, and the biological conditions/groups for each
-   sample/file in the third column. The columns may or may not be named, as this
-   information is not used by metaseqR. The above order (sample names, file names,
-   biological condition) is used instead. This is the preferred method of data
-   input as in this way, the analysis is streamlined within R from the beginning
-   until the end, ensuring data integrity (e.g. the compatibility of the genome
-   annotations used, something that can sometimes be broken when using external
-   read counting software). SAM/BAM files are imported through the Bioconductor
-   packages Rsamtools and Repitools and BED files are imported through the
-   Bioconductor package rtracklayer. The aligned reads are converted to a read
-   counts table through facilities provided in the Bioconductor package
-   GenomicRanges. The Ensembl gene or exon regions which are used to summarize
-   the read alignments and create the final read counts table for each gene or
-   exon can be obtained either through downloading at the time of usage using the
-   Bioconductor package biomaRt, or through the use of the embedded in the
-   metaseqR package Ensembl annotation for speed, or from a user-specified file.
-  \item Summarized numbers of reads for each genomic feature (gene or exon) by
-   providing a file containing the read counts table. This file should contain at
-   least: a) a column with a unique identifier for each gene/exon (currently only
-   Ensembl identifiers are supported unless the required annotation elements for
-   each genomic region are embedded in the file), b) as many columns as the number
-   of samples in the experiment. Each column with sample read counts should be
-   named with a unique sample name. Optionally, the read counts file can contain
-   annotation elements for each genomic feature (gene or exon) corresponding to
-   the unique identifier column. In this case, the pipeline may be executed with
-   the annotation=``embedded'' argument and it is very useful when the user does
-   not wish to use Ensembl annotation or the organisms under investigation is not
-   supported by metaseqR. If the user chooses to use embedded to the read counts
-   file annotation, then at least the following elements should be provided for
-   each genomic region, apart from its unique name should be provided (in
-   parenthesis next to each element, the required column name): chromosome where
-   the genomic feature is located (chromosome), starting base pair in the
-   chromosome (start), ending base pair in the chromosome (end). For best
-   performance (e.g. availability of all quality control and diagnostic plots),
-   the following annotation elements should also be provided: GC content
-   (gc\_content) for genomic features of type ``gene'', the gene model name
-   (gene\_name) for genomic features of type ``exon'', the transcribing strand of
-   each feature, denoted as ``+'' or ``-'' (strand), HUGO (or other alias) gene
-   name (gene\_name) and each genomic features biotype/biological categorization,
-   for example Ensembl categorizations like ``protein\_coding'', ``ncRNA'',
-  ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied
-  with Ensembl annotation, it is better practice not to use embedded annotation
-  in the counts file but download it or use the embedded in the package annotation
-  using the respective options.
-  \item Like case (2) but all the data mentioned in (2) are stored in an R data
-  frame object (for example, derived after a user-defined or otherwise customized
-  preprocessing).
+    \item Aligned reads in SAM/BAM or BED format. In this case, the input files are
+    passed to the metaseqr pipeline through a simply structured tab-delimited text
+    file. This file contains in its first column unique names that are used to
+    identify each sample, the SAM/BAM/ BED file names (preferably with their full
+    path) in the second column, and the biological conditions/groups for each
+    sample/file in the third column. The columns may or may not be named, as this
+    information is not used by metaseqR. The above order (sample names, file names,
+    biological condition) is used instead. This is the preferred method of data
+    input as in this way, the analysis is streamlined within R from the beginning
+    until the end, ensuring data integrity (e.g. the compatibility of the genome
+    annotations used, something that can sometimes be broken when using external
+    read counting software). SAM/BAM files are imported through the Bioconductor
+    packages Rsamtools and Repitools and BED files are imported through the
+    Bioconductor package rtracklayer. The aligned reads are converted to a read
+    counts table through facilities provided in the Bioconductor package
+    GenomicRanges. The Ensembl gene or exon regions which are used to summarize
+    the read alignments and create the final read counts table for each gene or
+    exon can be obtained either through downloading at the time of usage using the
+    Bioconductor package biomaRt, or through the use of the embedded in the
+    metaseqR package Ensembl annotation for speed, or from a user-specified file.
+    \item Summarized numbers of reads for each genomic feature (gene or exon) by
+    providing a file containing the read counts table. This file should contain at
+    least: a) a column with a unique identifier for each gene/exon (currently only
+    Ensembl identifiers are supported unless the required annotation elements for
+    each genomic region are embedded in the file), b) as many columns as the number
+    of samples in the experiment. Each column with sample read counts should be
+    named with a unique sample name. Optionally, the read counts file can contain
+    annotation elements for each genomic feature (gene or exon) corresponding to
+    the unique identifier column. In this case, the pipeline may be executed with
+    the annotation=``embedded'' argument and it is very useful when the user does
+    not wish to use Ensembl annotation or the organisms under investigation is not
+    supported by metaseqR. If the user chooses to use embedded to the read counts
+    file annotation, then at least the following elements should be provided for
+    each genomic region, apart from its unique name should be provided (in
+    parenthesis next to each element, the required column name): chromosome where
+    the genomic feature is located (chromosome), starting base pair in the
+    chromosome (start), ending base pair in the chromosome (end). For best
+    performance (e.g. availability of all quality control and diagnostic plots),
+    the following annotation elements should also be provided: GC content
+    (gc\_content) for genomic features of type ``gene'', the gene model name
+    (gene\_name) for genomic features of type ``exon'', the transcribing strand of
+    each feature, denoted as ``+'' or ``-'' (strand), HUGO (or other alias) gene
+    name (gene\_name) and each genomic features biotype/biological categorization,
+    for example Ensembl categorizations like ``protein\_coding'', ``ncRNA'',
+    ``pseudogene'', etc. (biotype). In any case, if the user needs are satisfied
+    with Ensembl annotation, it is better practice not to use embedded annotation
+    in the counts file but download it or use the embedded in the package annotation
+    using the respective options.
+    \item Like case (2) but all the data mentioned in (2) are stored in an R data
+    frame object (for example, derived after a user-defined or otherwise customized
+    preprocessing).
 \end{enumerate}
 
 In any case of the above, some of the main input arguments to the pipeline can
@@ -462,29 +462,29 @@ of expression filters which can be applied altogether or only a subset of them.
 The expression filters are the following:
 
 \begin{enumerate}
-  \item a global median filter, where genes below the median of the global
-   normalized count distribution in all samples are not accepted for further
-   analysis (this filter has been used to distinguish between ``expressed'' and
-   ``not expressed'' genes in several cases, e.g. (Mokry et al., NAR, 2011). The
-   value of this filter is a boolean, \lstinline{TRUE} for applying this filter
-   and \lstinline{FALSE} for not applying.
-  \item	a global mean filter, similar as the global median filter but using the
-   global mean.
-  \item a global quantile filter, which is the same as the previous two but using
-   a specific quantile of the total counts distribution
-  \item a filter based on the expression of genes known to be specifically expressed
-   (e.g. not expressed) under the system under investigation. In this case, a set
-   of known not-expressed genes is used to estimate an expression cutoff. This can
-   be quite useful, as the genes are filtered based on \emph{a true biological cutoff}
-   instead of a statistical cutoff. The value of this filter is a character vector
-   of HUGO gene symbols (which must be contained in the annotation, see previous
-   section). Thus, if the user intends to use this filter, it is better to instruct
-   metaseqr to download annotation on the fly or use the annotations embedded in
-   the package. Then, these genes are used to build a ``null'' expression
-   distribution. The 90\textsuperscript{th} quantile of this distribution is then
-   the expression cutoff. This filter can be combined with any other filter. The
-   user should be careful with gene names as they are case sensitive and must
-   match exactly (``Pten'' is different from ``PTEN'').
+    \item a global median filter, where genes below the median of the global
+    normalized count distribution in all samples are not accepted for further
+    analysis (this filter has been used to distinguish between ``expressed'' and
+    ``not expressed'' genes in several cases, e.g. (Mokry et al., NAR, 2011). The
+    value of this filter is a boolean, \lstinline{TRUE} for applying this filter
+    and \lstinline{FALSE} for not applying.
+    \item a global mean filter, similar as the global median filter but using the
+    global mean.
+    \item a global quantile filter, which is the same as the previous two but using
+    a specific quantile of the total counts distribution
+    \item a filter based on the expression of genes known to be specifically expressed
+    (e.g. not expressed) under the system under investigation. In this case, a set
+    of known not-expressed genes is used to estimate an expression cutoff. This can
+    be quite useful, as the genes are filtered based on \emph{a true biological cutoff}
+    instead of a statistical cutoff. The value of this filter is a character vector
+    of HUGO gene symbols (which must be contained in the annotation, see previous
+    section). Thus, if the user intends to use this filter, it is better to instruct
+    metaseqr to download annotation on the fly or use the annotations embedded in
+    the package. Then, these genes are used to build a ``null'' expression
+    distribution. The 90\textsuperscript{th} quantile of this distribution is then
+    the expression cutoff. This filter can be combined with any other filter. The
+    user should be careful with gene names as they are case sensitive and must
+    match exactly (``Pten'' is different from ``PTEN'').
 \end{enumerate}
 
 The fourth filter category is a qualitative filter based on the biological
@@ -549,63 +549,63 @@ each of the applied statistical tests and will also report, apart from the p-val
 from each method, a combined p-value using one of the following methods:
 
 \begin{enumerate}
-  \item	The Simes p-value combination method. This method uses the minimum
-   ordered p-value from all methods divided by the inverse order of the p-values.
-   The ordering is performed across the number of statistics used. This is the
-   default method.
-  \item the Fisher p-value combination meta-analysis method, implemented in the R
-   package MADAM. This is the default method.
-  \item same as (2) but using permutations, as implemented in the R package MADAM.
-   This option is quite computationally intensive and requires additional running
-   time.
-  \item the Whitlock p-value combination method, implemented in the Bioconductor
-   package survcomp. This method has the advantage of allowing weighting for each
-   methodology. In the current version of metaseqR, the weights are equal for all
-   statistical tests. For example, the user may estimate weights for his/her
-   dataset using metaseqR facilities for this purpose.
-  \item The maximum p-value returned by a set of statistical tests for the same
-   gene. This is equivalent to the “intersection” of the results derived from
-   each statistical test, returning genes which have been found as statistically
-   significant by all the statistical tests applied. The maximum p-value ensures
-   that the false positives are minimized at a (usually high) cost on the true
-   positives (statistical power).
-  \item The minimum p-value returned by a set of statistical tests for the same
-   gene. This is equivalent to the “union” of the results derived from each
-   statistical test, returning genes which have been found as statistically
-   significant by at least one of the statistical tests applied. The minimum
-   p-value ensures that the true positives are maximized at a (usually high)
-   cost on the false positives (type I error).
-  \item A weighted p-value where the weights can be either fixed (e.g. equal or
-   set by the user according to performance evidence from the literature), or
-   estimated using metaseqR's facilities for this purpose (simulation based on
-   the user data and weighting according to performance measurement on simulated
-   data). The weights must sum to 1.
-  \item A method based on permutations. This method has three variants:
-  \begin{enumerate}
-    \item In the first variant (\lstinline{dperm.min}), an initial p-value vector
-     is constructed for each gene, containing the minimum p-value resulted from
-     the applied statistical tests (more lose, see above).
-    \item In the second variant (\lstinline{dperm.max}), an initial p-value vector
-     is constructed for each gene, containing the maximum p-value resulted from
-     the applied statistical tests (more strict, see above).
-    \item In the third variant (\lstinline{dperm.weight}), an initial p-vale
-     vector is constructed for each gene, containing the convex linear combination
-     of the p-values resulted from all the statistical tests applied for each gene.
-     To construct the convex linear combination, a vector of weights is used, one
-     for each statistical test, and the sum of all weights must be 1.
-  \end{enumerate}
-  After the construction of the original combined p-value with one of the
-  aforementioned variants a permutation procedure is initialed, where nperm
-  permutations are performed across the samples of the normalized counts matrix,
-  producing nperm permuted instances of the initial dataset. Then, all the chosen
-  statistical tests are re-executed for each permutation. The final p-value is the
-  number of times that the p-value of the permuted datasets is smaller than the
-  original dataset. The p-value of the original dataset is created based on the
-  choice of one. Generally, the permutation procedure usually requires a lot of
-  time in order to yield accurate results (at least 10000 iterations especially
-  in smaller datasets). Additionally, this method will NOT work when there are no
-  replicated samples across biological conditions. In that case, the Simes method
-  or one of the others should be used.
+    \item The Simes p-value combination method. This method uses the minimum
+    ordered p-value from all methods divided by the inverse order of the p-values.
+    The ordering is performed across the number of statistics used. This is the
+    default method.
+    \item the Fisher p-value combination meta-analysis method, implemented in the R
+    package MADAM. This is the default method.
+    \item same as (2) but using permutations, as implemented in the R package MADAM.
+    This option is quite computationally intensive and requires additional running
+    time.
+    \item the Whitlock p-value combination method, implemented in the Bioconductor
+    package survcomp. This method has the advantage of allowing weighting for each
+    methodology. In the current version of metaseqR, the weights are equal for all
+    statistical tests. For example, the user may estimate weights for his/her
+    dataset using metaseqR facilities for this purpose.
+    \item The maximum p-value returned by a set of statistical tests for the same
+    gene. This is equivalent to the “intersection” of the results derived from
+    each statistical test, returning genes which have been found as statistically
+    significant by all the statistical tests applied. The maximum p-value ensures
+    that the false positives are minimized at a (usually high) cost on the true
+    positives (statistical power).
+    \item The minimum p-value returned by a set of statistical tests for the same
+    gene. This is equivalent to the “union” of the results derived from each
+    statistical test, returning genes which have been found as statistically
+    significant by at least one of the statistical tests applied. The minimum
+    p-value ensures that the true positives are maximized at a (usually high)
+    cost on the false positives (type I error).
+    \item A weighted p-value where the weights can be either fixed (e.g. equal or
+    set by the user according to performance evidence from the literature), or
+    estimated using metaseqR's facilities for this purpose (simulation based on
+    the user data and weighting according to performance measurement on simulated
+    data). The weights must sum to 1.
+    \item A method based on permutations. This method has three variants:
+    \begin{enumerate}
+       \item In the first variant (\lstinline{dperm.min}), an initial p-value vector
+        is constructed for each gene, containing the minimum p-value resulted from
+        the applied statistical tests (more lose, see above).
+       \item In the second variant (\lstinline{dperm.max}), an initial p-value vector
+        is constructed for each gene, containing the maximum p-value resulted from
+        the applied statistical tests (more strict, see above).
+       \item In the third variant (\lstinline{dperm.weight}), an initial p-vale
+        vector is constructed for each gene, containing the convex linear combination
+        of the p-values resulted from all the statistical tests applied for each gene.
+        To construct the convex linear combination, a vector of weights is used, one
+        for each statistical test, and the sum of all weights must be 1.
+    \end{enumerate}
+    After the construction of the original combined p-value with one of the
+    aforementioned variants a permutation procedure is initialed, where nperm
+    permutations are performed across the samples of the normalized counts matrix,
+    producing nperm permuted instances of the initial dataset. Then, all the chosen
+    statistical tests are re-executed for each permutation. The final p-value is the
+    number of times that the p-value of the permuted datasets is smaller than the
+    original dataset. The p-value of the original dataset is created based on the
+    choice of one. Generally, the permutation procedure usually requires a lot of
+    time in order to yield accurate results (at least 10000 iterations especially
+    in smaller datasets). Additionally, this method will NOT work when there are no
+    replicated samples across biological conditions. In that case, the Simes method
+    or one of the others should be used.
 \end{enumerate}
 
 It should be noted that in the case of NOISeq, the significance value returned is
@@ -622,58 +622,58 @@ based on multiple testing correction and Monte Carlo methods.
 \section{References}
 
 \begin{enumerate}
-  \item Anders, S., and Huber, W. (2010). Differential expression analysis for
-   sequence count data. Genome Biol 11, R106.
-  \item Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery
-   Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the
-   Royal Statistical Society Series B (Methodological) 57, 289-300.
-  \item Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery
-   rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.
-  \item Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the
-   generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics
-   12, 35.
-  \item Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing
-   Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.
-  \item Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh,
-   Oliver and Boyd).
-  \item Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods
-   for identifying differential expression in sequence count data. BMC Bioinformatics
-   11, 422.
-  \item Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests
-   of significance. Biometrika 75, 800-803.
-  \item Holm, S. (1979). A simple sequentially rejective multiple test procedure.
-   Scandinavian Journal of Statistics 6, 65-70.
-  \item Hommel, G. (1988). A stagewise rejective multiple test procedure based on
-   a modified Bonferroni test. Biometrika 75, 383-386.
-  \item Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits,
-   B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013).
-   EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments.
-   Bioinformatics 29, 1035-1043
-  \item Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012).
-   htSeqTools: high-throughput sequencing quality control, processing and
-   visualization in R. Bioinformatics 28, 589-590.
-  \item Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content
-   normalization for RNA-Seq data. BMC Bioinformatics 12, 480.
-  \item Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a
-   Bioconductor package for differential expression analysis of digital gene
-   expression data. Bioinformatics 26, 139-140.
-  \item Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011).
-   survcomp: an R/Bioconductor package for performance assessment and comparison
-   of survival models. Bioinformatics 27, 3206-3208.
-  \item Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology
-   46, 561-576.
-  \item Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests
-   of significance. Biometrika 73 (3): 751-754.
-  \item Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics
-   and Computational Biology Solutions using R and Bioconductor, G. R., C. V.,
-   D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.
-  \item Storey, J.D., and Tibshirani, R. (2003). Statistical significance for
-   genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445.
-  \item Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A.
-   (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21,
-   2213-2223.
-  \item Whitlock, M.C. (2005). Combining probability from independent tests: the
-   weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.
+    \item Anders, S., and Huber, W. (2010). Differential expression analysis for
+    sequence count data. Genome Biol 11, R106.
+    \item Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery
+    Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the
+    Royal Statistical Society Series B (Methodological) 57, 289-300.
+    \item Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery
+    rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.
+    \item Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the
+    generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics
+    12, 35.
+    \item Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing
+    Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.
+    \item Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh,
+    Oliver and Boyd).
+    \item Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods
+    for identifying differential expression in sequence count data. BMC Bioinformatics
+    11, 422.
+    \item Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests
+    of significance. Biometrika 75, 800-803.
+    \item Holm, S. (1979). A simple sequentially rejective multiple test procedure.
+    Scandinavian Journal of Statistics 6, 65-70.
+    \item Hommel, G. (1988). A stagewise rejective multiple test procedure based on
+    a modified Bonferroni test. Biometrika 75, 383-386.
+    \item Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits,
+    B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013).
+    EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments.
+    Bioinformatics 29, 1035-1043
+    \item Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012).
+    htSeqTools: high-throughput sequencing quality control, processing and
+    visualization in R. Bioinformatics 28, 589-590.
+    \item Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content
+    normalization for RNA-Seq data. BMC Bioinformatics 12, 480.
+    \item Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a
+    Bioconductor package for differential expression analysis of digital gene
+    expression data. Bioinformatics 26, 139-140.
+    \item Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011).
+    survcomp: an R/Bioconductor package for performance assessment and comparison
+    of survival models. Bioinformatics 27, 3206-3208.
+    \item Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology
+    46, 561-576.
+    \item Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests
+    of significance. Biometrika 73 (3): 751-754.
+    \item Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics
+    and Computational Biology Solutions using R and Bioconductor, G. R., C. V.,
+    D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.
+    \item Storey, J.D., and Tibshirani, R. (2003). Statistical significance for
+    genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445.
+    \item Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A.
+    (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21,
+    2213-2223.
+    \item Whitlock, M.C. (2005). Combining probability from independent tests: the
+    weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.
 \end{enumerate}
 
 \section{R session information}

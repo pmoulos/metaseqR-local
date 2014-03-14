@@ -851,7 +851,8 @@ validate.list.args <- function(what,method=NULL,arg.list) {
         normalization = {
             switch(method,
                 edaseq = { 
-                    valid <- names(arg.list) %in% c("within.which","between.which")
+                    valid <- names(arg.list) %in% c("within.which",
+                        "between.which")
                     not.valid <- which(!valid)
                 },
                 deseq = {
@@ -876,8 +877,8 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                 }
             )
             if (length(not.valid)>0) {
-                warnwrap(paste("The following",method,what,"argument names are ",
-                    "invalid and will be ignored:",
+                warnwrap(paste("The following",method,what,"argument names",
+                    "are invalid and will be ignored:",
                     paste(names(arg.list)[not.valid],collapse=", ")))
                 arg.list[not.valid] <- NULL
             }
@@ -886,16 +887,18 @@ validate.list.args <- function(what,method=NULL,arg.list) {
         statistics = {
             switch(method,
                 deseq = {
-                    valid <- names(arg.list) %in% c("method","sharingMode","fitType")
+                    valid <- names(arg.list) %in% c("method","sharingMode",
+                        "fitType")
                     not.valid <- which(!valid)
                 },
                 edger = {
-                    valid <- names(arg.list) %in% c("main.method","rowsum.filter",
-                        "prior.df","trend","span","tag.method","grid.length",
-                        "grid.range","offset","glm.method","subset","AveLogCPM",
-                        "trend.method","dispersion","offset","weights","lib.size",
-                        "prior.count","start","method","test","abundance.trend",
-                        "robust","winsor.tail.p")
+                    valid <- names(arg.list) %in% c("main.method",
+                        "rowsum.filter","prior.df","trend","span","tag.method",
+                        "grid.length","grid.range","offset","glm.method",
+                        "subset","AveLogCPM","trend.method","dispersion",
+                        "offset","weights","lib.size","prior.count","start",
+                        "method","test","abundance.trend","robust",
+                        "winsor.tail.p")
                     not.valid <- which(!valid)
                 },
                 noiseq = {
@@ -905,11 +908,11 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                     not.valid <- which(!valid)
                 },
                 bayseq = {
-                    valid <- names(arg.list) %in% c("samplesize","samplingSubset",
-                        "equalDispersions","estimation","zeroML","consensus",
-                        "moderate","pET","marginalise","subset","priorSubset",
-                        "bootStraps","conv","nullData","returnAll","returnPD",
-                        "discardSampling","cl")
+                    valid <- names(arg.list) %in% c("samplesize",
+                        "samplingSubset","equalDispersions","estimation",
+                        "zeroML","consensus","moderate","pET","marginalise",
+                        "subset","priorSubset","bootStraps","conv","nullData",
+                        "returnAll","returnPD","discardSampling","cl")
                     not.valid <- which(!valid)
                 },
                 limma = {
@@ -923,8 +926,8 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                 }
             )
             if (length(not.valid)>0) {
-                warnwrap(paste("The following",method,what,"argument names are ",
-                    "invalid and will be ignored:",
+                warnwrap(paste("The following",method,what,"argument names",
+                    "are invalid and will be ignored:",
                     paste(names(arg.list)[not.valid],collapse=", ")))
                 arg.list[not.valid] <- NULL
             }
@@ -935,8 +938,8 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                 "biotype")
             not.valid.1 <- which(!valid.1)
             if (length(not.valid.1)>0) {
-                warnwrap(paste("The following",method,what,"argument names are ",
-                    "invalid and will be ignored:",
+                warnwrap(paste("The following",method,what,"argument names",
+                    "are invalid and will be ignored:",
                     paste(names(arg.list)[not.valid.1],collapse=", ")))
                 arg.list[not.valid.1] <- NULL
             }
@@ -948,20 +951,21 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                             not.valid.2 <- which(!valid.2)
                         },
                         avg.reads = {
-                            valid.2 <- names(arg.list[[n]]) %in% c("average.per.bp",
-                                "quantile")
+                            valid.2 <- names(arg.list[[n]]) %in%
+                                c("average.per.bp","quantile")
                             not.valid.2 <- which(!valid.2)
                         },
                         expression = {
-                            valid.2 <- names(arg.list[[n]]) %in% c("median","mean",
-                                "quantile","known","custom")
+                            valid.2 <- names(arg.list[[n]]) %in% c("median",
+                                "mean","quantile","known","custom")
                             not.valid.2 <- which(!valid.2)
                         }
                     )
                     if (length(not.valid.2)>0) {
-                        warnwrap(paste("The following",method,what,"sub-argument ",
-                            "names are invalid and will be ignored:",
-                            paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+                        warnwrap(paste("The following",method,what,
+                            "sub-argument names are invalid and will be",
+                            "ignored:",paste(names(arg.list[[n]])[not.valid.2],
+                            collapse=", ")))
                         arg.list[[n]][not.valid.2] <- NULL
                     }
                 }
@@ -972,8 +976,8 @@ validate.list.args <- function(what,method=NULL,arg.list) {
             valid.1 <- names(arg.list) %in% c("mnrpx")
             not.valid.1 <- which(!valid.1)
             if (length(not.valid.1)>0) {
-                warnwrap(paste("The following",method,what,"argument names are ",
-                    "invalid and will be ignored:",
+                warnwrap(paste("The following",method,what,"argument names",
+                    "are invalid and will be ignored:",
                     paste(names(arg.list)[not.valid.1],collapse=", ")))
                 arg.list[not.valid.1] <- NULL
             }
@@ -981,15 +985,16 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                 for (n in names(arg.list)) {
                     switch(n,
                         mnrpx = {
-                            valid.2 <- names(arg.list[[n]]) %in% c("exons.per.gene",
-                                "min.exons","frac")
+                            valid.2 <- names(arg.list[[n]]) %in%
+                                c("exons.per.gene","min.exons","frac")
                             not.valid.2 <- which(!valid.2)
                         }
                     )
                     if (length(not.valid.2)>0) {
-                        warnwrap(paste("The following",method,what,"sub-argument ",
-                            "names are invalid and will be ignored:",
-                            paste(names(arg.list[[n]])[not.valid.2],collapse=", ")))
+                        warnwrap(paste("The following",method,what,
+                            "sub-argument names are invalid and will be",
+                            "ignored:",paste(names(arg.list[[n]])[not.valid.2],
+                            collapse=", ")))
                         arg.list[[n]][not.valid.2] <- NULL
                     }
                 }
@@ -1003,9 +1008,10 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                         "pseudogene","miRNA","retrotransposed","protein_coding",
                         "processed_pseudogene","snRNA","snRNA_pseudogene",
                         "Mt_tRNA_pseudogene","miRNA_pseudogene","misc_RNA",
-                        "tRNA_pseudogene","snoRNA","scRNA_pseudogene","rRNA_pseudogene",
-                        "snoRNA_pseudogene","rRNA","misc_RNA_pseudogene","IG_V_gene",
-                        "IG_D_gene","IG_J_gene","IG_C_gene","IG_pseudogene","scRNA")
+                        "tRNA_pseudogene","snoRNA","scRNA_pseudogene",
+                        "rRNA_pseudogene","snoRNA_pseudogene","rRNA",
+                        "misc_RNA_pseudogene","IG_V_gene","IG_D_gene",
+                        "IG_J_gene","IG_C_gene","IG_pseudogene","scRNA")
                     not.valid <- which(!valid)
                 },
                 hg19 = {
@@ -1013,17 +1019,19 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                         "protein_coding","antisense","processed_transcript",
                         "snRNA","sense_intronic","miRNA","misc_RNA","snoRNA",
                         "rRNA","polymorphic_pseudogene","sense_overlapping",
-                        "three_prime_overlapping_ncrna","TR_V_gene","TR_V_pseudogene",
-                        "TR_D_gene","TR_J_gene","TR_C_gene","TR_J_pseudogene",
-                        "IG_C_gene","IG_C_pseudogene","IG_J_gene","IG_J_pseudogene",
-                        "IG_D_gene","IG_V_gene","IG_V_pseudogene")
+                        "three_prime_overlapping_ncrna","TR_V_gene",
+                        "TR_V_pseudogene","TR_D_gene","TR_J_gene","TR_C_gene",
+                        "TR_J_pseudogene","IG_C_gene","IG_C_pseudogene",
+                        "IG_J_gene","IG_J_pseudogene","IG_D_gene","IG_V_gene",
+                        "IG_V_pseudogene")
                     not.valid <- which(!valid)
                 },
                 mm9 = {
                     valid <- names(arg.list) %in% c("pseudogene","snRNA",
                         "protein_coding","antisense","miRNA","lincRNA","snoRNA",
-                        "processed_transcript","misc_RNA","rRNA","sense_overlapping",
-                        "sense_intronic","polymorphic_pseudogene","non_coding",
+                        "processed_transcript","misc_RNA","rRNA",
+                        "sense_overlapping","sense_intronic",
+                        "polymorphic_pseudogene","non_coding",
                         "three_prime_overlapping_ncrna","IG_C_gene","IG_J_gene",
                         "IG_D_gene","IG_V_gene","ncrna_host")
                     not.valid <- which(!valid)
@@ -1031,10 +1039,11 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                 mm10 = {
                     valid <- names(arg.list) %in% c("pseudogene","snRNA",
                         "protein_coding","antisense","miRNA","snoRNA","lincRNA",
-                        "processed_transcript","misc_RNA","rRNA","sense_intronic",
-                        "sense_overlapping","polymorphic_pseudogene","IG_C_gene",
-                        "IG_J_gene","IG_D_gene","IG_LV_gene","IG_V_gene",
-                        "IG_V_pseudogene","TR_V_gene","TR_V_pseudogene",
+                        "processed_transcript","misc_RNA","rRNA",
+                        "sense_intronic","sense_overlapping",
+                        "polymorphic_pseudogene","IG_C_gene","IG_J_gene",
+                        "IG_D_gene","IG_LV_gene","IG_V_gene","IG_V_pseudogene",
+                        "TR_V_gene","TR_V_pseudogene",
                         "three_prime_overlapping_ncrna")
                     not.valid <- which(!valid)
                 },
@@ -1044,22 +1053,24 @@ validate.list.args <- function(what,method=NULL,arg.list) {
                     not.valid <- which(!valid)
                 },
                 rn5 = {
-                    valid <- names(arg.list) %in% c("protein_coding","pseudogene",
-                        "processed_pseudogene","miRNA","rRNA","misc_RNA")
+                    valid <- names(arg.list) %in% c("protein_coding",
+                        "pseudogene","processed_pseudogene","miRNA","rRNA",
+                        "misc_RNA")
                     not.valid <- which(!valid)
                 },
                 danrer7 = {
-                    valid <- names(arg.list) %in% c("antisense","protein_coding",
-                        "miRNA","snoRNA","rRNA","lincRNA","processed_transcript",
-                        "snRNA","pseudogene","sense_intronic","misc_RNA",
-                        "polymorphic_pseudogene","IG_V_pseudogene","IG_C_pseudogene",
-                        "IG_J_pseudogene","non_coding","sense_overlapping")
+                    valid <- names(arg.list) %in% c("antisense",
+                        "protein_coding","miRNA","snoRNA","rRNA","lincRNA",
+                        "processed_transcript","snRNA","pseudogene",
+                        "sense_intronic","misc_RNA","polymorphic_pseudogene",
+                        "IG_V_pseudogene","IG_C_pseudogene","IG_J_pseudogene",
+                        "non_coding","sense_overlapping")
                     not.valid <- which(!valid)
                 }
             )
             if (length(not.valid)>0) {
-                warnwrap(paste("The following",method,what,"argument names are ",
-                    "invalid and will be ignored:",
+                warnwrap(paste("The following",method,what,"argument names",
+                    "are invalid and will be ignored:",
                     paste(names(arg.list)[not.valid],collapse=", ")))
                 arg.list[not.valid] <- NULL
             }
@@ -1101,7 +1112,8 @@ get.annotation <- function(org,type) {
             dataset=get.dataset(org))
     else
         mart <- useMart(biomart="ENSEMBL_MART_PLANT",dataset=get.dataset(org))
-    #mart <- useMart(biomart="ensembl",host=get.host(org),dataset=get.dataset(org))
+    #mart <- useMart(biomart="ensembl",host=get.host(org),
+    #    dataset=get.dataset(org))
     chrs.exp <- paste(get.valid.chrs(org),collapse="|")
     if (type=="gene") {
         bm <- getBM(attributes=get.gene.attributes(),mart=mart)
@@ -1241,28 +1253,29 @@ get.valid.chrs <- function(org)
         mm9 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-                "chr8","chr9","chrX","chrY"
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6",
+                "chr7","chr8","chr9","chrX","chrY"
             ))
         },
         mm10 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-                "chr8","chr9","chrX","chrY"
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6",
+                "chr7","chr8","chr9","chrX","chrY"
             ))
         },
         rn5 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
-                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6","chr7",
-                "chr8","chr9","chrX"
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6",
+                "chr7","chr8","chr9","chrX"
             ))
         },
         dm3 = {
             return(c(
-                "chr2L","chr2LHet","chr2R","chr2RHet","chr3L","chr3LHet","chr3R",
-                "chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet","chrYHet"
+                "chr2L","chr2LHet","chr2R","chr2RHet","chr3L","chr3LHet",
+                "chr3R","chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet",
+                "chrYHet"
             ))
         },
         danrer7 = {
@@ -1540,8 +1553,8 @@ get.preset.opts <- function(preset,org) {
             exon.filters <- NULL
             gene.filters <- NULL
             pcut <- NA
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean")
@@ -1550,8 +1563,9 @@ get.preset.opts <- function(preset,org) {
             exon.filters <- NULL
             gene.filters <- NULL
             pcut <- NA
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean","sd","cv")
@@ -1560,8 +1574,9 @@ get.preset.opts <- function(preset,org) {
             exon.filters <- NULL
             gene.filters <- NULL
             pcut <- NA
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts","flags")
             export.scale <- c("natural","log2","log10","vst")
             export.values <- c("raw","normalized")
             export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -1592,8 +1607,8 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.defaults("biotype.filter",org[1])
             )
             pcut <- 0.05
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean")
@@ -1624,8 +1639,9 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.defaults("biotype.filter",org[1])
             )
             pcut <- 0.05
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean","sd","cv")
@@ -1656,8 +1672,9 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.defaults("biotype.filter",org[1])
             )
             pcut <- 0.05
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts","flags")
             export.scale <- c("natural","log2","log10","vst")
             export.values <- c("raw","normalized")
             export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -1688,8 +1705,8 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.strict.biofilter(org[1])
             )
             pcut <- 0.01
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean")
@@ -1720,8 +1737,9 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.strict.biofilter(org[1])
             )
             pcut <- 0.01
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts")
             export.scale <- c("natural","log2")
             export.values <- c("normalized")
             export.stats <- c("mean","sd","cv")
@@ -1752,8 +1770,9 @@ get.preset.opts <- function(preset,org) {
                 biotype=get.strict.biofilter(org[1])
             )
             pcut <- 0.01
-            export.what <- c("annotation","p.value","adj.p.value","meta.p.value",
-                "adj.meta.p.value","fold.change","stats","counts","flags")
+            export.what <- c("annotation","p.value","adj.p.value",
+                "meta.p.value","adj.meta.p.value","fold.change","stats",
+                "counts","flags")
             export.scale <- c("natural","log2","log10","vst")
             export.values <- c("raw","normalized")
             export.stats <- c("mean","median","sd","mad","cv","rcv")
@@ -2050,39 +2069,56 @@ make.stat <- function(samples,data.list,stat,export.scale) {
     stat.result <- vector("list",length(export.scale))
     names(stat.result) <- export.scale
     for (scl in export.scale) {
-        stat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
+        stat.data <- data.list[[scl]][,match(samples,
+            colnames(data.list[[scl]]))]
         if (!is.matrix(stat.data)) stat.data <- as.matrix(stat.data)
         switch(stat,
             mean = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(round(mean(x))) else return(mean(x))
+                    if (s=="natural")
+                        return(round(mean(x)))
+                    else
+                        return(mean(x))
                 },scl)
             },
             median = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(round(median(x))) else return(median(x))
+                    if (s=="natural")
+                        return(round(median(x)))
+                    else
+                        return(median(x))
                 },scl)
             },
             sd = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(ceiling(sd(x))) else return(sd(x))
+                    if (s=="natural")
+                        return(ceiling(sd(x)))
+                    else
+                        return(sd(x))
                 },scl)
             },
             mad = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(ceiling(mad(x))) else return(mad(x))
+                    if (s=="natural")
+                        return(ceiling(mad(x)))
+                    else
+                        return(mad(x))
                 },scl)
             },
             cv = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(ceiling(sd(x))/round(mean(x)))
-                    else return(sd(x)/mean(x))
+                    if (s=="natural")
+                        return(ceiling(sd(x))/round(mean(x)))
+                    else
+                        return(sd(x)/mean(x))
                 },scl)
             },
             rcv = {
                 stat.result[[scl]] <- apply(stat.data,1,function(x,s) {
-                    if (s=="natural") return(ceiling(mad(x))/round(median(x))) 
-                    else return(mad(x)/median(x))
+                    if (s=="natural")
+                        return(ceiling(mad(x))/round(median(x))) 
+                    else
+                        return(mad(x)/median(x))
                 },scl)
             }
         )
@@ -2121,7 +2157,8 @@ make.matrix <- function(samples,data.list,export.scale="natural") {
     mat <- vector("list",length(export.scale))
     names(mat) <- export.scale
     for (scl in export.scale) {
-        mat.data <- data.list[[scl]][,match(samples,colnames(data.list[[scl]]))]
+        mat.data <- data.list[[scl]][,match(samples,
+            colnames(data.list[[scl]]))]
         if (!is.matrix(mat.data)) {
             mat.data <- as.matrix(mat.data)
             colnames(mat.data) <- samples
@@ -2195,7 +2232,7 @@ make.contrast.list <- function(contrast,sample.list) {
 #' \dontrun{
 #' targets <- data.frame(sample=c("C1","C2","T1","T2"),
 #'   condition=c("Control","Control","Treatment","Treatment"))
-#' write.table(targets,file="targets.txt",sep="\t",row.names=F,quote="")
+#' write.table(targets,file="targets.txt",sep="\t",row.names=FALSE,quote="")
 #' sample.list <- make.sample.list("targets.txt")
 #'}
 make.sample.list <- function(input) {
@@ -2236,8 +2273,9 @@ make.project.path <- function(path,f=NULL) {
         success <- tryCatch(
             if (!file.exists(path)) dir.create(path,recursive=TRUE) else TRUE,
             error=function(e) {
-                disp("Cannot create ",path,"! Is it a valid system path? Is there ",
-                    "a write permissions problem? Reverting to automatic creation...")
+                disp("Cannot create ",path,"! Is it a valid system path? Is ",
+                    "there a write permissions problem? Reverting to ",
+                    "automatic creation...")
                 return(FALSE)
             },
             finally=""
@@ -2332,13 +2370,20 @@ make.report.messages <- function(lang) {
         en = {
             messages <- list(
                 org=list(
-                    hg18="human (<em>Homo sapiens</em>), genome version alias hg18",
-                    hg19="human (<em>Homo sapiens</em>), genome version alias hg19",
-                    mm9="mouse (<em>Mus musculus</em>), genome version alias mm9",
-                    mm10="mouse (<em>Mus musculus</em>), genome version alias mm10",
-                    rno5="rat (<em>Rattus norvegicus</em>), genome version  alias rno5",
-                    dm3="fruitfly (<em>Drosophila melanogaster</em>), genome version alias dm3",
-                    danrer7="zebrafish (<em>Danio rerio</em>), genome version alias danrer7"
+                    hg18=paste("human (<em>Homo sapiens</em>),",
+                        "genome version alias hg18"),
+                    hg19=paste("human (<em>Homo sapiens</em>),",
+                        "genome version alias hg19"),
+                    mm9=paste("mouse (<em>Mus musculus</em>),",
+                        "genome version alias mm9"),
+                    mm10=paste("mouse (<em>Mus musculus</em>),",
+                        "genome version alias mm10"),
+                    rno5=paste("rat (<em>Rattus norvegicus</em>),",
+                        "genome version  alias rno5"),
+                    dm3=paste("fruitfly (<em>Drosophila melanogaster</em>),",
+                        "genome version alias dm3"),
+                    danrer7=paste("zebrafish (<em>Danio rerio</em>),",
+                        "genome version alias danrer7")
                 ),
                 whenfilter=list(
                     prenorm="before normalization",
@@ -2365,15 +2410,20 @@ make.report.messages <- function(lang) {
                     union="union of individual results",
                     fisher="Fisher's method (R package MADAM)",
                     fperm="Fisher's method with permutations (R package MADAM)",
-                    dperm.min="samples permutation based method with minimum p-values",
-                    dperm.max="samples permutation based method with maximum p-values",
-                    dperm.weight="samples permutation based method with weighted p-values",
+                    dperm.min=paste("samples permutation based method with",
+                        "minimum p-values"),
+                    dperm.max=paste("samples permutation based method with",
+                        "maximum p-values"),
+                    dperm.weight=paste("samples permutation based method with",
+                        "weighted p-values"),
                     minp="minimum p-value across results",
                     maxp="maximum p-value across results",
                     weight="weighted p-value across results",
                     simes="Simes correction and combination method",
-                    whitlock="Whitlock's Z-transformation method (Bioconductor package survcomp)",
-                    none="no meta-analysis, p-values from the first supplied statistical algorithm"
+                    whitlock=paste("Whitlock's Z-transformation method",
+                        "(Bioconductor package survcomp)"),
+                    none=paste("no meta-analysis, reported p-values from the",
+                        "first supplied statistical algorithm")
                 ),
                 adjust=list(
                     holm="Holm FWER",
@@ -2426,463 +2476,599 @@ make.report.messages <- function(lang) {
                     rcv="Robust Coefficient of Variation"
                 ),
                 preset=list(
-                    all.basic="use all genes and export all genes and basic annotation and statistics elements",
-                    all.normal="use all genes and export all genes and normal annotation and statistics elements",
-                    all.full="use all genes and export all genes and all available annotation and statistics elements",
-                    medium.basic="apply a medium set of filters and and export statistically significant genes and basic annotation and statistics elements",
-                    medium.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-                    medium.full="apply a medium set of filters and and export statistically significant genes and all available annotation and statistics elements",
-                    strict.basic="apply a strict set of filters and and export statistically significant genes and basic annotation and statistics elements",
-                    strict.normal="apply a medium set of filters and and export statistically significant genes and normal annotation and statistics elements",
-                    strict.full="apply a medium set of filters and and export statistically significant genes and alla available annotation and statistics elements"
+                    all.basic=paste("use all genes and export all genes and",
+                        "basic annotation and statistics elements"),
+                    all.normal=paste("use all genes and export all genes and",
+                        "normal annotation and statistics elements"),
+                    all.full=paste("use all genes and export all genes and all",
+                        "available annotation and statistics elements"),
+                    medium.basic=paste("apply a medium set of filters and",
+                        "export statistically significant genes and basic",
+                        "annotation and statistics elements"),
+                    medium.normal=paste("apply a medium set of filters and",
+                        "export statistically significant genes and normal",
+                        "annotation and statistics elements"),
+                    medium.full=paste("apply a medium set of filters and",
+                        "export statistically significant genes and all",
+                        "available annotation and statistics elements"),
+                    strict.basic=paste("apply a strict set of filters and",
+                        "export statistically significant genes and basic",
+                        "annotation and statistics elements"),
+                    strict.normal=paste("apply a medium set of filters and",
+                        "export statistically significant genes and normal",
+                        "annotation and statistics elements"),
+                    strict.full=paste("apply a medium set of filters and",
+                        "export statistically significant genes and all",
+                        "available annotation and statistics elements")
                 ),
                 explain=list(
                     mds=paste(
-                        "The Multi-Dimensional Scaling (MDS) plots comprise a means",
-                        "of visualizing the level of similarity of individual cases",
-                        "of a dataset. It is similar to Principal Component Analysis",
-                        "(PCA), but instead of using the covariance matrix to find",
-                        "similarities among cases, MDS uses absolute distance metrics",
-                        "such as the classical Euclidean distance. Because of the",
-                        "relative linear relations among sequencing samples, it",
-                        "provides a more realistic clustering among samples. MDS",
-                        "serves quality control and it can be interpreted as follows:",
-                        "when the distance among samples of the same biological",
-                        "condition in the MDS space is small, this is an indication",
-                        "of high correlation and reproducibility among them. When",
-                        "this distance is larger or heterogeneous (e.g. the 3rd",
-                        "sample of a triplicate set is further from the other 2),",
-                        "this comprises an indication of low correlation and",
-                        "reproducibility among samples. It can help exclude poor",
-                        "samples from further analysis.",collapse=" "
+                "The Multi-Dimensional Scaling (MDS) plots comprise a means",
+                "of visualizing the level of similarity of individual cases",
+                "of a dataset. It is similar to Principal Component Analysis",
+                "(PCA), but instead of using the covariance matrix to find",
+                "similarities among cases, MDS uses absolute distance metrics",
+                "such as the classical Euclidean distance. Because of the",
+                "relative linear relations among sequencing samples, it",
+                "provides a more realistic clustering among samples. MDS",
+                "serves quality control and it can be interpreted as follows:",
+                "when the distance among samples of the same biological",
+                "condition in the MDS space is small, this is an indication",
+                "of high correlation and reproducibility among them. When",
+                "this distance is larger or heterogeneous (e.g. the 3rd",
+                "sample of a triplicate set is further from the other 2),",
+                "this comprises an indication of low correlation and",
+                "reproducibility among samples. It can help exclude poor",
+                "samples from further analysis.",collapse=" "
                     ),
                     biodetection=paste(
-                        "The biotype detection bar diagrams are a set of quality",
-                        "control charts that show the percentage of each biotype",
-                        "in the genome (i.e. in the whole set of features provided,",
-                        "for example, protein coding genes, non coding RNAs or",
-                        "pseudogenes) in grey bars, which proportion has been",
-                        "detected in a sample before normalization and after a",
-                        "basic filtering by removing features with zero counts in",
-                        "red lined bars, and the percentage of each biotype within",
-                        "the sample in solid red bars. The difference between grey",
-                        "bars and solid red bars is that the grey bars show the",
-                        "percentage of a feature in the genome while the solid red",
-                        "bars show the percentage in the sample. Thus, the solid",
-                        "red bars may be sometimes higher than the grey bars because",
-                        "certain features (e.g. protein coding genes) may be",
-                        "detected within a sample with a higher proportion",
-                        "relatively to their presence in the genome, as compared",
-                        "with other features. For example, while the percentage",
-                        "of protein coding genes in the whole genome is already",
-                        "higher than other biotypes, this percentage is expected",
-                        "to be even higher in an RNA-Seq experiment where one",
-                        "expects protein-coding genes to exhibit greater abundance.",
-                        "The vertical green line separates the most abundant",
-                        "biotypes (in the left-hand side, corresponding to the",
-                        "left axis scale) from the rest (in the right-hand side,",
-                        "corresponding to the right axis scale). Otherwise, the",
-                        "lower abundance biotypes would be indistiguishable.",
-                        "Unexpected outcomes in this quality control chart (e.g.",
-                        "very low detection of protein coding genes) would signify",
-                        "possible low quality of a sample.",collapse=" "
+                "The biotype detection bar diagrams are a set of quality",
+                "control charts that show the percentage of each biotype",
+                "in the genome (i.e. in the whole set of features provided,",
+                "for example, protein coding genes, non coding RNAs or",
+                "pseudogenes) in grey bars, which proportion has been",
+                "detected in a sample before normalization and after a",
+                "basic filtering by removing features with zero counts in",
+                "red lined bars, and the percentage of each biotype within",
+                "the sample in solid red bars. The difference between grey",
+                "bars and solid red bars is that the grey bars show the",
+                "percentage of a feature in the genome while the solid red",
+                "bars show the percentage in the sample. Thus, the solid",
+                "red bars may be sometimes higher than the grey bars because",
+                "certain features (e.g. protein coding genes) may be",
+                "detected within a sample with a higher proportion",
+                "relatively to their presence in the genome, as compared",
+                "with other features. For example, while the percentage",
+                "of protein coding genes in the whole genome is already",
+                "higher than other biotypes, this percentage is expected",
+                "to be even higher in an RNA-Seq experiment where one",
+                "expects protein-coding genes to exhibit greater abundance.",
+                "The vertical green line separates the most abundant",
+                "biotypes (in the left-hand side, corresponding to the",
+                "left axis scale) from the rest (in the right-hand side,",
+                "corresponding to the right axis scale). Otherwise, the",
+                "lower abundance biotypes would be indistiguishable.",
+                "Unexpected outcomes in this quality control chart (e.g.",
+                "very low detection of protein coding genes) would signify",
+                "possible low quality of a sample.",collapse=" "
                     ),
                     countsbio=paste(
-                        "The biotype detection counts boxplots are a set of quality",
-                        "control charts that depict both the biological classification",
-                        "for the detected features and the actual distribution of",
-                        "the read counts for each biological type. The boxplot",
-                        "comprises a means of summarizing the read counts distribution",
-                        "of a sample in the form of a bar with extending lines,",
-                        "as commonly used way of graphically presenting groups of",
-                        "numerical data. A boxplot also indicates which observations,",
-                        "if any, might be considered outliers and is able to visually",
-                        "show different types of populations, without making any",
-                        "assumptions of the underlying statistical distribution.",
-                        "The spacings between the different parts of the box help",
-                        "indicate variance, skewness and identify outliers. The",
-                        "thick bar inside the colored box is the median of the",
-                        "observations while the box extends over the Interquartile",
-                        "Range of the observations. The whiskers extend up (down)",
-                        "to +/-1.5xIQR. Unexpected outcomes (e.g. protein coding",
-                        "read count distribution similar to pseudogene read count",
-                        "distribution) indicates poor sample quality.",collapse=" "
+                "The biotype detection counts boxplots are a set of quality",
+                "control charts that depict both the biological classification",
+                "for the detected features and the actual distribution of",
+                "the read counts for each biological type. The boxplot",
+                "comprises a means of summarizing the read counts distribution",
+                "of a sample in the form of a bar with extending lines,",
+                "as commonly used way of graphically presenting groups of",
+                "numerical data. A boxplot also indicates which observations,",
+                "if any, might be considered outliers and is able to visually",
+                "show different types of populations, without making any",
+                "assumptions of the underlying statistical distribution.",
+                "The spacings between the different parts of the box help",
+                "indicate variance, skewness and identify outliers. The",
+                "thick bar inside the colored box is the median of the",
+                "observations while the box extends over the Interquartile",
+                "Range of the observations. The whiskers extend up (down)",
+                "to +/-1.5xIQR. Unexpected outcomes (e.g. protein coding",
+                "read count distribution similar to pseudogene read count",
+                "distribution) indicates poor sample quality.",collapse=" "
                     ),
                     saturation=paste(
-                        "The read and biotype saturation plots are a set of quality",
-                        "control charts that depict the read count saturation",
-                        "levels at several sequencing depths. Thus, they comprise",
-                        "a means of assessing whether the sequencing depth of an",
-                        "RNA-Seq experiment is sufficient in order to detect the",
-                        "biological features under investigation. These quality",
-                        "control charts are separated in two subgroups: the first",
-                        "subgroup (read saturation per biotype for all samples)",
-                        "is a set of plots, one for each biological feature (e.g.",
-                        "protein coding, pseudogene, lincRNA, etc.), that depict",
-                        "the number of detected features in different sequencing",
-                        "depths and for all samples in the same plot. The second",
-                        "subgroup (read saturation per sample for all biotypes)",
-                        "is a set of plots similar to the above, but this time,",
-                        "there is one pair of plots with two panels for each sample,",
-                        "presenting all biological features. The left panel depicts",
-                        "the saturation levels for the less abundatnt features,",
-                        "while the right panel, the saturation for the more abundant",
-                        "features, as placing them all together would make the",
-                        "less abundant features indistinguishable. All the saturation",
-                        "plots should be interpreted as follows: if the read counts",
-                        "for a biotype tend to be saturated, the respective curve",
-                        "should tend to reach a plateau in higher depths. Otherwise,",
-                        "more sequencing is needed for the specific biotype.",
+                "The read and biotype saturation plots are a set of quality",
+                "control charts that depict the read count saturation",
+                "levels at several sequencing depths. Thus, they comprise",
+                "a means of assessing whether the sequencing depth of an",
+                "RNA-Seq experiment is sufficient in order to detect the",
+                "biological features under investigation. These quality",
+                "control charts are separated in two subgroups: the first",
+                "subgroup (read saturation per biotype for all samples)",
+                "is a set of plots, one for each biological feature (e.g.",
+                "protein coding, pseudogene, lincRNA, etc.), that depict",
+                "the number of detected features in different sequencing",
+                "depths and for all samples in the same plot. The second",
+                "subgroup (read saturation per sample for all biotypes)",
+                "is a set of plots similar to the above, but this time,",
+                "there is one pair of plots with two panels for each sample,",
+                "presenting all biological features. The left panel depicts",
+                "the saturation levels for the less abundatnt features,",
+                "while the right panel, the saturation for the more abundant",
+                "features, as placing them all together would make the",
+                "less abundant features indistinguishable. All the saturation",
+                "plots should be interpreted as follows: if the read counts",
+                "for a biotype tend to be saturated, the respective curve",
+                "should tend to reach a plateau in higher depths. Otherwise,",
+                "more sequencing is needed for the specific biotype.",
                         collapse=" "
                     ),
                     readnoise=paste(
-                        "The read noise plots depict the percentage of biological",
-                        "features detected when subsampling the total number of",
-                        "reads. Very steep curves in read noise plots indicate",
-                        "that although the sequencing depth reaches its maximum,",
-                        "a relatively small percentage of total features is detected,",
-                        "indicating that the level of background noise is relatively",
-                        "high. Less steep RNA composition curves, indicate less noise.",
-                        "When a sample's curve deviate from the rest, it could",
-                        "indicate lower or higher quality, depending on the curves",
-                        "of the rest of the samples.",collapse=" "
+                "The read noise plots depict the percentage of biological",
+                "features detected when subsampling the total number of",
+                "reads. Very steep curves in read noise plots indicate",
+                "that although the sequencing depth reaches its maximum,",
+                "a relatively small percentage of total features is detected,",
+                "indicating that the level of background noise is relatively",
+                "high. Less steep RNA composition curves, indicate less noise.",
+                "When a sample's curve deviate from the rest, it could",
+                "indicate lower or higher quality, depending on the curves",
+                "of the rest of the samples.",collapse=" "
                     ),
                     correl=paste(
-                        "The sample correlation plots depict the accordance among",
-                        "the RNA-Seq samples, as this is manifested through the",
-                        "read counts table used with the metaseqr pipeline, with",
-                        "two representations that both use the correlation matrix",
-                        "(a matrix which depicts all the pairwise correlations",
-                        "between each pair of samples) of the read counts matrix.",
-                        "The first one is a correlation clustered heatmap which",
-                        "depicts the correlations among samples as color-scaled",
-                        "image and the hierarchical clustering tree depicts the",
-                        "grouping of the samples according to their correlation.",
-                        "Samples from the same group that are not clustered together",
-                        "comprises and indication that there might be a quality",
-                        "problem with the dataset. The second is a 'correlogram'",
-                        "plot, where again the samples are hierarchically clustered",
-                        "and grouped but this time correlations are presented as",
-                        "ellipses inside each cell. Each cell represents a pairwise",
-                        "comparison and each correlation coefficient is represented",
-                        "by an ellipse whose 'diameter', direction and color",
-                        "depict the accordance for that pair of samples. Highly",
-                        "correlated samples are depicted as ellipses with narrow",
-                        "diameter while while poorly correlated samples are",
-                        "depicted as ellipses with wide diameters. Also, highly",
-                        "correlated samples are depicted as ellipses with a ",
-                        "left-to-right upwards direction while poorly correlated",
-                        "samples are depicted as ellipses with a right-to-left",
-                        "upwards direction.",collapse=" "
+                "The sample correlation plots depict the accordance among",
+                "the RNA-Seq samples, as this is manifested through the",
+                "read counts table used with the metaseqr pipeline, with",
+                "two representations that both use the correlation matrix",
+                "(a matrix which depicts all the pairwise correlations",
+                "between each pair of samples) of the read counts matrix.",
+                "The first one is a correlation clustered heatmap which",
+                "depicts the correlations among samples as color-scaled",
+                "image and the hierarchical clustering tree depicts the",
+                "grouping of the samples according to their correlation.",
+                "Samples from the same group that are not clustered together",
+                "comprises and indication that there might be a quality",
+                "problem with the dataset. The second is a 'correlogram'",
+                "plot, where again the samples are hierarchically clustered",
+                "and grouped but this time correlations are presented as",
+                "ellipses inside each cell. Each cell represents a pairwise",
+                "comparison and each correlation coefficient is represented",
+                "by an ellipse whose 'diameter', direction and color",
+                "depict the accordance for that pair of samples. Highly",
+                "correlated samples are depicted as ellipses with narrow",
+                "diameter while while poorly correlated samples are",
+                "depicted as ellipses with wide diameters. Also, highly",
+                "correlated samples are depicted as ellipses with a ",
+                "left-to-right upwards direction while poorly correlated",
+                "samples are depicted as ellipses with a right-to-left",
+                "upwards direction.",collapse=" "
                     ),
                     pairwise=paste(
-                        "The pairwise comparison plots are split in three parts:",
-                        "the upper diagonal consists of simple scatterplots for",
-                        "all pairwise sample comparisons, together with their",
-                        "pearson correlation coefficient. It is a simple measure",
-                        "of between sample correlation using all the available",
-                        "data points instead of only the correlation matrix. The",
-                        "lower diagonal, consist of mean-difference plots for all",
-                        "pairwise sample comparisons. A mean-difference plot (or",
-                        "a Bland-Altman plots) is a method of data plotting used",
-                        "in analyzing the agreement between two different",
-                        "assays/variables. In this graphical method the differences",
-                        "(or alternatively the ratios) between the two variables",
-                        "are plotted against the averages of the two. Such a plot",
-                        "is useful, for example, to analyze data with strong",
-                        "correlation between x and y axes, when the (x,y) dots on",
-                        "the plot are close to the diagonal x=y. In this case, the",
-                        "value of the transformed variable X is about the same as",
-                        "x and y and the variable Y shows the difference between",
-                        "x and y. In both represantations, irregular shapes of the",
-                        "red smoother lines are an indication of poor correlation",
-                        "between samples or of other systematic bias sources,",
-                        "which is usually corrected through data normalization.",
-                        collapse=" "
+                "The pairwise comparison plots are split in three parts:",
+                "the upper diagonal consists of simple scatterplots for",
+                "all pairwise sample comparisons, together with their",
+                "pearson correlation coefficient. It is a simple measure",
+                "of between sample correlation using all the available",
+                "data points instead of only the correlation matrix. The",
+                "lower diagonal, consist of mean-difference plots for all",
+                "pairwise sample comparisons. A mean-difference plot (or",
+                "a Bland-Altman plots) is a method of data plotting used",
+                "in analyzing the agreement between two different",
+                "assays/variables. In this graphical method the differences",
+                "(or alternatively the ratios) between the two variables",
+                "are plotted against the averages of the two. Such a plot",
+                "is useful, for example, to analyze data with strong",
+                "correlation between x and y axes, when the (x,y) dots on",
+                "the plot are close to the diagonal x=y. In this case, the",
+                "value of the transformed variable X is about the same as",
+                "x and y and the variable Y shows the difference between",
+                "x and y. In both represantations, irregular shapes of the",
+                "red smoother lines are an indication of poor correlation",
+                "between samples or of other systematic bias sources,",
+                "which is usually corrected through data normalization.",
+                collapse=" "
                     ),
                     rnacomp=paste(
-                        "The RNA composition plots depict the differences in the",
-                        "distributions of reads in the same biological features",
-                        "across samples. The following is taken from the NOISeq",
-                        "vignette: <em>'...when two samples have different RNA",
-                        "composition, the distribution of sequencing reads across",
-                        "the features is different in such a way that although",
-                        "a feature had the same number of read counts in both",
-                        "samples, it would not mean that it was equally expressed",
-                        "in both... To check if this bias is present in the data,",
-                        "the RNA composition plot and the correponding diagnostic",
-                        "test can be used. In this case, each sample s is compared",
-                        "to the reference sample r (which can be arbitrarily",
-                        "chosen). To do that, M values are computed as",
-                        "log2(counts_sample = counts_reference). If no bias is",
-                        "present, it should be expected that the median of M",
-                        "values for each comparison is 0. Otherwise, it would be",
-                        "indicating that expression levels in one of the samples",
-                        "tend to be higher than in the other, and this could lead",
-                        "to false discoveries when computing differencial expression.",
-                        "Confidence intervals for the M median are also computed by",
-                        "bootstrapping. If value 0 does not fall inside the interval,",
-                        "it means that the deviation of the sample with regard",
-                        "to the reference sample is statistically significant.",
-                        "Therefore, a normalization procedure is required.'</em>",
-                        collapse=" "
+                "The RNA composition plots depict the differences in the",
+                "distributions of reads in the same biological features",
+                "across samples. The following is taken from the NOISeq",
+                "vignette: <em>'...when two samples have different RNA",
+                "composition, the distribution of sequencing reads across",
+                "the features is different in such a way that although",
+                "a feature had the same number of read counts in both",
+                "samples, it would not mean that it was equally expressed",
+                "in both... To check if this bias is present in the data,",
+                "the RNA composition plot and the correponding diagnostic",
+                "test can be used. In this case, each sample s is compared",
+                "to the reference sample r (which can be arbitrarily",
+                "chosen). To do that, M values are computed as",
+                "log2(counts_sample = counts_reference). If no bias is",
+                "present, it should be expected that the median of M",
+                "values for each comparison is 0. Otherwise, it would be",
+                "indicating that expression levels in one of the samples",
+                "tend to be higher than in the other, and this could lead",
+                "to false discoveries when computing differencial expression.",
+                "Confidence intervals for the M median are also computed by",
+                "bootstrapping. If value 0 does not fall inside the interval,",
+                "it means that the deviation of the sample with regard",
+                "to the reference sample is statistically significant.",
+                "Therefore, a normalization procedure is required.'</em>",
+                collapse=" "
                     ),
                     boxplot=paste(
-                        "The boxplot comprises a means of summarizing the read",
-                        "counts distribution of a sample in the form of a bar",
-                        "with extending lines, as a commonly used way of",
-                        "graphically presenting groups of numerical data. A",
-                        "boxplot also indicates which observations, if any, might",
-                        "be considered outliers and is able to visually show",
-                        "different types of populations, without making any",
-                        "assumptions of the underlying statistical distribution.",
-                        "The spacings between the different parts of the box help",
-                        "indicate variance, skewness and identify outliers. The",
-                        "thick bar inside the colored box is the median of the",
-                        "observations while the box extends over the Interquartile",
-                        "Range of the observations. The whiskers extend up (down)",
-                        "to +/-1.5xIQR. Boxplots at similar levels indicate good",
-                        "quality of the normalization. When after normalization",
-                        "boxplots remain at different levels, maybe another",
-                        "normalization algorithm may have to be examined.",
-                        "The un-normalized boxplots show the need for data",
-                        "normalization in order for the data from different",
-                        "samples to follow the same underlying distribution and",
-                        "statistical testing becoming possible.",collapse=" "
+                    "The boxplot comprises a means of summarizing the read",
+                    "counts distribution of a sample in the form of a bar",
+                    "with extending lines, as a commonly used way of",
+                    "graphically presenting groups of numerical data. A",
+                    "boxplot also indicates which observations, if any, might",
+                    "be considered outliers and is able to visually show",
+                    "different types of populations, without making any",
+                    "assumptions of the underlying statistical distribution.",
+                    "The spacings between the different parts of the box help",
+                    "indicate variance, skewness and identify outliers. The",
+                    "thick bar inside the colored box is the median of the",
+                    "observations while the box extends over the Interquartile",
+                    "Range of the observations. The whiskers extend up (down)",
+                    "to +/-1.5xIQR. Boxplots at similar levels indicate good",
+                    "quality of the normalization. When after normalization",
+                    "boxplots remain at different levels, maybe another",
+                    "normalization algorithm may have to be examined.",
+                    "The un-normalized boxplots show the need for data",
+                    "normalization in order for the data from different",
+                    "samples to follow the same underlying distribution and",
+                    "statistical testing becoming possible.",collapse=" "
                     ),
                     gcbias=paste(
-                        "The GC-content bias plot is a quality control chart that",
-                        "shows the possible dependence of the read counts (in log2",
-                        "scale) under a gene to the GC content percentage of that",
-                        "gene. In order for the statistical tests to be able to",
-                        "detect statistical significance which occurs due to real",
-                        "biological effects and not by other systematic biases",
-                        "present in the data (e.g. a possible GC-content bias),",
-                        "the latter should be accounted for by the applied",
-                        "normalization algorithm. Although the tests are performed",
-                        "for each gene across biological conditions one could assume",
-                        "that the GC content does not represent a bias as it's the",
-                        "same for the tested gene across samples and conditions.",
-                        "However, Risso et al. (2011) showed that the GC-content",
-                        "could have an impact in the statistical testing procedure.",
-                        "The GC-content bias plot depicts the dependence of the",
-                        "read counts to the GC content before and after normalization.",
-                        "The smoothing lines for each sample, should be as 'straight'",
-                        "as possible after normalization. In addition, if the",
-                        "smoothing lines differ significantly among biological",
-                        "conditions it would constitute a possible quality warning.",
-                        collapse=" "
+                "The GC-content bias plot is a quality control chart that",
+                "shows the possible dependence of the read counts (in log2",
+                "scale) under a gene to the GC content percentage of that",
+                "gene. In order for the statistical tests to be able to",
+                "detect statistical significance which occurs due to real",
+                "biological effects and not by other systematic biases",
+                "present in the data (e.g. a possible GC-content bias),",
+                "the latter should be accounted for by the applied",
+                "normalization algorithm. Although the tests are performed",
+                "for each gene across biological conditions one could assume",
+                "that the GC content does not represent a bias as it's the",
+                "same for the tested gene across samples and conditions.",
+                "However, Risso et al. (2011) showed that the GC-content",
+                "could have an impact in the statistical testing procedure.",
+                "The GC-content bias plot depicts the dependence of the",
+                "read counts to the GC content before and after normalization.",
+                "The smoothing lines for each sample, should be as 'straight'",
+                "as possible after normalization. In addition, if the",
+                "smoothing lines differ significantly among biological",
+                "conditions it would constitute a possible quality warning.",
+                collapse=" "
                     ),
                     lengthbias=paste(
-                        "The gene/transcript length bias plot is a quality control",
-                        "chart that shows the possible dependence of the read counts",
-                        "(in log2 scale) under a gene to the length that gene (whole",
-                        "gene or sum of exons depending on the analysis). In order",
-                        "for the statistical tests to be able to detect statistical",
-                        "significance which occurs due to real biological effects",
-                        "and not by other systematic biases present in the data",
-                        "(e.g. a possible length bias), the latter should be accounted",
-                        "for by the applied normalization algorithm. Although the",
-                        "tests are performed for each gene across bioogical conditions,",
-                        "one could assume that the gene length does not represent",
-                        "a bias as it's the same for the tested gene across samples",
-                        "and conditions. However, it has been shown in several",
-                        "studies that the gene length could have an impact in the",
-                        "statistical testing procedure. The length bias plot",
-                        "depicts the dependence of the read counts to the",
-                        "gene/transcript length before and after normalization.",
-                        "The smoothing lines for each sample, should be as 'straight'",
-                        "as possible after normalization. In addition, if the",
-                        "smoothing lines differ significantly among biological",
-                        "conditions it would constitute a possible quality warning.",
-                        collapse=" "
+                "The gene/transcript length bias plot is a quality control",
+                "chart that shows the possible dependence of the read counts",
+                "(in log2 scale) under a gene to the length that gene (whole",
+                "gene or sum of exons depending on the analysis). In order",
+                "for the statistical tests to be able to detect statistical",
+                "significance which occurs due to real biological effects",
+                "and not by other systematic biases present in the data",
+                "(e.g. a possible length bias), the latter should be accounted",
+                "for by the applied normalization algorithm. Although the",
+                "tests are performed for each gene across bioogical conditions,",
+                "one could assume that the gene length does not represent",
+                "a bias as it's the same for the tested gene across samples",
+                "and conditions. However, it has been shown in several",
+                "studies that the gene length could have an impact in the",
+                "statistical testing procedure. The length bias plot",
+                "depicts the dependence of the read counts to the",
+                "gene/transcript length before and after normalization.",
+                "The smoothing lines for each sample, should be as 'straight'",
+                "as possible after normalization. In addition, if the",
+                "smoothing lines differ significantly among biological",
+                "conditions it would constitute a possible quality warning.",
+                collapse=" "
                     ),
                     meandiff=paste(
-                        "A mean-difference plot (or a Bland-Altman plot) is a",
-                        "method of data plotting used in analyzing the agreement",
-                        "between two different assays/variables. In this graphical",
-                        "method the differences (or alternatively the ratios)",
-                        "between the two variables are plotted against the averages",
-                        "of the two. Such a plot is useful, for example, to analyze",
-                        "data with strong correlation between x and y axes, when",
-                        "the (x,y) dots on the plot are close to the diagonal x=y.",
-                        "In this case, the value of the transformed variable X is",
-                        "about the same as x and y and the variable Y shows the",
-                        "difference between x and y. When the data cloud in a mean",
-                        "difference plot is centered around the horizontal zero line,",
-                        "this is an indication of good data quality and good",
-                        "normalization results. On the other hand, when the data",
-                        "cloud deviates from the center line or has a 'banana'",
-                        "shape, this constitutes an indication of systematic biases",
-                        "present in the data and that either the chosen normalization",
-                        "algorithm has not worked well, or that data are not",
-                        "normalized. The smoothing curve that traverses the data",
-                        "(red curve) summarizes the above trends.",collapse=" "
+                "A mean-difference plot (or a Bland-Altman plot) is a",
+                "method of data plotting used in analyzing the agreement",
+                "between two different assays/variables. In this graphical",
+                "method the differences (or alternatively the ratios)",
+                "between the two variables are plotted against the averages",
+                "of the two. Such a plot is useful, for example, to analyze",
+                "data with strong correlation between x and y axes, when",
+                "the (x,y) dots on the plot are close to the diagonal x=y.",
+                "In this case, the value of the transformed variable X is",
+                "about the same as x and y and the variable Y shows the",
+                "difference between x and y. When the data cloud in a mean",
+                "difference plot is centered around the horizontal zero line,",
+                "this is an indication of good data quality and good",
+                "normalization results. On the other hand, when the data",
+                "cloud deviates from the center line or has a 'banana'",
+                "shape, this constitutes an indication of systematic biases",
+                "present in the data and that either the chosen normalization",
+                "algorithm has not worked well, or that data are not",
+                "normalized. The smoothing curve that traverses the data",
+                "(red curve) summarizes the above trends.",collapse=" "
                     ),
                     meanvar=paste(
-                        "The mean-variance plot comprises a graphical means to",
-                        "display a possible relationship between the means of",
-                        "gene expression (counts) values and their variances",
-                        "across replicates of the same biological condition. Thus",
-                        "data can be inspected for possible overdispersion (greater",
-                        "variability in a dataset than would be expected based on",
-                        "a given simple statistical model). In such plots for",
-                        "RNA-Seq data, overdispersion is usually manifested as",
-                        "increasing variance with increasing gene expression",
-                        "(counts) and it is summarized through a smoothing curve",
-                        "(red curve). The following is taken from the EDASeq package",
-                        "vignette: '<em>...although the Poisson distribution",
-                        "is a natural and simple way to model count data, it has",
-                        "the limitation of assuming equality of the mean and",
-                        "variance. For this reason, the negative binomial",
-                        "distribution has been proposed as an alternative when the",
-                        "data show over-dispersion...'</em> If overdispersion is",
-                        "not present, the data cloud is expected to be evenly",
-                        "scattered around the smoothing curve.",collapse=" "
+                "The mean-variance plot comprises a graphical means to",
+                "display a possible relationship between the means of",
+                "gene expression (counts) values and their variances",
+                "across replicates of the same biological condition. Thus",
+                "data can be inspected for possible overdispersion (greater",
+                "variability in a dataset than would be expected based on",
+                "a given simple statistical model). In such plots for",
+                "RNA-Seq data, overdispersion is usually manifested as",
+                "increasing variance with increasing gene expression",
+                "(counts) and it is summarized through a smoothing curve",
+                "(red curve). The following is taken from the EDASeq package",
+                "vignette: '<em>...although the Poisson distribution",
+                "is a natural and simple way to model count data, it has",
+                "the limitation of assuming equality of the mean and",
+                "variance. For this reason, the negative binomial",
+                "distribution has been proposed as an alternative when the",
+                "data show over-dispersion...'</em> If overdispersion is",
+                "not present, the data cloud is expected to be evenly",
+                "scattered around the smoothing curve.",collapse=" "
                     ),
                     deheatmap=paste(
-                        "The Differentially Expressed Genes (DEGs) heatmaps depict",
-                        "how well samples from different conditions cluster",
-                        "together according to their expression values after",
-                        "normalization and statistical testing, for each requested",
-                        "statistical contrast. If samples from the same biological",
-                        "condition do not cluster together, this would comprise",
-                        "a warning sign regarding the quality of the samples. In",
-                        "addition, DEG heatmaps provide an initial view of",
-                        "possible clusters of co-expressed genes.",collapse=" "
+                    "The Differentially Expressed Genes (DEGs) heatmaps depict",
+                    "how well samples from different conditions cluster",
+                    "together according to their expression values after",
+                    "normalization and statistical testing, for each requested",
+                    "statistical contrast. If samples from the same biological",
+                    "condition do not cluster together, this would comprise",
+                    "a warning sign regarding the quality of the samples. In",
+                    "addition, DEG heatmaps provide an initial view of",
+                    "possible clusters of co-expressed genes.",collapse=" "
                     ),
                     volcano=paste(
-                        "A volcano plot is a scatterplot that is often used when",
-                        "analysing high-throughput -omics data (e.g. microarray",
-                        "data, RNA-Seq data) to give an overview of interesting",
-                        "genes. The log2 fold change is plotted on the x-axis and",
-                        "the negative log10 p-value is plotted on the y-axis. A",
-                        "volcano plot combines the results of a statistical test",
-                        "(aka, p-values) with the magnitude of the change enabling",
-                        "quick visual identification of those genes that display",
-                        "large-magnitude changes that are also statistically",
-                        "significant. The horizontal dashed line sets the threshold",
-                        "for statistical significance, while the vertical dashed",
-                        "lines set the thresholds for biological significance. You",
-                        "should also keep in mind that when using more than one",
-                        "statistical algorithm and performing meta-analysis, the",
-                        "volcano plots become harder to interpret. This happens",
-                        "because the genes that have stronger evidence of being",
-                        "differentially expressed obtain lower p-values while the",
-                        "rest either remain at similar levels or obtain higher",
-                        "p-values. The result is a 'warped' volcano plot, with two",
-                        "main data clouds: one in the upper part of the plot, and",
-                        "one in the lower part of the plot. You can always zoom in",
-                        "when using interacting mode (the default).",collapse=" "
+                "A volcano plot is a scatterplot that is often used when",
+                "analysing high-throughput -omics data (e.g. microarray",
+                "data, RNA-Seq data) to give an overview of interesting",
+                "genes. The log2 fold change is plotted on the x-axis and",
+                "the negative log10 p-value is plotted on the y-axis. A",
+                "volcano plot combines the results of a statistical test",
+                "(aka, p-values) with the magnitude of the change enabling",
+                "quick visual identification of those genes that display",
+                "large-magnitude changes that are also statistically",
+                "significant. The horizontal dashed line sets the threshold",
+                "for statistical significance, while the vertical dashed",
+                "lines set the thresholds for biological significance. You",
+                "should also keep in mind that when using more than one",
+                "statistical algorithm and performing meta-analysis, the",
+                "volcano plots become harder to interpret. This happens",
+                "because the genes that have stronger evidence of being",
+                "differentially expressed obtain lower p-values while the",
+                "rest either remain at similar levels or obtain higher",
+                "p-values. The result is a 'warped' volcano plot, with two",
+                "main data clouds: one in the upper part of the plot, and",
+                "one in the lower part of the plot. You can always zoom in",
+                "when using interacting mode (the default).",collapse=" "
                     ),
                     biodist=paste(
-                        "The chromosome and biotype distributions bar diagram for",
-                        "Differentially Expressed Genes (DEGs) is split in two",
-                        "panels: i) on the left panel DEGs are distributed per",
-                        "chromosome and the percentage of each chromosome in the",
-                        "genome is presented in grey bars, the percentage of DEGs",
-                        "in each chromosome is presented in red lined bars and the",
-                        "percentage of certain chromosomes in the distribution of",
-                        "DEGs is presented in solid red bars. ii) on the right panel,",
-                        "DEGs are distributed per biotype and the percentage of",
-                        "each biotype in the genome (i.e. in the whole set of",
-                        "features provided, for example, protein coding genes, non",
-                        "coding RNAs or pseudogenes) is presented in grey bars,",
-                        "the percentage of DEGs in each biotype is presented in",
-                        "blue lined bars and the percentage of each biotype in",
-                        "DEGs is presented in solid blue lines. The vertical green",
-                        "line separates the most abundant biotypes (in the left-hand",
-                        "side, corresponding to the left axis scale), from the rest",
-                        "(in the right-hand side, corresponding to the right axis",
-                        "scale). Otherwise, the lower abundance, biotypes would be",
-                        "indistinguishable.",collapse=" "
+                "The chromosome and biotype distributions bar diagram for",
+                "Differentially Expressed Genes (DEGs) is split in two",
+                "panels: i) on the left panel DEGs are distributed per",
+                "chromosome and the percentage of each chromosome in the",
+                "genome is presented in grey bars, the percentage of DEGs",
+                "in each chromosome is presented in red lined bars and the",
+                "percentage of certain chromosomes in the distribution of",
+                "DEGs is presented in solid red bars. ii) on the right panel,",
+                "DEGs are distributed per biotype and the percentage of",
+                "each biotype in the genome (i.e. in the whole set of",
+                "features provided, for example, protein coding genes, non",
+                "coding RNAs or pseudogenes) is presented in grey bars,",
+                "the percentage of DEGs in each biotype is presented in",
+                "blue lined bars and the percentage of each biotype in",
+                "DEGs is presented in solid blue lines. The vertical green",
+                "line separates the most abundant biotypes (in the left-hand",
+                "side, corresponding to the left axis scale), from the rest",
+                "(in the right-hand side, corresponding to the right axis",
+                "scale). Otherwise, the lower abundance, biotypes would be",
+                "indistinguishable.",collapse=" "
                     ),
                     filtered=paste(
-                        "The chromosome and biotype distribution of filtered genes",
-                        "is a quality control chart with two rows and four panels:",
-                        "on the left panel of the first row, the bar chart depicts",
-                        "the numbers of filtered genes per chromosome (actual numbers",
-                        "shown above the bars). On the right panel of the first row,",
-                        "the bar chart depicts the numbers of filtered genes per",
-                        "biotype (actual numbers shown above the bars). On the left",
-                        "panel of the second row, the bar chart depicts the fraction",
-                        "of the filtered genes to the total genes per chromosome",
-                        "(actual percentages shown above the bars). On the right",
-                        "panel of the second row, the bar chart depicts the fraction",
-                        "of the filtered genes to the total genes per biotype",
-                        "(actual percentages shown above the bars). This plot",
-                        "should indicate possible quality problems when for example",
-                        "the filtered genes for a specific chromosome (or the",
-                        "fraction) is extremely higher than the rest. Generally,",
-                        "the fractions per chromosome should be uniform and the",
-                        "fractions per biotype should be proportional to the biotype",
-                        "fraction relative to the genome.",collapse=" "
+                "The chromosome and biotype distribution of filtered genes",
+                "is a quality control chart with two rows and four panels:",
+                "on the left panel of the first row, the bar chart depicts",
+                "the numbers of filtered genes per chromosome (actual numbers",
+                "shown above the bars). On the right panel of the first row,",
+                "the bar chart depicts the numbers of filtered genes per",
+                "biotype (actual numbers shown above the bars). On the left",
+                "panel of the second row, the bar chart depicts the fraction",
+                "of the filtered genes to the total genes per chromosome",
+                "(actual percentages shown above the bars). On the right",
+                "panel of the second row, the bar chart depicts the fraction",
+                "of the filtered genes to the total genes per biotype",
+                "(actual percentages shown above the bars). This plot",
+                "should indicate possible quality problems when for example",
+                "the filtered genes for a specific chromosome (or the",
+                "fraction) is extremely higher than the rest. Generally,",
+                "the fractions per chromosome should be uniform and the",
+                "fractions per biotype should be proportional to the biotype",
+                "fraction relative to the genome.",collapse=" "
                     ),
                     venn=paste(
-                        "The Venn diagrams are an intuitive way of presenting",
-                        "overlaps between lists, based on the overlap of basic",
-                        "geometrical shapes. The numbers of overlapping genes per",
-                        "statistical algorithm are shown in the different areas",
-                        "of the Venn diagrams, one for each contrast.",collapse=" "
+                    "The Venn diagrams are an intuitive way of presenting",
+                    "overlaps between lists, based on the overlap of basic",
+                    "geometrical shapes. The numbers of overlapping genes per",
+                    "statistical algorithm are shown in the different areas",
+                    "of the Venn diagrams, one for each contrast.",collapse=" "
                     )
                 ),
                 references=list(
                     filein=list(
-                        sam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
-                        bam="Statham, A.L., Strbenac, D., Coolen, M.W., Stirzaker, C., Clark, S.J., Robinson, M.D. (2010). Repitools: an R package for the analysis of enrichment-based epigenomic data. Bioinformatics 26(13), 1662-1663.",
-                        bed="Lawrence, M., Gentleman, R., Carey, V. (2009). rtracklayer: an R package for interfacing with genome browsers. Bioinformatics 25(14), 1841-1842."
+                        sam=paste("Statham, A.L., Strbenac, D., Coolen, M.W.,",
+                            "Stirzaker, C., Clark, S.J., Robinson, M.D. (2010).",
+                            "Repitools: an R package for the analysis of",
+                            "enrichment-based epigenomic data. Bioinformatics",
+                            "26(13), 1662-1663."),
+                        bam=paste("Statham, A.L., Strbenac, D., Coolen, M.W.,",
+                            "Stirzaker, C., Clark, S.J., Robinson, M.D. (2010).",
+                            "Repitools: an R package for the analysis of",
+                            "enrichment-based epigenomic data. Bioinformatics",
+                            "26(13), 1662-1663."),
+                        bed=paste("Lawrence, M., Gentleman, R., Carey, V.",
+                            "(2009). rtracklayer: an R package for interfacing",
+                            "with genome browsers. Bioinformatics 25(14),",
+                            "1841-1842.")
                     ),
                     norm=list(
-                        edaseq="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-                        deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
-                        edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
-                        noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        nbpseq="Di, Y, Schafer, D., Cumbie, J.S., and Chang, J.H. (2011). The NBP Negative Binomial Model for Assessing Differential Gene Expression from RNA-Seq. Statistical Applications in Genetics and Molecular Biology 10(1), 1-28.",
+                        edaseq=paste("Risso, D., Schwartz, K., Sherlock, G.,",
+                            "and Dudoit, S. (2011). GC-content normalization",
+                            "for RNA-Seq data. BMC Bioinformatics 12, 480."),
+                        deseq=paste("Anders, S., and Huber, W. (2010).",
+                            "Differential expression analysis for sequence",
+                            "count data. Genome Biol 11, R106."),
+                        edger=paste("Robinson, M.D., McCarthy, D.J., and",
+                            "Smyth, G.K. (2010). edgeR: a Bioconductor package",
+                            "for differential expression analysis of digital",
+                            "gene expression data. Bioinformatics 26,",
+                            "139-140."),
+                        noiseq=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        nbpseq=paste("Di, Y, Schafer, D., Cumbie, J.S., and",
+                            "Chang, J.H. (2011). The NBP Negative Binomial",
+                            "Model for Assessing Differential Gene Expression",
+                            "from RNA-Seq. Statistical Applications in",
+                            "Genetics and Molecular Biology 10(1), 1-28."),
                         none=NULL
                     ),
                     stat=list(
-                        deseq="Anders, S., and Huber, W. (2010). Differential expression analysis for sequence count data. Genome Biol 11, R106.",
-                        edger="Robinson, M.D., McCarthy, D.J., and Smyth, G.K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26, 139-140.",
-                        noiseq="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        limma="Smyth, G. (2005). Limma: linear models for microarray data. In Bioinformatics and Computational Biology Solutions using R and Bioconductor, G. R., C. V., D. S., I. R., and H. W., eds. (New York, Springer), pp. 397-420.",
-                        bayseq="Hardcastle, T.J., and Kelly, K.A. (2010). baySeq: empirical Bayesian methods for identifying differential expression in sequence count data. BMC Bioinformatics 11, 422.",
-                        nbpseq="Di, Y, Schafer, D. (2012): NBPSeq: Negative Binomial Models for RNA-Sequencing Data. R package version 0.1.8, http://CRAN.R-project.org/package=NBPSeq.",
-                        ebseq="Leng, N., Dawson, J.A., Thomson, J.A., Ruotti, V., Rissman, A.I., Smits, B.M., Haag, J.D., Gould, M.N., Stewart, R.M., and Kendziorski, C. (2013). EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments. Bioinformatics 29, 1035-1043"
+                        deseq=paste("Anders, S., and Huber, W. (2010).",
+                            "Differential expression analysis for sequence",
+                            "count data. Genome Biol 11, R106."),
+                        edger=paste("Robinson, M.D., McCarthy, D.J., and",
+                            "Smyth, G.K. (2010). edgeR: a Bioconductor package",
+                            "for differential expression analysis of digital",
+                            "gene expression data. Bioinformatics 26,",
+                            "139-140."),
+                        noiseq=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        limma=paste("Smyth, G. (2005). Limma: linear models",
+                            "for microarray data. In Bioinformatics and",
+                            "Computational Biology Solutions using R and",
+                            "Bioconductor, G. R., C. V., D. S., I. R., and",
+                            "H. W., eds. (New York, Springer), pp. 397-420."),
+                        bayseq=paste("Hardcastle, T.J., and Kelly, K.A.",
+                            "(2010). baySeq: empirical Bayesian methods for",
+                            "identifying differential expression in sequence",
+                            "count data. BMC Bioinformatics 11, 422."),
+                        nbpseq=paste("Di, Y, Schafer, D., Cumbie, J.S., and",
+                            "Chang, J.H. (2011). The NBP Negative Binomial",
+                            "Model for Assessing Differential Gene Expression",
+                            "from RNA-Seq. Statistical Applications in",
+                            "Genetics and Molecular Biology 10(1), 1-28."),
+                        ebseq=paste("Leng, N., Dawson, J.A., Thomson, J.A.,",
+                            "Ruotti, V., Rissman, A.I., Smits, B.M., Haag,",
+                            "J.D., Gould, M.N., Stewart, R.M., and",
+                            "Kendziorski, C. (2013). EBSeq: an empirical",
+                            "Bayes hierarchical model for inference in",
+                            "RNA-seq experiments. Bioinformatics 29, 1035-1043")
                     ),
                     meta=list(
-                        fisher="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
-                        fperm="Fisher, R.A. (1932). Statistical Methods for Research Workers (Edinburgh, Oliver and Boyd).",
+                        fisher=paste("Fisher, R.A. (1932). Statistical",
+                            "Methods for Research Workers (Edinburgh, Oliver",
+                            "and Boyd)."),
+                        fperm=paste("Fisher, R.A. (1932). Statistical",
+                            "Methods for Research Workers (Edinburgh, Oliver",
+                            "and Boyd)."),
                         whitlock=c(
-                            "Whitlock, M.C. (2005). Combining probability from independent tests: the weighted Z-method is superior to Fisher's approach. J Evol Biol 18, 1368-1373.",
-                            "Schroder, M.S., Culhane, A.C., Quackenbush, J., and Haibe-Kains, B. (2011). survcomp: an R/Bioconductor package for performance assessment and comparison of survival models. Bioinformatics 27, 3206-3208."
+                            paste("Whitlock, M.C. (2005). Combining",
+                                "probability from independent tests:",
+                                "the weighted Z-method is superior to Fisher's",
+                                "approach. J Evol Biol 18, 1368-1373."),
+                            paste("Schroder, M.S., Culhane, A.C., Quackenbush,",
+                                "J., and Haibe-Kains, B. (2011). survcomp:",
+                                "an R/Bioconductor package for performance",
+                                "assessment and comparison of survival",
+                                "models. Bioinformatics 27, 3206-3208.")
                         ),
-                        weight="Genovese, C.R., Roeder, K., Wasserman, L. (2006). False discovery control with p-value weighting. Biometrika 93 (3): 509-524.",
-                        simes="Simes, R. J. (1986). An improved Bonferroni procedure for multiple tests of significance. Biometrika 73 (3): 751-754.",
+                        weight=paste("Genovese, C.R., Roeder, K., Wasserman,",
+                            "L. (2006). False discovery control with p-value",
+                            "weighting. Biometrika 93 (3): 509-524."),
+                        simes=paste("Simes, R. J. (1986). An improved",
+                            "Bonferroni procedure for multiple tests of",
+                            "significance. Biometrika 73 (3): 751-754."),
                         none=NULL
                     ),
                     multiple=list(
-                        BH="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
-                        fdr="Benjamini, Y., and Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. Journal of the Royal Statistical Society Series B (Methodological) 57, 289-300.",
-                        BY="Benjamini, Y., and Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. Annals of Statistics 26, 1165-1188.",
-                        bonferroni="Shaffer, J.P. (1995). Multiple hypothesis testing. Annual Review of Psychology 46, 561-576.",
-                        holm="Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics 6, 65-70.",
-                        hommel="Hommel, G. (1988). A stagewise rejective multiple test procedure based on a modified Bonferroni test. Biometrika 75, 383-386.",
-                        hochberg="Hochberg, Y. (1988). A sharper Bonferroni procedure for multiple tests of significance. Biometrika 75, 800-803.",
-                        qvalue="Storey, J.D., and Tibshirani, R. (2003). Statistical significance for genomewide studies. Proc Natl Acad Sci U S A 100, 9440-9445."
+                        BH=paste("Benjamini, Y., and Hochberg, Y. (1995). ",
+                            "Controlling the False Discovery Rate: A Practical",
+                            "and Powerful Approach to Multiple Testing.",
+                            "Journal of the Royal Statistical Society Series",
+                            "B (Methodological) 57, 289-300."),
+                        fdr=paste("Benjamini, Y., and Hochberg, Y. (1995). ",
+                            "Controlling the False Discovery Rate: A Practical",
+                            "and Powerful Approach to Multiple Testing.",
+                            "Journal of the Royal Statistical Society Series",
+                            "B (Methodological) 57, 289-300."),
+                        BY=paste("Benjamini, Y., and Yekutieli, D. (2001). The",
+                            "control of the false discovery rate in multiple",
+                            "testing under dependency. Annals of Statistics",
+                            "26, 1165-1188."),
+                        bonferroni=paste("Shaffer, J.P. (1995). Multiple",
+                            "hypothesis testing. Annual Review of",
+                            "Psychology 46, 561-576."),
+                        holm=paste("Holm, S. (1979). A simple sequentially",
+                            "rejective multiple test procedure. Scandinavian",
+                            "Journal of Statistics 6, 65-70."),
+                        hommel=paste("Hommel, G. (1988). A stagewise rejective",
+                            "multiple test procedure based on a modified",
+                            "Bonferroni test. Biometrika 75, 383-386."),
+                        hochberg=paste("Hochberg, Y. (1988). A sharper",
+                            "Bonferroni procedure for multiple tests of",
+                            "significance. Biometrika 75, 800-803."),
+                        qvalue=paste("Storey, J.D., and Tibshirani, R. (2003).",
+                            "Statistical significance for genomewide studies.",
+                            "Proc Natl Acad Sci U S A 100, 9440-9445.")
                     ),
                     figure=list(
-                        mds="Planet, E., Attolini, C.S., Reina, O., Flores, O., and Rossell, D. (2012). htSeqTools: high-throughput sequencing quality control, processing and visualization in R. Bioinformatics 28, 589-590.",
-                        biodetection="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        countsbio="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        saturation="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        readnoise="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        gcbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-                        lengthbias="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-                        meandiff="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-                        meanvar="Risso, D., Schwartz, K., Sherlock, G., and Dudoit, S. (2011). GC-content normalization for RNA-Seq data. BMC Bioinformatics 12, 480.",
-                        rnacomp="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        biodist="Tarazona, S., Garcia-Alcalde, F., Dopazo, J., Ferrer, A., and Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome Res 21, 2213-2223.",
-                        venn="Chen, H., and Boutros, P.C. (2011). VennDiagram: a package for the generation of highly-customizable Venn and Euler diagrams in R. BMC Bioinformatics 12, 35.",
+                        mds=paste("Planet, E., Attolini, C.S., Reina, O.,",
+                            "Flores, O., and Rossell, D. (2012). htSeqTools:",
+                            "high-throughput sequencing quality control,",
+                            "processing and visualization in R. Bioinformatics",
+                            "28, 589-590."),
+                        biodetection=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        countsbio=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        saturation=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        readnoise=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        gcbias=paste("Risso, D., Schwartz, K., Sherlock, G.,",
+                            "and Dudoit, S. (2011). GC-content normalization",
+                            "for RNA-Seq data. BMC Bioinformatics 12, 480."),
+                        lengthbias=paste("Risso, D., Schwartz, K., Sherlock,",
+                            "G., and Dudoit, S. (2011). GC-content",
+                            "normalization for RNA-Seq data.",
+                            "BMC Bioinformatics 12, 480."),
+                        meandiff=paste("Risso, D., Schwartz, K., Sherlock, G.,",
+                            "and Dudoit, S. (2011). GC-content normalization",
+                            "for RNA-Seq data. BMC Bioinformatics 12, 480."),
+                        meanvar=paste("Risso, D., Schwartz, K., Sherlock, G.,",
+                            "and Dudoit, S. (2011). GC-content normalization",
+                            "for RNA-Seq data. BMC Bioinformatics 12, 480."),
+                        rnacomp=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        biodist=paste("Tarazona, S., Garcia-Alcalde, F.,",
+                            "Dopazo, J., Ferrer, A., and Conesa, A. (2011).",
+                            "Differential expression in RNA-seq: a matter of",
+                            "depth. Genome Res 21, 2213-2223."),
+                        venn=paste("Chen, H., and Boutros, P.C. (2011).",
+                            "VennDiagram: a package for the generation of",
+                            "highly-customizable Venn and Euler diagrams in R.",
+                            "BMC Bioinformatics 12, 35."),
                         filtered=NULL
                     )
                 )

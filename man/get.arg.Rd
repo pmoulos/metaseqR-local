@@ -2,22 +2,22 @@
 \alias{get.arg}
 \title{Argument getter}
 \usage{
-  get.arg(arg.list, arg.name)
+    get.arg(arg.list, arg.name)
 }
 \arguments{
-  \item{arg.list}{the initial list of a method's (e.g.
-  normalization) arguments. Can be created with the
-  \code{\link{get.defaults}} function.}
+    \item{arg.list}{the initial list of a method's (e.g.
+    normalization) arguments. Can be created with the
+    \code{\link{get.defaults}} function.}
 
-  \item{arg.name}{the argument name inside the argument
-  list to fetch its value.}
+    \item{arg.name}{the argument name inside the argument
+    list to fetch its value.}
 }
 \value{
-  The argument sub-list.
+    The argument sub-list.
 }
 \description{
-  Get argument(s) from a list of arguments, e.g.
-  normalization arguments.
+    Get argument(s) from a list of arguments, e.g.
+    normalization arguments.
 }
 \examples{
 \donttest{
@@ -26,6 +26,6 @@ a <- get.arg(norm.list,c("main.method","logratioTrim"))
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

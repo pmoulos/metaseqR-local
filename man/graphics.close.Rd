@@ -2,14 +2,14 @@
 \alias{graphics.close}
 \title{Close plotting device}
 \usage{
-  graphics.close(o)
+    graphics.close(o)
 }
 \arguments{
-  \item{o}{the plotting device, see main metaseqr function}
+    \item{o}{the plotting device, see main metaseqr function}
 }
 \description{
-  Wrapper function to close a plotting device. Internal use
-  only.
+    Wrapper function to close a plotting device. Internal use
+    only.
 }
 \examples{
 \donttest{
@@ -17,6 +17,6 @@ graphics.close("pdf")
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

@@ -2,22 +2,22 @@
 \alias{make.html.header}
 \title{HTML report helper}
 \usage{
-  make.html.header(h)
+    make.html.header(h)
 }
 \arguments{
-  \item{h}{the colnames of a matrix or data frame, usually
-  as output of \code{\link{make.html.cells}} function.}
+    \item{h}{the colnames of a matrix or data frame, usually
+    as output of \code{\link{make.html.cells}} function.}
 }
 \value{
-  A character vector with html formatted header of a
-  matrix.
+    A character vector with html formatted header of a
+    matrix.
 }
 \description{
-  Returns a character vector with an html formatted table
-  head row. Essentially, it collapses the input row to a
-  single character and puts a <th></th> tag set around. It
-  is meant to be applied to the output of
-  \code{\link{make.html.cells}}. Internal use.
+    Returns a character vector with an html formatted table
+    head row. Essentially, it collapses the input row to a
+    single character and puts a <th></th> tag set around. It
+    is meant to be applied to the output of
+    \code{\link{make.html.cells}}. Internal use.
 }
 \examples{
 \donttest{
@@ -29,6 +29,6 @@ the.header <- make.html.header(the.cells[1,])
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

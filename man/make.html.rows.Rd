@@ -2,21 +2,21 @@
 \alias{make.html.rows}
 \title{HTML report helper}
 \usage{
-  make.html.rows(mat)
+    make.html.rows(mat)
 }
 \arguments{
-  \item{mat}{the data matrix, usually the output of
-  \code{\link{make.html.cells}} function.}
+    \item{mat}{the data matrix, usually the output of
+    \code{\link{make.html.cells}} function.}
 }
 \value{
-  A character vector with html formatted rows of a matrix.
+    A character vector with html formatted rows of a matrix.
 }
 \description{
-  Returns a character vector with html formatted rows.
-  Essentially, it collapses every row of a matrix to a
-  single character and puts a <tr></tr> tag set around. It
-  is meant to be applied to the output of
-  \code{\link{make.html.cells}}. Internal use.
+    Returns a character vector with html formatted rows.
+    Essentially, it collapses every row of a matrix to a
+    single character and puts a <tr></tr> tag set around. It
+    is meant to be applied to the output of
+    \code{\link{make.html.cells}}. Internal use.
 }
 \examples{
 \donttest{
@@ -28,6 +28,6 @@ the.rows <- make.html.rows(the.cells)
 }
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 

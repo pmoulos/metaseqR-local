@@ -4,14 +4,14 @@
 \title{Human RNA-Seq data with three conditions, three samples}
 \format{a named \code{list} with library sizes.}
 \source{
-  GEO (http://www.ncbi.nlm.nih.gov/geo/)
+    GEO (http://www.ncbi.nlm.nih.gov/geo/)
 }
 \description{
-  The library size list for \code{hg19.exon.counts}. See
-  the data set description.
+    The library size list for \code{hg19.exon.counts}. See
+    the data set description.
 }
 \author{
-  Panagiotis Moulos
+    Panagiotis Moulos
 }
 \keyword{datasets}
 
