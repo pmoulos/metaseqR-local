@@ -1,3 +1,34 @@
+#' Main argument validator
+#'
+#' Checks if the arguments passed to \code{\link{metaseqr}} are valid and throws
+#' a warning about the invalid ones (which are ignored anyway because of the
+#' \code{...} in \code{\link{metaseqr}}. However, for this reason this function
+#' is useful as some important parameter faults might go unnoticed in the beginning
+#' and cause a failure afterwards. Internal use.
+#' 
+#' @param main.args a list of parameters with which metaseqr is called (essentially,
+#' the output of \code{\link{match.call}}.
+#' @author Panagiotis Moulos
+check.main.args <- function(main.args) {
+    in.args <- names(main.args)[-1] # 1st member name of calling function
+    valid.args <- c(
+        "counts","sample.list","file.type","path","contrast","libsize.list",
+        "id.col","gc.col","name.col","bt.col","annotation","org","count.type",
+        "exon.filters","gene.filters","when.apply.filter","normalization",
+        "norm.args","statistics","stat.args","adjust.method","meta.p","weight",
+        "nperm","reprod","pcut","log.offset","preset","qc.plots","fig.format",
+        "out.list","export.where","export.what","export.scale","export.values",
+        "export.stats","export.counts.table","restrict.cores","report",
+        "report.top","report.template","verbose","run.log"
+    )
+    invalid <- setdiff(in.args,valid.args)
+    if (length(invalid) > 0) {
+        for (i in 1:length(invalid))
+            warnwrap("Unknown input argument to metaseqr pipeline: ",invalid[i],
+                " ...Ignoring...",now=TRUE)
+    }
+}
+
 #' Text argument validator
 #'
 #' Checks if one or more given textual argument(s) is/are member(s) of a list of 
@@ -287,15 +318,14 @@ check.libsize <- function(libsize.list,sample.list) {
 #' options. Internal use only.
 #'
 #' @param m meta-analysis method
-#' @param s data transformation method
 #' @param p qc plot types
 #' @author Panagiotis Moulos
 #' @export
 #' @examples
 #' \dontrun{
-#' check.packages(c("simes","whitlock"),c("vsn"),c("gcbias","correl"))
+#' check.packages(c("simes","whitlock"),c("gcbias","correl"))
 #}
-check.packages <- function(m,s,p) {
+check.packages <- function(m,p) {
     # Check meta-analysis packages
     if (m %in% c("fisher","fperm") && !require(MADAM))
         stopwrap("R package MADAM is required for \"fisher\", \"perm\" or ",
@@ -303,10 +333,10 @@ check.packages <- function(m,s,p) {
     if (m=="whitlock" && !require(survcomp))
         stopwrap("Bioconductor package survcomp is required for \"whitlock\" ",
             "p-value meta analysis!")
-    # Check VST
-    if (("vst" %in% s) && !require(vsn))
-        stopwrap("Bioconductor package vsn is required for \"vsn\" count data ",
-            "transformation!")
+    ## Check VST
+    #if (("vst" %in% s) && !require(vsn))
+    #    stopwrap("Bioconductor package vsn is required for \"vsn\" count data ",
+    #        "transformation!")
     if ("venn" %in% p && !require(VennDiagram))
         stopwrap("R package VennDiagram is required for some of the selected ",
             "QC plots!")

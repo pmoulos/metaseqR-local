@@ -866,8 +866,7 @@ metaseqr <- function(
         PROJECT.PATH <- make.project.path(export.where)
     else
         PROJECT.PATH <- make.project.path(export.where,counts)
-    VERBOSE <- NULL
-    VERBOSE <<- verbose
+    assign("VERBOSE",verbose,envir=meta.env)
     # Check logger, here
     if (run.log && suppressWarnings(!require(log4r)))
     {
@@ -875,10 +874,15 @@ metaseqr <- function(
             "not be created...")
         run.log <- FALSE
     }
-    LOGGER <- NULL
     if (run.log)
-        LOGGER <<- create.logger(logfile=file.path(PROJECT.PATH$main,
+        logger <- create.logger(logfile=file.path(PROJECT.PATH$main,
             "metaseqr_run.log"),level=2,logformat="%d %c %m")
+    else
+        logger <- NULL
+    assign("LOGGER",logger,envir=meta.env)
+
+    # Check if there are any mispelled or invalid parameters and throw a warning
+    check.main.args(as.list(match.call()))
     
     # Check if sample names match in file/df and list, otherwise meaningless to proceed
     if (!from.raw)
@@ -983,7 +987,7 @@ metaseqr <- function(
         sample.list)
 
     # Check main functionality packages
-    check.packages(meta.p,export.scale,qc.plots)
+    check.packages(meta.p,qc.plots)
     # Check if parallel processing is available
     multic <- check.parallel(restrict.cores)
     # Check the case of embedded annotation but not given gc and gene name columns

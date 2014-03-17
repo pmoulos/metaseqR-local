@@ -191,14 +191,18 @@ diagplot.metaseqr <- function(object,sample.list,annotation=NULL,contrast.list=N
                 meandiff = {
                     fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,
                         which.plot=p,output=output,path=path,...)
-                    for (n in names(fil))
-                        files$meandiff[[n]] <- unlist(fil[[n]])
+                    for (n in names(fil)) {
+                        if (!is.null(fil[[n]]))
+                            files$meandiff[[n]] <- unlist(fil[[n]])
+                    }
                 },
                 meanvar = {
                     fil <- diagplot.edaseq(object,sample.list,is.norm=is.norm,
                         which.plot=p,output=output,path=path,...)
-                    for (n in names(fil))
-                        files$meanvar[[n]] <- unlist(fil[[n]])
+                    for (n in names(fil)) {
+                        if (!is.null(fil[[n]]))
+                            files$meanvar[[n]] <- unlist(fil[[n]])
+                    }
                 },
                 rnacomp = {
                     files$rnacomp <- diagplot.noiseq(object,sample.list,covars,

@@ -20,6 +20,7 @@ Imports:
     gplots,
     corrplot,
     qvalue,
+    vsn,
     brew,
     rjson
 Suggests:
@@ -30,7 +31,6 @@ Suggests:
     Repitools,
     MADAM,
     survcomp,
-    vsn,
     VennDiagram,
     knitr,
     zoo,
@@ -54,8 +54,8 @@ biocViews: Software, GeneExpression, DifferentialExpression, WorkflowStep,
 VignetteBuilder: knitr
 Authors@R: c(person(given="Panagiotis", family="Moulos",
     email="moulos@fleming.gr", role=c("aut", "cre")))
-Version: 0.99.2
-Date: 2014-03-14
+Version: 0.99.3
+Date: 2014-03-17
 Collate:
     'metaseqr.argcheck.R'
     'metaseqr-data.R'

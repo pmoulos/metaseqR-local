@@ -10,6 +10,10 @@ import(qvalue)
 import(brew)
 import(rjson)
 
+importFrom("vsn",vsn)
+importFrom("vsn",vsn2)
+importFrom("vsn",predict)
+
 importFrom("DESeq",adjustScvForBias)
 importFrom("DESeq",conditions)
 importFrom("DESeq",counts)

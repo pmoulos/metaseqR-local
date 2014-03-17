@@ -4,8 +4,8 @@
 #' \tabular{ll}{
 #' Package: \tab metaseqR\cr
 #' Type: \tab Package\cr
-#' Version: \tab 0.99.2\cr
-#' Date: \tab 2014-03-14\cr
+#' Version: \tab 0.99.3\cr
+#' Date: \tab 2014-03-17\cr
 #' Depends: \tab R (>= 2.13.0), Biobase, BiocGenerics, rjson, biomaRt, utils,
 #' knitr, EDASeq, DESeq, edgeR, limma, NOISeq, baySeq, NBPSeq, MADAM, survcomp,
 #' brew, gplots, corrplot, GenomicRanges, Rsamtools, rtracklayer, Repitools,
@@ -28,3 +28,6 @@
 #' @author Panagiotis Moulos \email{moulos@@fleming.gr}
 #' @keywords package
 NULL
+
+# Package environment to store a couple of variables that must be global
+meta.env <- new.env(parent=emptyenv())

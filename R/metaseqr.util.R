@@ -80,7 +80,7 @@ read2count <- function(files.list,file.type,annotation,has.all.fields=FALSE,
             seqnames.field="chromosome"
         )
 
-    sample.names <- as.character(sapply(files.list,names))
+    sample.names <- unlist(lapply(files.list,names),use.names=FALSE)
     sample.files <- unlist(files.list,use.names=FALSE)
     names(sample.files) <- sample.names
     counts <- matrix(0,nrow=length(annotation.gr),ncol=length(sample.names))
@@ -3284,51 +3284,42 @@ filter.high <- function(x,f) { return(all(x>=f)) }
 #' disp("Now running iteration ",i,"...")
 #'}
 disp <- function(...) {
-    if (exists("VERBOSE")) {
-        verbose <- get("VERBOSE")
-        if (!is.null(verbose) && verbose) {
-            #cat("\n",...,sep="")
-            message("\n",...,appendLF=FALSE)
-            #flush.console()
-        }
-    }
-    else
+    verbose <- get("VERBOSE",envir=meta.env)
+    if (!is.null(verbose) && verbose) {
         message("\n",...,appendLF=FALSE)
-    if (exists("LOGGER")) {
-        logger <- get("LOGGER")
-        levalias <- c("one","two","three","four","five")
-        if (!is.null(logger)) {
-            switch(levalias[level(logger)],
-                one = { debug(logger,paste0(...)) },
-                two = { info(logger,gsub("\\n","",paste0(...))) },
-                three = { warn(logger,gsub("\\n","",paste0(...))) },
-                four = { error(logger,gsub("\\n","",paste0(...))) },
-                five = { fatal(logger,gsub("\\n","",paste0(...))) }
-            )
-        }
+    }
+    logger <- get("LOGGER",envir=meta.env)
+    levalias <- c("one","two","three","four","five")
+    if (!is.null(logger)) {
+        switch(levalias[level(logger)],
+            one = { debug(logger,paste0(...)) },
+            two = { info(logger,gsub("\\n","",paste0(...))) },
+            three = { warn(logger,gsub("\\n","",paste0(...))) },
+            four = { error(logger,gsub("\\n","",paste0(...))) },
+            five = { fatal(logger,gsub("\\n","",paste0(...))) }
+        )
     }
 }
 
 stopwrap <- function(...,t="fatal") {
-    if (exists("LOGGER")) {
-        logger <- get("LOGGER")
-        if (!is.null(logger)) {
-            if (t=="fatal")
-                fatal(logger,gsub("\\n","",paste0(...)))
-            else
-                error(logger,gsub("\\n","",paste0(...)))
-        }
+    logger <- get("LOGGER",envir=meta.env)
+    if (!is.null(logger)) {
+        if (t=="fatal")
+            fatal(logger,gsub("\\n","",paste0(...)))
+        else
+            error(logger,gsub("\\n","",paste0(...)))
     }
     stop(paste0(...))
 }
 
-warnwrap <- function(...) {
-    if (exists("LOGGER")) {
-        logger <- get("LOGGER")
-        if (!is.null("logger"))
-            warn(logger,gsub("\\n","",paste0(...)))
-    }
-    warning(paste0(...),call.=FALSE)
+warnwrap <- function(...,now=FALSE) {
+    logger <- get("LOGGER",envir=meta.env)
+    if (!is.null("logger"))
+        warn(logger,gsub("\\n","",paste0(...)))
+    if (now)
+        warning(paste0(...),call.=FALSE,immediate.=TRUE)
+    else
+        warning(paste0(...),call.=FALSE)
 }
 
 elap2human <- function(start.time) {

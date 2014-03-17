@@ -315,7 +315,8 @@
                                     } else {
                                         cat(" using the Bioconductor package ",report.messages$stat[[statistics]],". ",sep="")
                                     }
-                                    if (pcut==1) plasm <- 0.05 else plasm <- pcut
+                                    if (!is.na(pcut))
+                                        if (pcut==1) plasm <- 0.05 else plasm <- pcut
                                     cat("The final numbers of differentially expressed genes were (per contrast): ")
                                     msg.contrast <- character(length(contrast))
                                     names(msg.contrast) <- contrast
@@ -539,7 +540,7 @@
                                 <div id="summary_nde_container">
                                     <strong>Number of differentially expressed genes per contrast: </strong>
                                     <%
-                                    if (pcut==1)
+                                    if (!is.na(pcut) && pcut==1)
                                         cat("The p-value cutoff during the analysis was set to 1 so as to retrieve the total gene list which passed the ",
                                             "filtering procedure. Each gene in the list is accompanied by its statistical scores (p-value, FDR, etc.)</br>")
                                     %>
@@ -552,7 +553,7 @@
                                             else if (is.na(pcut))
                                                 cat("no statistical threshold defined","</li>")
                                             else {
-                                                if (pcut==1)
+                                                if (!is.na(pcut) && pcut==1)
                                                     plasm <- 0.05
                                                 else
                                                     plasm <- pcut

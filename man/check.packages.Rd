@@ -2,12 +2,10 @@
 \alias{check.packages}
 \title{Required packages validator}
 \usage{
-    check.packages(m, s, p)
+    check.packages(m, p)
 }
 \arguments{
     \item{m}{meta-analysis method.}
-
-    \item{s}{data transformation method.}
     
     \item{p}{QC plot types.}
 }
@@ -17,7 +15,7 @@
     to metaseqR input options. Internal use only.
 }
 \examples{
-check.packages(c("simes","whitlock"),c("vsn"),
+check.packages(c("simes","whitlock"),
     c("gcbias","correl"))
 }
 \author{
