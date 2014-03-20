@@ -333,10 +333,6 @@ check.packages <- function(m,p) {
     if (m=="whitlock" && !require(survcomp))
         stopwrap("Bioconductor package survcomp is required for \"whitlock\" ",
             "p-value meta analysis!")
-    ## Check VST
-    #if (("vst" %in% s) && !require(vsn))
-    #    stopwrap("Bioconductor package vsn is required for \"vsn\" count data ",
-    #        "transformation!")
     if ("venn" %in% p && !require(VennDiagram))
         stopwrap("R package VennDiagram is required for some of the selected ",
             "QC plots!")

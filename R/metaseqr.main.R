@@ -1211,7 +1211,7 @@ metaseqr <- function(
         #    disp("Reading stored exon annotation for ",org,"...")
         #    exon.data <- read.annotation(org,count.type)
         #}
-        else if (annotation=="embedded") 
+        else if (annotation=="embedded")
         {
             # The following should work if annotation elements are arranged in 
             # MeV-like data style
@@ -1279,6 +1279,7 @@ metaseqr <- function(
                         write.table(cbind(exon.data[rownames(exon.counts),],
                             exon.counts),gzfh,sep="\t",row.names=FALSE,
                             quote=FALSE)
+                        close(gzfh)
                     }
                 }
             }

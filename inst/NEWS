@@ -67,3 +67,12 @@ added:
     prevent crashes during run)
 fixed:
     - Small bug fix in read2count function
+
+changes in version 0.99.4 (2014-03-18)
+added:
+fixed:
+    - Removed all <<- assignments
+    - Changed the Depends of DESCRIPTION file to import less packages in the main
+    environment
+    - Added qvalue package to Depends as there was a problem with NBPSeq
+

@@ -642,20 +642,20 @@ stat.bayseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,
     )
     CD <- new("countData",data=bayes.data,replicates=classes)
     if (is.null(libsize.list))
-        libsizes(CD) <- baySeq::getLibsizes(CD)
+        baySeq::libsizes(CD) <- baySeq::getLibsizes(CD)
     else
-        libsizes(CD) <- unlist(libsize.list)
+        baySeq::libsizes(CD) <- unlist(libsize.list)
     for (con.name in names(contrast.list)) {
         disp("  Contrast: ", con.name,"\n")
         con <- contrast.list[[con.name]]
         cd <- CD[,names(unlist(con))]
         if (length(con)==2)
-            groups(cd) <- list(NDE=rep(1,length(unlist(con))),
+            baySeq::groups(cd) <- list(NDE=rep(1,length(unlist(con))),
                 DE=c(rep(1,length(con[[1]])),rep(2,length(con[[2]]))))
         else
-            groups(cd) <- list(NDE=rep(1,length(unlist(con))),
+            baySeq::groups(cd) <- list(NDE=rep(1,length(unlist(con))),
                 DE=unlist(con,use.names=FALSE)) # Maybe this will not work
-        replicates(cd) <- as.factor(classes[names(unlist(con))])
+        baySeq::replicates(cd) <- as.factor(classes[names(unlist(con))])
         cd <- baySeq::getPriors.NB(cd,samplesize=stat.args$samplesize,
             samplingSubset=stat.args$samplingSubset,
             equalDispersions=stat.args$equalDispersions,
@@ -820,7 +820,7 @@ stat.nbpseq <- function(object,sample.list,contrast.list=NULL,stat.args=NULL,
         #}
     }
     for (con.name in names(contrast.list)) {
-        disp("  Contrast: ", con.name,"\n")
+        disp("  Contrast: ", con.name)
         con <- contrast.list[[con.name]]
         cons <- unique(unlist(con))
         if (length(con)==2) {
