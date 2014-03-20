@@ -328,7 +328,7 @@
                                             msg.contrast[cnt] <- paste("for the contrast ",gsub("_vs_"," versus ",cnt),", no statistical threshold defined",sep="")
                                         } else {
                                             if (adjust.method!="none") {
-                                                add.text.p <- paste(" (",length(which(adj.sum.p.list[[cnt]]<plasm)),")",sep="")
+                                                add.text.p <- paste(" (",length(which(p.adjust(sum.p.list[[cnt]],adjust.method)<plasm)),")",sep="")
                                                 has.fdr.text <- " (FDR or adjusted p-value)"
                                             }
                                             else
@@ -336,7 +336,7 @@
                                             if (length(strsplit(cnt,"_vs_")[[1]])==2) {
                                                 tmp <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(sum.p.list[[cnt]]<plasm),],log.offset))
                                                 if (adjust.method!="none") {
-                                                    tmp.f <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(adj.sum.p.list[[cnt]]<plasm),],log.offset))
+                                                    tmp.f <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(p.adjust(sum.p.list[[cnt]],adjust.method)<plasm),],log.offset))
                                                     add.text.fu <- paste(" (",length(which(tmp.f>=1)),")",sep="")
                                                     add.text.fd <- paste(" (",length(which(tmp.f<=-1)),")",sep="")
                                                     add.text.fn <- paste(" (",length(which(abs(tmp.f)<1)),")",sep="")
@@ -558,7 +558,7 @@
                                                 else
                                                     plasm <- pcut
                                                 if (adjust.method!="none") {
-                                                    add.text.p <- paste("(",length(which(adj.sum.p.list[[cnt]]<plasm)),")",sep="")
+                                                    add.text.p <- paste("(",length(which(p.adjust(sum.p.list[[cnt]],adjust.method)<plasm)),")",sep="")
                                                     has.fdr.text <- "(FDR or adjusted p-value)"
                                                 }
                                                 else
@@ -566,7 +566,7 @@
                                                 if (length(strsplit(cnt,"_vs_")[[1]])==2) {
                                                     tmp.p <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(sum.p.list[[cnt]]<plasm),],log.offset))
                                                     if (adjust.method!="none") {
-                                                        tmp.f <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(adj.sum.p.list[[cnt]]<plasm),],log.offset))
+                                                        tmp.f <- log2(make.fold.change(cnt,sample.list,norm.genes.expr[which(p.adjust(sum.p.list[[cnt]],adjust.method)<plasm),],log.offset))
                                                         add.text.fu <- paste("(",length(which(tmp.f>=1)),")",sep="")
                                                         add.text.fd <- paste("(",length(which(tmp.f<=-1)),")",sep="")
                                                         add.text.fn <- paste("(",length(which(abs(tmp.f)<1)),")",sep="")
