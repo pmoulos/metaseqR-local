@@ -2261,7 +2261,7 @@ make.sample.list <- function(input) {
 #' @author Panagiotis Moulos
 make.project.path <- function(path,f=NULL) {
     if (is.na(path) || is.null(path)) {
-        if (!is.data.frame(f) && !is.null(f) && file.exists(f))
+        if (!is.data.frame(f) && !is.null(f) && !is.list(f) && file.exists(f))
             main.path <- file.path(dirname(f),paste("metaseqr_result_",
                 format(Sys.time(),format="%Y%m%d%H%M%S"),sep=""))
         else
@@ -2299,6 +2299,9 @@ make.project.path <- function(path,f=NULL) {
 make.path.struct <- function(main.path) {
     project.path <- list(
         main=main.path,
+        media=file.path(main.path,"media"),
+        data=file.path(main.path,"data"),
+        logs=file.path(main.path,"logs"),
         lists=file.path(main.path,"lists"),
         plots=file.path(main.path,"plots"),
         qc=file.path(main.path,"plots","qc"),
