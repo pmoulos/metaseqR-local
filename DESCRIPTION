@@ -22,19 +22,18 @@ Imports:
     corrplot,
     vsn,
     brew,
-    rjson
+    rjson,
+    log4r
 Suggests:
     BiocGenerics,
     GenomicRanges,
     rtracklayer,
     Rsamtools,
-    Repitools,
     MADAM,
     survcomp,
     VennDiagram,
     knitr,
     zoo,
-    log4r,
     RUnit
 Enhances:
     parallel,
