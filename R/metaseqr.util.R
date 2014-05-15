@@ -363,7 +363,7 @@ read.targets <- function(input,path=NULL) {
             has.paired.info <- TRUE
             has.stranded.info <- TRUE
         }
-        if (has.paired.info) {
+        if (has.paired.info && !has.stranded.info) {
             paired.list <- vector("list",length(conditions))
             names(paired.list) <- conditions
             for (n in conditions) {
@@ -376,7 +376,7 @@ read.targets <- function(input,path=NULL) {
         }
         else
             paired.list <- NULL
-        if (has.stranded.info) {
+        if (has.stranded.info && !has.paired.info) {
             stranded.list <- vector("list",length(conditions))
             names(stranded.list) <- conditions
             for (n in conditions) {
@@ -389,6 +389,26 @@ read.targets <- function(input,path=NULL) {
         }
         else
             stranded.list <- NULL
+        if (has.stranded.info && has.paired.info) {
+            stranded.list <- vector("list",length(conditions))
+            names(stranded.list) <- conditions
+            for (n in conditions) {
+                stranded.list[[n]] <- character(length(sample.list[[n]]))
+                names(stranded.list[[n]]) <- sample.list[[n]]
+                for (nn in names(stranded.list[[n]]))
+                    stranded.list[[n]][nn] <- as.character(tab[which(as.character(
+                        tab[,1])==nn),5])
+            }
+            paired.list <- vector("list",length(conditions))
+            names(paired.list) <- conditions
+            for (n in conditions) {
+                paired.list[[n]] <- character(length(sample.list[[n]]))
+                names(paired.list[[n]]) <- sample.list[[n]]
+                for (nn in names(paired.list[[n]]))
+                    paired.list[[n]][nn] <- as.character(tab[which(as.character(
+                        tab[,1])==nn),4])
+            }
+        }
     }
     else
         paired.list <- stranded.list <- NULL
@@ -600,7 +620,7 @@ get.defaults <- function(what,method=NULL) {
                 nbpseq = {
                     return(list(
                         main.method="nbsmyth",
-                        method=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
+                        model=list(nbpseq="log-linear-rel-mean",nbsmyth="NBP"),
                         tests="HOA",
                         alternative="two.sided"
                     ))
@@ -1272,6 +1292,9 @@ validate.list.args <- function(what,method=NULL,arg.list) {
 #'
 #' @param org the organism for which to download annotation.
 #' @param type either \code{"gene"} or \code{"exon"}.
+#' @param refdb the online source to use to fetch annotation. It can be
+#' \code{"ensembl"} (default), \code{"ucsc"} or \code{"refseq"}. In the later two
+#' cases, an SQL connection is opened with the UCSC public databases.
 #' @return A data frame with the canonical (not isoforms!) genes or exons of the
 #' requested organism. When \code{type="genes"}, the data frame has the following
 #' columns: chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype.
@@ -1289,7 +1312,42 @@ validate.list.args <- function(what,method=NULL,arg.list) {
 #' hg19.genes <- get.annotation("hg19","gene")
 #' mm9.exons <- get.annotation("mm9","exon")
 #'}
-get.annotation <- function(org,type) {
+get.annotation <- function(org,type,refdb="ensembl") {
+    switch(refdb,
+        ensembl = { return(get.ensembl.annotation(org,type)) },
+        ucsc = { },
+        refseq = { }
+    )
+}
+
+#' Ensembl annotation downloader
+#'
+#' This function connects to the EBI's Biomart service using the package biomaRt
+#' and downloads annotation elements (gene co-ordinates, exon co-ordinates, gene
+#' identifications, biotypes etc.) for each of the supported organisms. See the
+#' help page of \code{\link{metaseqr}} for a list of supported organisms. The
+#' function downloads annotation for an organism genes or exons.
+#'
+#' @param org the organism for which to download annotation.
+#' @param type either \code{"gene"} or \code{"exon"}.
+#' @return A data frame with the canonical (not isoforms!) genes or exons of the
+#' requested organism. When \code{type="genes"}, the data frame has the following
+#' columns: chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype.
+#' When \code{type="exon"} the data frame has the following columns: chromosome,
+#' start, end, exon_id, gene_id, strand, gene_name, biotype. The gene_id and exon_id
+#' correspond to Ensembl gene and exon accessions respectively. The gene_name
+#' corresponds to HUGO nomenclature gene names.
+#' @note The data frame that is returned contains only "canonical" chromosomes
+#' for each organism. It does not contain haplotypes or random locations and does
+#' not contain chromosome M.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' hg19.genes <- get.ensembl.annotation("hg19","gene")
+#' mm9.exons <- get.ensembl.annotation("mm9","exon")
+#'}
+get.ensembl.annotation <- function(org,type) {
     if (org!="tair10")
         mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",host=get.host(org),
             dataset=get.dataset(org))
@@ -1330,6 +1388,321 @@ get.annotation <- function(org,type) {
     ann <- ann[grep(chrs.exp,ann$chromosome),]
     ann$chromosome <- as.character(ann$chromosome)
     return(ann)
+}
+
+#' UCSC/RefSeq annotation downloader
+#'
+#' This function connects to the UCSC Genome Browser public database and downloads
+#' annotation elements (gene co-ordinates, exon co-ordinates, gene identifications
+#' etc.) for each of the supported organisms, but using UCSC instead of Ensembl.
+#' See the help page of \code{\link{metaseqr}} for a list of supported organisms.
+#' The function downloads annotation for an organism genes or exons.
+#'
+#' @param org the organism for which to download annotation.
+#' @param type either \code{"gene"} or \code{"exon"}.
+#' @param refdb either \code{"ucsc"} or \code{"refseq"}.
+#' @return A data frame with the canonical (not isoforms!) genes or exons of the
+#' requested organism. When \code{type="genes"}, the data frame has the following
+#' columns: chromosome, start, end, gene_id, gc_content, strand, gene_name, biotype.
+#' When \code{type="exon"} the data frame has the following columns: chromosome,
+#' start, end, exon_id, gene_id, strand, gene_name, biotype. The gene_id and exon_id
+#' correspond to Ensembl gene and exon accessions respectively. The gene_name
+#' corresponds to HUGO nomenclature gene names.
+#' @note The data frame that is returned contains only "canonical" chromosomes
+#' for each organism. It does not contain haplotypes or random locations and does
+#' not contain chromosome M. Note also that as the UCSC databases do not contain
+#' biotype classification like Ensembl, this will be returned as \code{NA} and
+#' as a result, some quality control plots will not be available.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' hg19.genes <- get.ucsc.annotation("hg19","gene","ucsc")
+#' mm9.exons <- get.ucsc.annotation("mm9","exon")
+#'}
+get.ucsc.annotation <- function(org,type,refdb="ucsc") {
+    if (!require(RMySQL))
+        stopwrap("R package RMySQL is required!")
+    
+    chrs.exp <- paste(get.valid.chrs(org),collapse="|")
+
+    db.org <- get.ucsc.organism(org)
+    db.creds <- get.ucsc.credentials()
+    con <- dbConnect(MySQL(),user=db.creds[2],password=NULL,dbname=db.org,
+        host=db.creds[1])
+    query <- get.ucsc.query(type,refdb)
+    raw.ann <- dbGetQuery(con,query)
+    if (type=="gene") {
+        ann <- NULL
+    }
+    else if (type=="exon") {
+        ann <- NULL
+    }
+    ann <- ann[order(ann$chromosome,ann$start),]
+    ann <- ann[grep(chrs.exp,ann$chromosome),]
+    ann$chromosome <- as.character(ann$chromosome)
+    return(ann)
+}
+
+#' Return a named vector of GC-content for each region of a data frame
+#'
+#' Returns a named numeric vector (names are the genomic region names, e.g. genes)
+#' given a data frame which can be converted to a GRanges object (e.g. it has at
+#' least chromosome, start, end fields). This function works best when the input
+#' annotation data frame has been retrieved using one of the SQL queries generated
+#' from \code{\link{get.ucsc.query}}, used in \code{\link{get.ucsc.annotation}}.
+#'
+#' @param ann a data frame which can be converted to a GRanges object, that means
+#' it has at least the chromosome, start, end fields. Preferably, the output of
+#' \code{link{get.ucsc.annotation}}.
+#' @param org one of metaseqR supported organisms.
+#' @return A named numeric vector.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' ann <- get.ucsc.annotation("mm9","gene","ucsc")
+#' gc <- get.ucsc.query("gene","ucsc")
+#'}
+get.gc.content <- function(ann,org) {
+    if (missing(ann))
+        stopwrap("A valid annotation data frame must be provided in order to ",
+            "retrieve GC-content.")
+    org <- tolower(org[1])
+    check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3",
+        "danrer7","pantro4","tair10"),multiarg=FALSE)
+    # Convert annotation to GRanges
+    disp("Converting annotation to GenomicRanges object...")
+    if (packageVersion("GenomicRanges")<1.14)
+        ann.gr <- GRanges(
+            seqnames=Rle(ann[,1]),
+            ranges=IRanges(start=ann[,2],end=ann[,3]),
+            strand=Rle(ann[,6]),
+            name=as.character(ann[,4])
+        )
+    else
+        ann.gr <- makeGRangesFromDataFrame(
+            df=ann,
+            keep.extra.columns=TRUE,
+            seqnames.field="chromosome"
+        )
+    bsg <- load.bs.genome(org)
+    disp("Getting DNA sequences...")
+    seqs <- getSeq(bsg,names=ann.gr)
+    disp("Getting GC content...")
+    freq.matrix <- alphabetFrequency(seqs,as.prob=TRUE,baseOnly=TRUE)
+    gc.content <- apply(freq.matrix,1,function(x) round(100*sum(x[2:3]),
+        digits=2))
+    names(gc.content) <- as.character(ann[,4])
+    return(gc.content)
+}
+
+#' Return queries for the UCSC Genome Browser database, according to organism and
+#' source
+#'
+#' Returns an SQL query to be used with a connection to the UCSC Genome Browser
+#' database and fetch metaseqR supported organism annotations. This query is
+#' constructed based on the data source and data type to be returned.
+#'
+#' @param refdb one of \code{"ucsc"} or \code{"refseq"} to use the UCSC or RefSeq
+#' annotation sources respectively.
+#' @param type either \code{"gene"} or \code{"exon"}.
+#' @return A named character vector.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' db.query <- get.ucsc.query("gene","ucsc")
+#'}
+get.ucsc.query <- function(type,refdb="ucsc") {
+    type <- tolower(type[1])
+    refdb <- tolower(refdb[1])
+    check.text.args("type",type,c("gene","exon"))
+    check.text.args("refdb",refdb,c("ucsc","refseq"))
+    switch(type,
+        gene = {
+            switch(refdb,
+                ucsc = {
+                    return(paste("SELECT knownCanonical.chrom AS ",
+                        "`chromosome`,`chromStart` AS `start`,`chromEnd` AS ",
+                        "`end`,`transcript` AS `gene_id`,0 AS `gc_content`,",
+                        "knownGene.strand AS `strand`,`geneName` AS ",
+                        "`gene_name`,'NA' AS `biotype` FROM `knownCanonical` ",
+                        "INNER JOIN `knownGene` ON knownCanonical.transcript=",
+                        "knownGene.name INNER JOIN `knownToRefSeq` ON ",
+                        "knownCanonical.transcript=knownToRefSeq.name INNER ",
+                        "JOIN `refFlat` ON knownToRefSeq.value=refFlat.name ",
+                        "GROUP BY `gene_id` ORDER BY `chromosome`, `start`",
+                        sep=""))
+                },
+                refseq = {
+                    return(paste("SELECT refFlat.chrom AS `chromosome`,",
+                        "refFlat.txStart AS `start`,refFlat.txEnd AS `end`,",
+                        "refFlat.name AS `gene_id`,0 AS `gc_content`,",
+                        "refFlat.strand AS `strand`,`geneName` AS `gene_name`,",
+                        "'NA' AS `biotype` FROM `refFlat` INNER JOIN ",
+                        "`knownToRefSeq` ON refFlat.name=knownToRefSeq.value ",
+                        "INNER JOIN `knownCanonical` ON knownToRefSeq.name=",
+                        "knownCanonical.transcript GROUP BY refFlat.name ",
+                        "ORDER BY `chromosome`, `start`",
+                        sep=""))
+                }
+            )
+        },
+        exon = {
+            switch(refdb,
+                ucsc = {
+                    return(paste("SELECT knownGene.chrom AS `chromosome`,",
+                        "knownGene.exonStarts AS `start`,knownGene.exonEnds ",
+                        "AS `end`,knownGene.name AS `exon_id`,",
+                        "knownGene.strand AS `strand`,`transcript` AS ",
+                        "`gene_id`,`geneName` AS `gene_name`,'NA' AS ".
+                        "`biotype` FROM `knownGene` INNER JOIN ",
+                        "`knownCanonical` ON knownGene.name=",
+                        "knownCanonical.transcript INNER JOIN `knownToRefSeq` ",
+                        "ON knownCanonical.transcript=knownToRefSeq.name ",
+                        "INNER JOIN `refFlat` ON knownToRefSeq.value=",
+                        "refFlat.name GROUP BY knownGene.name ORDER BY ",
+                        "`chromosome`, `start`",
+                        sep=""))
+                },
+                refseq = {
+                    return(paste("SELECT refFlat.chrom AS `chromosome`,"
+                        "refFlat.exonStarts AS `start`,refFlat.exonEnds AS ",
+                        "`end`,refFlat.name AS `exon_id`,refFlat.strand AS ",
+                        "`strand`,`geneName` AS `gene_id`,'NA' AS `biotype` ",
+                        "FROM `refFlat` INNER JOIN knownToRefSeq ON ",
+                        "refFlat.name=knownToRefSeq.value INNER JOIN ",
+                        "knownCanonical ON knownToRefSeq.name=",
+                        "knownCanonical.transcript GROUP BY refFlat.name ",
+                        "ORDER BY `chromosome`,`start`"))
+                }
+            )
+        }
+    )
+}
+
+#' Return host, username and password for UCSC Genome Browser database
+#'
+#' Returns a character vector with a hostname, username and password to connect
+#' to the UCSC Genome Browser database to retrieve annotation. Internal use.
+#'
+#' @return A named character vector.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' db.creds <- get.ucsc.credentials()
+#'}
+get.ucsc.credentials <- function() {
+    return(c(
+        host="genome-mysql.cse.ucsc.edu",
+        user="genome",
+        password=""
+    ))
+}
+
+#' Return a proper formatted organism alias
+#'
+#' Returns the proper UCSC Genome Browser database organism alias based on what is
+#' given to metaseqR. Internal use.
+#'
+#' @return A proper organism alias.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' org <- get.ucsc.organism("danrer7")
+#'}
+get.ucsc.organism <- function(org) {
+    switch(org,
+        hg18 = { return("hg18") },
+        hg19 = { return("hg19") },
+        mm9 = { return("mm9") },
+        mm10 = { return("mm10") },
+        rn5 = { return("rn5") },
+        dm3 = { return("dm3") },
+        danrer7 = { return("danRer7") },
+        pantro4 = { return("panTro4") },
+        tair10 = { return("TAIR10") }
+    )
+}
+
+#' Return a proper formatted BSgenome organism name
+#'
+#' Returns a properly formatted BSgenome package name according to metaseqR's
+#' supported organism. Internal use.
+#'
+#' @return A proper BSgenome package name.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' bs.name <- get.bs.organism("hg18")
+#'}
+get.bs.organism <- function(org) {
+    switch(org,
+        hg18 = {
+            return("BSgenome.Hsapiens.UCSC.hg18")
+        },
+        hg18 = {
+            return("BSgenome.Hsapiens.UCSC.hg19")
+        },
+        mm9 = {
+            return("BSgenome.Mmusculus.UCSC.mm9")
+        },
+        mm10 = {
+            return("BSgenome.Mmusculus.UCSC.mm10")
+        },
+        rn5 = {
+            return("BSgenome.Rnorvegicus.UCSC.rn5")
+        },
+        dm3 = {
+            return("BSgenome.Dmelanogaster.UCSC.dm3")
+        },
+        danrer7 = {
+            return("BSgenome.Drerio.UCSC.danRer7")
+        },
+        pantro4 = {
+            stopwrap("panTro4 is not yet supported by BSgenome! Please use ",
+                "Ensembl as annoation source.")
+        },
+        tair10 = {
+            stopwrap("TAIR10 is not yet supported by BSgenome! Please use ",
+                "Ensembl as annoation source.")
+        }
+    )
+}
+
+#' Loads (or downloads) the required BSGenome package
+#'
+#' Retrieves the required BSgenome package when the annotation source is \code{"ucsc"}
+#' or \code{"refseq"}. These packages are required in order to estimate the
+#' GC-content of the retrieved genes from UCSC or RefSeq.
+#'
+#' @param org one of \code{\link{metaseqr}} supported organisms.
+#' @return The BSgenome object for the requested organism.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' bs.obj <- load.bs.genome("mm9")
+#'}
+load.bs.genome <- function(org) {
+    if (!require(BiocInstaller))
+        stopwrap("The Bioconductor package BiocInstaller is required to ",
+            "proceed!")
+    if (!require(BSgenome))
+        stopwrap("The Bioconductor package BSgenome is required to ",
+            "proceed!")
+    bs.org <- get.bs.organism(org)
+    if (bs.org %in% installed.genomes())
+        bs.obj <- getBSgenome(org)
+    else {
+        biocLite(bs.org)
+        bs.obj <- getBSgenome(org)
+    }
+    return(bs.obj)
 }
 
 #' Biotype converter
