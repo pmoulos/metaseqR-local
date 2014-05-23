@@ -125,6 +125,9 @@
 #' for rat genomes \code{"rno5"}, for drosophila genome \code{"dm3"}, for zebrafish
 #' genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"} and for Arabidopsis
 #' thaliana genome \code{"tair10"}.
+#' @param refdb the reference annotation repository from which to retrieve annotation
+#' elements to use with metaseqr. It can be one of \code{"ensembl"} (default),
+#' \code{"ucsc"} or \code{"refseq"}.
 #' @param count.type the type of reads inside the counts file. It can be one of 
 #' \code{"gene"} or \code{"exon"}. This is a very important and mandatory parameter
 #' as it defines the course of the workflow.
@@ -768,6 +771,7 @@ metaseqr <- function(
     bt.col=NA,
     annotation=c("download","embedded"),
     org=c("hg18","hg19","mm9","mm10","rno5","dm3","danrer7","pantro4","tair10"),
+    refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon"),
     exon.filters=list(
         min.active.exons=list(
@@ -911,6 +915,7 @@ metaseqr <- function(
     file.type <- tolower(file.type[1])
     annotation <- tolower(annotation[1])
     org <- tolower(org[1])
+    refdb <- tolower(refdb[1])
     count.type <- tolower(count.type[1])
     when.apply.filter <- tolower(when.apply.filter[1])
     normalization <- tolower(normalization[1])
@@ -955,6 +960,7 @@ metaseqr <- function(
         multiarg=FALSE)
     check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3",
         "danrer7","pantro4","tair10"),multiarg=FALSE)
+    check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
     check.text.args("when.apply.filter",when.apply.filter,c("postnorm",
         "prenorm"),multiarg=FALSE)
@@ -1102,6 +1108,7 @@ metaseqr <- function(
     }
     disp("Annotation: ",annotation)
     disp("Organism: ",org)
+    disp("Reference source: ",refdb)
     disp("Count type: ",count.type)
     if (!is.null(preset))
         disp("Analysis preset: ",preset)
@@ -1202,12 +1209,12 @@ metaseqr <- function(
     {
         # Download gene annotation anyway
         disp("Downloading gene annotation for ",org,"...")
-        gene.data <- get.annotation(org,"gene")
+        gene.data <- get.annotation(org,"gene",refdb)
         
         if (annotation=="download")
         {
             disp("Downloading exon annotation for ",org,"...")
-            exon.data <- get.annotation(org,count.type)
+            exon.data <- get.annotation(org,count.type,refdb,multic)
         }
         #else
         #{
@@ -1218,7 +1225,7 @@ metaseqr <- function(
         #if (annotation=="download")
         #{
         #    disp("Downloading exon annotation for ",org,"...")
-        #    exon.data <- get.annotation(org,count.type)
+        #    exon.data <- get.annotation(org,count.type,refdb,multic)
         #}
         #else if (annotation=="fixed")
         #{
@@ -1365,7 +1372,7 @@ metaseqr <- function(
         if (annotation=="download")
         {
             disp("Downloading gene annotation for ",org,"...")
-            gene.data <- get.annotation(org,count.type)
+            gene.data <- get.annotation(org,count.type,refdb)
         }
         #else if (annotation=="fixed")
         #{
@@ -2400,7 +2407,7 @@ metaseqr <- function(
 #' @examples
 #' \dontrun{
 #' data("hg19.exon.data",package="metaseqR")
-#' gene.data <- get.annotation("hg19","gene")
+#' gene.data <- get.annotation("hg19","gene","ensembl")
 #' reduced.gene.data <- reduce.gene.data(hg19.exon.counts,gene.data)
 #' multic <- check.parallel(0.4)
 #' gene.model <- construct.gene.model(hg19.exon.counts,sample.list.hg19,gene.data,
@@ -2448,7 +2455,7 @@ construct.gene.model <- function(exon.counts,sample.list,
 #' @examples
 #' \dontrun{
 #' data("hg19.exon.data",package="metaseqR")
-#' gene.data <- get.annotation("hg19","gene")
+#' gene.data <- get.annotation("hg19","gene","ensembl")
 #' reduced.gene.data <- reduce.gene.data(hg19.exon.counts,gene.data)
 #'}
 reduce.gene.data <- function(exon.data,gene.data) {

@@ -10,6 +10,7 @@
         annotation = c("download", "embedded"),
         org = c("hg18", "hg19", "mm9", "mm10", "rno5", "dm3", "danrer7",
             "pantro4", "tair10"),
+        refdb = c("ensembl", "ucsc", "refseq"),
         count.type = c("gene", "exon"),
         exon.filters = list(min.active.exons = list(exons.per.gene = 5, 
                 min.exons = 2, frac = 1/5)),
@@ -200,6 +201,11 @@
     \code{"dm3"}, for zebrafish genome \code{"danrer7"}, for
     chimpanzee genome \code{"pantro4"} and for Arabidopsis 
     thaliana genome \code{"tair10"}.}
+
+    \item{refdb}{the reference annotation repository from
+    which to retrieve annotation elements to use with
+    metaseqr. It can be one of \code{"ensembl"} (default),
+    \code{"ucsc"} or \code{"refseq"}.}
 
     \item{count.type}{the type of reads inside the counts
     file. It can be one of \code{"gene"} or \code{"exon"}.
