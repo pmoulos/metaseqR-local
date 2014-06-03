@@ -122,7 +122,7 @@
 #' similar as possible to the \code{"download"} case, in terms of column structure.
 #' @param org the supported organisms by metaseqr. These can be, for human genomes
 #' \code{"hg18"} or \code{"hg19"}, for mouse genomes \code{"mm9"}, \code{"mm10"},
-#' for rat genomes \code{"rno5"}, for drosophila genome \code{"dm3"}, for zebrafish
+#' for rat genomes \code{"rn5"}, for drosophila genome \code{"dm3"}, for zebrafish
 #' genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"} and for Arabidopsis
 #' thaliana genome \code{"tair10"}.
 #' @param refdb the reference annotation repository from which to retrieve annotation
@@ -770,7 +770,7 @@ metaseqr <- function(
     name.col=NA,
     bt.col=NA,
     annotation=c("download","embedded"),
-    org=c("hg18","hg19","mm9","mm10","rno5","dm3","danrer7","pantro4","tair10"),
+    org=c("hg18","hg19","mm9","mm10","rn5","dm3","danrer7","pantro4","tair10"),
     refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon"),
     exon.filters=list(
@@ -958,7 +958,7 @@ metaseqr <- function(
         multiarg=FALSE)
     check.text.args("annotation",annotation,c("embedded","download"),
         multiarg=FALSE)
-    check.text.args("org",org,c("hg18","hg19","mm9","mm10","rno5","dm3",
+    check.text.args("org",org,c("hg18","hg19","mm9","mm10","rn5","dm3",
         "danrer7","pantro4","tair10"),multiarg=FALSE)
     check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
@@ -1043,12 +1043,21 @@ metaseqr <- function(
                 qc.plots <- qc.plots[-to.remove]
         }
     }
-    #else if (annotation=="download" || count.type=="exon") # Requires package biomaRt
-    #{
-    #    if (!require(biomaRt))
-    #        stopwrap("Bioconductor package biomaRt is required when annotation is "
-    #            "\"download\" or type argument is \"exon\"!")
-    #}
+    if (org=="hg18" && (refdb %in% c("ucsc","refseq")))
+    {
+        warnwrap("Gene/exon biotypes cannot be retrieved when organism is ",
+            "\"hg18\" and annotation database is \"ucsc\" or \"refseq\"! ",
+            "Biotype filters and certain plots will not be available...")
+        gene.filters$biotype=NULL
+        to.remove <- match(c("biodetection","countsbio","saturation",
+            "biodist","filtered"),qc.plots)
+        no.match <- which(is.na(to.remove))
+        if (length(no.match)>0)
+            to.remove <- to.remove[-no.match]
+        if (length(to.remove)>0)
+            qc.plots <- qc.plots[-to.remove]
+    }
+    
     # Check if drawing a Venn diagram is possible
     if ("venn" %in% qc.plots && length(statistics)==1)
     {
