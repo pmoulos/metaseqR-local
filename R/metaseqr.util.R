@@ -716,6 +716,46 @@ get.defaults <- function(what,method=NULL) {
                         IG_V_pseudogene=TRUE
                     ))
                 },
+                hg38 = {
+                    return(list(
+                        protein_coding=FALSE,
+                        polymorphic_pseudogene=FALSE,
+                        lincRNA=FALSE,
+                        unprocessed_pseudogene=TRUE,
+                        processed_pseudogene=FALSE,
+                        antisense=FALSE,
+                        processed_transcript=FALSE,
+                        transcribed_unprocessed_pseudogene=FALSE,
+                        sense_intronic=FALSE,
+                        unitary_pseudogene=TRUE,
+                        IG_V_gene=FALSE,
+                        IG_V_pseudogene=TRUE,
+                        TR_V_gene=FALSE,
+                        sense_overlapping=FALSE,
+                        transcribed_processed_pseudogene=FALSE,
+                        miRNA=FALSE,
+                        snRNA=FALSE,
+                        misc_RNA=FALSE,
+                        rRNA=TRUE,
+                        snoRNA=FALSE,
+                        IG_J_pseudogene=TRUE,
+                        IG_J_gene=FALSE,
+                        IG_D_gene=FALSE,
+                        three_prime_overlapping_ncrna=FALSE,
+                        IG_C_gene=FALSE,
+                        IG_C_pseudogene=TRUE,
+                        pseudogene=TRUE,
+                        TR_V_pseudogene=TRUE,
+                        Mt_tRNA=TRUE,
+                        Mt_rRNA=TRUE,
+                        translated_processed_pseudogene=FALSE,
+                        TR_J_gene=FALSE,
+                        TR_C_gene=FALSE,
+                        TR_D_gene=FALSE,
+                        TR_J_pseudogene=TRUE,
+                        LRG_gene=FALSE
+                    ))
+                },
                 mm9 = {
                     return(list(
                         pseudogene=FALSE,
@@ -1361,7 +1401,7 @@ get.ensembl.annotation <- function(org,type) {
     #    dataset=get.dataset(org))
     chrs.exp <- paste(get.valid.chrs(org),collapse="|")
     if (type=="gene") {
-        bm <- getBM(attributes=get.gene.attributes(),mart=mart)
+        bm <- getBM(attributes=get.gene.attributes(org),mart=mart)
         ann <- data.frame(
             chromosome=paste("chr",bm$chromosome_name,sep=""),
             start=bm$start_position,
@@ -1369,13 +1409,14 @@ get.ensembl.annotation <- function(org,type) {
             gene_id=bm$ensembl_gene_id,
             gc_content=bm$percentage_gc_content,
             strand=ifelse(bm$strand==1,"+","-"),
-            gene_name=bm$external_gene_id,
+            gene_name=if (org %in% c("hg18","hg19","mm9")) bm$external_gene_id else
+                bm$external_gene_name,
             biotype=bm$gene_biotype
         )
         rownames(ann) <- ann$gene_id
     }
     else if (type=="exon") {
-        bm <- getBM(attributes=get.exon.attributes(),mart=mart)
+        bm <- getBM(attributes=get.exon.attributes(org),mart=mart)
         ann <- data.frame(
             chromosome=paste("chr",bm$chromosome_name,sep=""),
             start=bm$exon_chrom_start,
@@ -1383,7 +1424,8 @@ get.ensembl.annotation <- function(org,type) {
             exon_id=bm$ensembl_exon_id,
             gene_id=bm$ensembl_gene_id,
             strand=ifelse(bm$strand==1,"+","-"),
-            gene_name=bm$external_gene_id,
+            gene_name=if (org %in% c("hg18","hg19","mm9")) bm$external_gene_id else
+                bm$external_gene_name,
             biotype=bm$gene_biotype
         )
         rownames(ann) <- ann$exon_id
@@ -1524,7 +1566,7 @@ get.gc.content <- function(ann,org) {
         stopwrap("A valid annotation data frame must be provided in order to ",
             "retrieve GC-content.")
     org <- tolower(org[1])
-    check.text.args("org",org,c("hg18","hg19","mm9","mm10","rn5","dm3",
+    check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
         "danrer7","pantro4","tair10"),multiarg=FALSE)
     # Convert annotation to GRanges
     disp("Converting annotation to GenomicRanges object...")
@@ -1575,7 +1617,7 @@ get.ucsc.query <- function(org,type,refdb="ucsc") {
     org <- tolower(org[1])
     refdb <- tolower(refdb[1])
     check.text.args("type",type,c("gene","exon"))
-    check.text.args("org",org,c("hg18","hg19","mm9","mm10","rn5","dm3",
+    check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
         "danrer7","pantro4","tair10"),multiarg=FALSE)
     check.text.args("refdb",refdb,c("ucsc","refseq"))
     switch(type,
@@ -1618,6 +1660,23 @@ get.ucsc.query <- function(org,type,refdb="ucsc") {
                                 "knownToRefSeq.value=refFlat.name GROUP BY ",
                                 "`gene_id` ORDER BY `chromosome`, `start`",
                                 sep=""))
+                        },
+                        hg38 = {
+                            return(paste("SELECT knownCanonical.chrom AS ",
+                                "`chromosome`,`chromStart` AS `start`,",
+                                "`chromEnd` AS `end`,`transcript` AS ",
+                                "`gene_id`,0 AS `gc_content`,knownGene.strand ",
+                                "AS `strand`,`geneName` AS `gene_name`,'NA' ",
+                                "AS `biotype` FROM `knownCanonical` INNER ",
+                                "JOIN `knownGene` ON ",
+                                "knownCanonical.transcript=knownGene.name ",
+                                "INNER JOIN `knownToRefSeq` ON ",
+                                "knownCanonical.transcript=knownToRefSeq.name ",                                
+                                "INNER JOIN `refFlat` ON ",
+                                "knownToRefSeq.value=refFlat.name GROUP BY ",
+                                "`gene_id` ORDER BY `chromosome`, `start`",
+                                sep=""))
+                            # Should be the same as hg19 but is like hg18
                         },
                         mm9 = {
                             return(paste("SELECT knownCanonical.chrom AS ",
@@ -1774,6 +1833,22 @@ get.ucsc.query <- function(org,type,refdb="ucsc") {
                                 " `start`",
                                 sep=""))
                         },
+                        hg38 = {
+                            return(paste("SELECT  refFlat.chrom AS ",
+                                "`chromosome`,refFlat.txStart AS `start`,",
+                                "refFlat.txEnd AS `end`,refFlat.name AS ",
+                                "`gene_id`,0 AS `gc_content`,refFlat.strand ",
+                                "AS `strand`,`geneName` AS `gene_name`,'NA' ",
+                                "AS `biotype` FROM `refFlat` INNER JOIN ",
+                                "`knownToRefSeq` ON ",
+                                "refFlat.name=knownToRefSeq.value INNER JOIN ",
+                                "`knownCanonical` ON ",
+                                "knownToRefSeq.name=knownCanonical.transcript ",
+                                "GROUP BY refFlat.name ORDER BY `chromosome`,",
+                                " `start`",
+                                sep=""))
+                            # Should be the same as hg19 but is as hg18
+                        },
                         mm9 = {
                             return(paste("SELECT  refFlat.chrom AS ",
                                 "`chromosome`,refFlat.txStart AS `start`,",
@@ -1922,6 +1997,23 @@ get.ucsc.query <- function(org,type,refdb="ucsc") {
                                 "knownToRefSeq.value=refFlat.name GROUP BY ",
                                 "knownGene.name ORDER BY `chromosome`, `start`",
                                 sep=""))
+                        },
+                        hg38 = {
+                            return(paste("SELECT knownGene.chrom AS ",
+                                "`chromosome`,knownGene.exonStarts AS `start`,",
+                                "knownGene.exonEnds AS `end`,knownGene.name ",
+                                "AS `exon_id`,knownGene.strand AS `strand`,",
+                                "`transcript` AS `gene_id`,`geneName` AS ",
+                                "`gene_name`,'NA' AS `biotype` FROM ",
+                                "`knownGene` INNER JOIN `knownCanonical` ON ",
+                                "knownGene.name=knownCanonical.transcript ",
+                                "INNER JOIN `knownToRefSeq` ON ",
+                                "knownCanonical.transcript=knownToRefSeq.name ",
+                                "INNER JOIN `refFlat` ON ",
+                                "knownToRefSeq.value=refFlat.name GROUP BY ",
+                                "knownGene.name ORDER BY `chromosome`, `start`",
+                                sep=""))
+                            # Should be the same as hg19 but is as hg18
                         },
                         mm9 = {
                             return(paste("SELECT knownGene.chrom AS ",
@@ -2078,6 +2170,22 @@ get.ucsc.query <- function(org,type,refdb="ucsc") {
                                 "`start`",
                                 sep=""))
                         },
+                        hg38 = {
+                            return(paste("SELECT refFlat.chrom AS ",
+                                "`chromosome`,refFlat.exonStarts AS `start`,",
+                                "refFlat.exonEnds AS `end`,refFlat.name AS ",
+                                "`exon_id`,refFlat.strand AS `strand`,",
+                                "refFlat.name AS `gene_id`,`geneName` AS ",
+                                "`gene_name`,'NA' AS `biotype` FROM `refFlat` ",
+                                "INNER JOIN `knownToRefSeq` ON ",
+                                "refFlat.name=knownToRefSeq.value INNER JOIN ",
+                                "`knownCanonical` ON ",
+                                "knownToRefSeq.name=knownCanonical.transcript ",
+                                "GROUP BY `exon_id` ORDER BY `chromosome`, ",
+                                "`start`",
+                                sep=""))
+                            # Should be the same as hg19 but is as hg18
+                        },
                         mm9 = {
                             return(paste("SELECT refFlat.chrom AS ",
                                 "`chromosome`,refFlat.exonStarts AS `start`,",
@@ -2224,6 +2332,7 @@ get.ucsc.organism <- function(org) {
     switch(org,
         hg18 = { return("hg18") },
         hg19 = { return("hg19") },
+        hg38 = { return("hg38") },
         mm9 = { return("mm9") },
         mm10 = { return("mm10") },
         rn5 = { return("rn5") },
@@ -2252,6 +2361,9 @@ get.bs.organism <- function(org) {
         },
         hg19 = {
             return("BSgenome.Hsapiens.UCSC.hg19")
+        },
+        hg38 = {
+            return("BSgenome.Hsapiens.UCSC.hg38") # Will throw error but correct
         },
         mm9 = {
             return("BSgenome.Mmusculus.UCSC.mm9")
@@ -2343,7 +2455,8 @@ get.biotypes <- function(a) {
 get.host <- function(org) {
     switch(org,
         hg18 = { return("may2009.archive.ensembl.org") },
-        hg19 = { return("www.ensembl.org") },
+        hg19 = { return("grch37.ensembl.org") },
+        hg38 = { return("www.ensembl.org") },
         mm9 = { return("may2012.archive.ensembl.org") },
         mm10 = { return("www.ensembl.org") },
         rn5 = { return("www.ensembl.org") },
@@ -2371,6 +2484,7 @@ get.dataset <- function(org) {
     switch(org,
         hg18 = { return("hsapiens_gene_ensembl") },
         hg19 = { return("hsapiens_gene_ensembl") },
+        hg38 = { return("hsapiens_gene_ensembl") },
         mm9 = { return("mmusculus_gene_ensembl") },
         mm10 = { return("mmusculus_gene_ensembl") },
         rn5 = { return("rnorvegicus_gene_ensembl") },
@@ -2405,6 +2519,13 @@ get.valid.chrs <- function(org)
             ))
         },
         hg19 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
+                "chr4","chr5","chr6","chr7","chr8","chr9","chrX","chrY"
+            ))
+        },
+        hg38 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
                 "chr17","chr18","chr19","chr2","chr20","chr21","chr22","chr3",
@@ -2467,6 +2588,7 @@ get.valid.chrs <- function(org)
 #' package in order to fetch the gene annotation for each organism. It has no
 #' parameters. Internal use.
 #'
+#' @param org one of the supported organisms.
 #' @return A character vector of Ensembl gene attributes.
 #' @export
 #' @author Panagiotis Moulos
@@ -2474,17 +2596,29 @@ get.valid.chrs <- function(org)
 #' \dontrun{
 #' gene.attr <- get.gene.attributes()
 #'}
-get.gene.attributes <- function() {
-    return(c(
-        "chromosome_name",
-        "start_position",
-        "end_position",
-        "ensembl_gene_id",
-        "percentage_gc_content",
-        "strand",
-        "external_gene_id",
-        "gene_biotype"
-    ))
+get.gene.attributes <- function(org) {
+    if (org %in% c("hg18","hg19","mm9"))
+        return(c(
+            "chromosome_name",
+            "start_position",
+            "end_position",
+            "ensembl_gene_id",
+            "percentage_gc_content",
+            "strand",
+            "external_gene_id",
+            "gene_biotype"
+        ))
+    else
+        return(c(
+            "chromosome_name",
+            "start_position",
+            "end_position",
+            "ensembl_gene_id",
+            "percentage_gc_content",
+            "strand",
+            "external_gene_name",
+            "gene_biotype"
+        ))
 }
 
 #' Annotation downloader helper
@@ -2493,6 +2627,7 @@ get.gene.attributes <- function() {
 #' package in order to fetch the exon annotation for each organism. It has no
 #' parameters. Internal use.
 #'
+#' @param org one of the supported organisms.
 #' @return A character vector of Ensembl exon attributes.
 #' @export
 #' @author Panagiotis Moulos
@@ -2500,17 +2635,29 @@ get.gene.attributes <- function() {
 #' \dontrun{
 #' exon.attr <- get.exon.attributes()
 #'}
-get.exon.attributes <- function() {
-    return(c(
-        "chromosome_name",
-        "exon_chrom_start",
-        "exon_chrom_end",
-        "ensembl_exon_id",
-        "strand",
-        "ensembl_gene_id",
-        "external_gene_id",
-        "gene_biotype"
-    ))
+get.exon.attributes <- function(org) {
+    if (org %in% c("hg18","hg19","mm9"))
+        return(c(
+            "chromosome_name",
+            "exon_chrom_start",
+            "exon_chrom_end",
+            "ensembl_exon_id",
+            "strand",
+            "ensembl_gene_id",
+            "external_gene_id",
+            "gene_biotype"
+        ))
+    else
+        return(c(
+            "chromosome_name",
+            "exon_chrom_start",
+            "exon_chrom_end",
+            "ensembl_exon_id",
+            "strand",
+            "ensembl_gene_id",
+            "external_gene_name",
+            "gene_biotype"
+        ))
 }
 
 #' Group together a more strict biotype filter
@@ -2585,6 +2732,46 @@ get.strict.biofilter <- function(org) {
                 IG_D_gene=FALSE,
                 IG_V_gene=FALSE,
                 IG_V_pseudogene=TRUE
+            ))
+        },
+        hg38 = {
+            return(list(
+                protein_coding=FALSE,
+                polymorphic_pseudogene=TRUE,
+                lincRNA=FALSE,
+                unprocessed_pseudogene=TRUE,
+                processed_pseudogene=TRUE,
+                antisense=FALSE,
+                processed_transcript=FALSE,
+                transcribed_unprocessed_pseudogene=TRUE,
+                sense_intronic=FALSE,
+                unitary_pseudogene=TRUE,
+                IG_V_gene=FALSE,
+                IG_V_pseudogene=TRUE,
+                TR_V_gene=FALSE,
+                sense_overlapping=FALSE,
+                transcribed_processed_pseudogene=TRUE,
+                miRNA=FALSE,
+                snRNA=FALSE,
+                misc_RNA=FALSE,
+                rRNA=TRUE,
+                snoRNA=TRUE,
+                IG_J_pseudogene=TRUE,
+                IG_J_gene=FALSE,
+                IG_D_gene=FALSE,
+                three_prime_overlapping_ncrna=FALSE,
+                IG_C_gene=FALSE,
+                IG_C_pseudogene=TRUE,
+                pseudogene=TRUE,
+                TR_V_pseudogene=TRUE,
+                Mt_tRNA=TRUE,
+                Mt_rRNA=TRUE,
+                translated_processed_pseudogene=TRUE,
+                TR_J_gene=FALSE,
+                TR_C_gene=FALSE,
+                TR_D_gene=FALSE,
+                TR_J_pseudogene=TRUE,
+                LRG_gene=FALSE
             ))
         },
         mm9 = {
@@ -2980,6 +3167,11 @@ get.preset.opts <- function(preset,org) {
 #'}
 make.fold.change <- function(contrast,sample.list,data.matrix,log.offset=1) {
     conds <- strsplit(contrast,"_vs_")[[1]]
+    #f (!is.matrix(data.matrix) || !is.data.frame(data.matrix)) { # Vector, nrow=1
+    #    nn <- names(data.matrix)
+    #    data.matrix <- t(as.matrix(data.matrix))
+    #    colnames(data.matrix) <- nn
+    #}
     fold.mat <- matrix(0,nrow(data.matrix),length(conds)-1)
     for (i in 2:length(conds)) { # First condition is ALWAYS reference
         samples.nom <- sample.list[[conds[i]]]

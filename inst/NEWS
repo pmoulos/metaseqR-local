@@ -173,7 +173,7 @@ BUG FIXES
     o Minor bug in argument checking, not allowing to not save the gene model in
     "exon" mode
 
-CHANGES IN VERSION 1.3.3 (2014-06-02)
+CHANGES IN VERSION 1.3.3 (2014-08-21)
 --------------------------------------
 
 NEW FEATURES
@@ -187,3 +187,19 @@ NEW FEATURES
 BUG FIXES
 
     o Fixed minor bug with warning level logging.
+    o Fixed problem occured with the change of biomaRt attributes for newer
+    organisms.
+
+CHANGES IN VERSION 1.3.4 (2014-09-03)
+--------------------------------------
+
+NEW FEATURES
+
+    o Added support for hg38
+
+BUG FIXES
+
+    o Fixed more problems occured with the change of biomaRt attributes for 
+    newer organisms.
+    o Fixed bug causing report crash when no genes are passing FDR threshold in
+    paired comparisons.

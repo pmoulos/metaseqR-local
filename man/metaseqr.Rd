@@ -8,8 +8,8 @@
         path = NULL, contrast = NULL, libsize.list = NULL,
         id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
         annotation = c("download", "embedded"),
-        org = c("hg18", "hg19", "mm9", "mm10", "rn5", "dm3", "danrer7",
-            "pantro4", "tair10"),
+        org = c("hg18", "hg19", "hg38", "mm9", "mm10", "rn5", "dm3", 
+            "danrer7", "pantro4", "tair10"),
         refdb = c("ensembl", "ucsc", "refseq"),
         count.type = c("gene", "exon"),
         exon.filters = list(min.active.exons = list(exons.per.gene = 5, 
@@ -195,9 +195,9 @@
     terms of column structure.}
 
     \item{org}{the supported organisms by metaseqr. These can
-    be, for human genomes \code{"hg18"} or \code{"hg19"}, for
-    mouse genomes \code{"mm9"}, \code{"mm10"}, for rat
-    genome \code{"rn5"}, for drosophila genome
+    be, for human genomes \code{"hg18"}, \code{"hg19"} or 
+    \code{"hg38"},  for mouse genomes \code{"mm9"}, \code{"mm10"}, 
+    for rat genome \code{"rn5"}, for drosophila genome
     \code{"dm3"}, for zebrafish genome \code{"danrer7"}, for
     chimpanzee genome \code{"pantro4"} and for Arabidopsis 
     thaliana genome \code{"tair10"}.}
