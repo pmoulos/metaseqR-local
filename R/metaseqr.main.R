@@ -1212,7 +1212,8 @@ metaseqr <- function(
     disp("Output data: ",paste(export.what,collapse=", "))
     disp("Output scale(s): ",paste(export.scale,collapse=", "))
     disp("Output values: ",paste(export.values,collapse=", "))
-    disp("Output statistics: ",paste(export.stats,collapse=", "),"\n")
+    if ("stats" %in% export.what)
+        disp("Output statistics: ",paste(export.stats,collapse=", "),"\n")
     ############################################################################
 
     if (count.type=="exon")
