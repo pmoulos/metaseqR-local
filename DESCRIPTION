@@ -37,7 +37,7 @@ Suggests:
     RUnit,
     BiocInstaller,
     BSgenome,
-    RMySQL
+    RSQLite
 Enhances:
     parallel,
     TCC

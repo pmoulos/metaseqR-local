@@ -1471,8 +1471,16 @@ get.ensembl.annotation <- function(org,type) {
 #' mm9.exons <- get.ucsc.annotation("mm9","exon")
 #'}
 get.ucsc.annotation <- function(org,type,refdb="ucsc",multic=FALSE) {
-    if (!require(RMySQL))
-        stopwrap("R package RMySQL is required!")
+    if (!require(RMySQL)) {
+        rmysql.present <- FALSE
+        warnwrap("R package RMySQL is not present! Annotation will be ",
+            "retrieved by downloading temporary files from UCSC and the usage
+            of a temporary SQLite database...")
+    }
+    else
+        rmysql.present <- TRUE
+    if (!require(RSQLite))
+        stopwrap("R package RSQLite is required to use annotation from UCSC!")
 
     if (org=="tair10") {
         warnwrap("Arabidopsis thaliana genome is not supported by UCSC Genome ",
@@ -1484,11 +1492,18 @@ get.ucsc.annotation <- function(org,type,refdb="ucsc",multic=FALSE) {
     chrs.exp <- paste("^",paste(valid.chrs,collapse="$|^"),"$",sep="")
 
     db.org <- get.ucsc.organism(org)
-    db.creds <- get.ucsc.credentials()
-    con <- dbConnect(MySQL(),user=db.creds[2],password=NULL,dbname=db.org,
-        host=db.creds[1])
-    query <- get.ucsc.query(org,type,refdb)
-    raw.ann <- dbGetQuery(con,query)
+    if (rmysql.present) {
+        db.creds <- get.ucsc.credentials()
+        con <- dbConnect(MySQL(),user=db.creds[2],password=NULL,dbname=db.org,
+            host=db.creds[1])
+        query <- get.ucsc.query(org,type,refdb)
+        raw.ann <- dbGetQuery(con,query)
+        dbDisconnect(con)
+    }
+    else {
+        # This should return the same data frame as the db query
+        get.ucsc.file(org,type,refdb)
+    }
     if (type=="gene") {
         ann <- raw.ann
         ann <- ann[grep(chrs.exp,ann$chromosome,perl=TRUE),]
@@ -1534,7 +1549,7 @@ get.ucsc.annotation <- function(org,type,refdb="ucsc",multic=FALSE) {
         )
         rownames(ann) <- ann$exon_id
     }
-    dbDisconnect(con)
+    
     gc.content <- get.gc.content(ann,org)
     ann$gc_content <- gc.content
     ann <- ann[order(ann$chromosome,ann$start),]
@@ -1594,6 +1609,300 @@ get.gc.content <- function(ann,org) {
     return(gc.content)
 }
 
+#' Download annotation from UCSC servers, according to organism and source
+#'
+#' Directly downloads UCSC and RefSeq annotation files from UCSC servers to be
+#' used with metaseqR. This functionality is used when the package RMySQL is not
+#' available for some reason, e.g. Windows machines.
+#'
+#' @param org one of metaseqR supported organisms.
+#' @param type either \code{"gene"} or \code{"exon"}.
+#' @param refdb one of \code{"ucsc"} or \code{"refseq"} to use the UCSC or RefSeq
+#' annotation sources respectively.
+#' @return A data frame with annotation elements.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' db.file <- get.ucsc.file("hg18","gene","ucsc")
+#'}
+get.ucsc.dbl <- function(org,type,refdb="ucsc") {
+    type <- tolower(type[1])
+    org <- tolower(org[1])
+    refdb <- tolower(refdb[1])
+    check.text.args("type",type,c("gene","exon"))
+    check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
+        "danrer7","pantro4","tair10"),multiarg=FALSE)
+    check.text.args("refdb",refdb,c("ucsc","refseq"))
+    
+    if (!require(RSQLite))
+        stopwrap("R package RSQLite is required to use annotation from UCSC!")
+
+    http.base <- paste("http://hgdownload.soe.ucsc.edu/goldenPath/",
+        get.ucsc.organism(org),"/database/",sep="")
+    
+    switch(type,
+        gene = {
+            switch(refdb,
+                ucsc = {
+                    switch(org,
+                        hg18 = {
+                            tables <- c("knownCanonical","knownGene",
+                                "knownToRefSeq","refFlat")
+                        },
+                        hg19 = {
+                            tables <- c("knownCanonical","knownGene",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","refFlat")
+                        },
+                        hg38 = {
+                            tables <- c("knownCanonical","knownGene",
+                                "knownToRefSeq","refFlat")
+                        },
+                        mm9 = {
+                            tables <- c("knownCanonical","knownGene",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","refFlat")
+                        },
+                        mm10 = {
+                            tables <- c("knownCanonical","knownGene",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","refFlat")
+                        },
+                        rn5 = {
+                            tables <- c("mgcGenes","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        dm3 = {
+                            tables <- c("flyBaseCanonical","flyBaseGene",
+                            "flyBaseToRefSeq","ensemblToGeneName",
+                            "ensemblSource")
+                        },
+                        danrer7 = {
+                            tables <- c("mgcGenes","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        pantro4 = {
+                            warnwrap("No UCSC Genome annotation for Pan ",
+                                "troglodytes! Will use RefSeq instead...",
+                                now=TRUE)
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        tair10 = {
+                            warnwrap("Arabidopsis thaliana genome is not ",
+                                "supported by UCSC Genome Borwser database! ",
+                                "Will automatically switch to Ensembl...",
+                                now=TRUE)
+                            return(FALSE)
+                        }
+                    )
+                },
+                refseq = {
+                    switch(org,
+                        hg18 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical")
+                        },
+                        hg19 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        hg38 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical")
+                        },
+                        mm9 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        mm10 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        rn5 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        dm3 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        danrer7 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        pantro4 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        tair10 = {
+                            warnwrap("Arabidopsis thaliana genome is not ",
+                                "supported by UCSC Genome Borwser database! ",
+                                "Will automatically switch to Ensembl...",
+                                now=TRUE)
+                            return(FALSE)
+                        }
+                    )
+                }
+            )
+        },
+        exon = {
+            switch(refdb,
+                ucsc = {
+                    switch(org,
+                        hg18 = {
+                            tables <- c("knownGene","knownCanonical",
+                                "knownToRefSeq","refFlat")
+                        },
+                        hg19 = {
+                            tables <- c("knownGene","knownCanonical",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","reFlat")
+                        },
+                        hg38 = {
+                            tables <- c("knownGene","knownCanonical",
+                                "knownToRefSeq","refFlat")
+                        },
+                        mm9 = {
+                            tables <- c("knownGene","knownCanonical",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","reFlat")
+                        },
+                        mm10 = {
+                            tables <- c("knownGene","knownCanonical",
+                                "knownToRefSeq","knownToEnsembl",
+                                "ensemblSource","reFlat")
+                        },
+                        rn5 = {
+                            tables <- c("mgcGenes","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        dm3 = {
+                            tables <- c("flyBaseCanonical","flyBaseGene",
+                                "flyBaseToRefSeq","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        danrer7 = {
+                            tables <- c("mgcGene","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        pantro4 = {
+                            warnwrap("No UCSC Genome annotation for Pan ",
+                                "troglodytes! Will use RefSeq instead...",
+                                now=TRUE)
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        tair10 = {
+                            warnwrap("Arabidopsis thaliana genome is not ",
+                                "supported by UCSC Genome Borwser database! ",
+                                "Will automatically switch to Ensembl...",
+                                now=TRUE)
+                            return(FALSE)
+                        }
+                    )
+                },
+                refseq = {
+                    switch(org,
+                        hg18 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical")
+                        },
+                        hg19 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        hg38 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical")
+                        },
+                        mm9 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        mm10 = {
+                            tables <- c("refFlat","knownToRefSeq",
+                                "knownCanonical","knownToEnsembl",
+                                "ensemblSource")
+                        },
+                        rn5 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        dm3 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        danrer7 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        pantro4 = {
+                            tables <- c("refFlat","ensemblToGeneName",
+                                "ensemblSource")
+                        },
+                        tair10 = {
+                            warnwrap("Arabidopsis thaliana genome is not ",
+                                "supported by UCSC Genome Borwser database! ",
+                                "Will automatically switch to Ensembl...",
+                                now=TRUE)
+                            return(FALSE)
+                        }
+                    )
+                }
+            )
+        }
+    )
+    file.list <- vector("list",length(tables))
+    names(file.list) <- tables
+    for (n in names(file.list)) {
+        file.list[[n]]$txt <- paste(http.base,n,".txt.gz",sep="")
+        file.list[[n]]$sql <- paste(http.base,n,".sql",sep="")
+    }
+    # Fill the fields for each table
+    drv <- dbDriver("SQLite")
+    db.tmp <- tempfile()
+    con <- dbConnect(drv,dbname=db.tmp)
+    disp("  Defining tables for temporary SQLite ",refdb," ",org," ",
+        type," subset database")
+    for (n in names(file.list)) {
+        #disp("    Creating table ",n)
+        cat("    Creating table ",n,"\n")
+        sql.def <- read.delim(file.list[[n]]$sql,row.names=NULL)
+        sql.def <- as.character(sql.def[,1])
+        field.start <- grep("CREATE",sql.def)
+        #field.end <- grep("ENGINE",sql.def)
+        field.end <- grep("KEY",sql.def)[1]
+        field.set <- sql.def[field.start:(field.end-1)]
+        field.set[length(field.set)]<-gsub(",","",field.set[length(field.set)])
+        create.query <- paste(paste(field.set,collapse="")," )",sep="")
+        dbSendQuery(con,create.query)
+    }
+    disp("  Retrieving tables for temporary SQLite ",refdb," ",org," ",type,
+        " subset database")
+    for (n in names(file.list)) {
+        disp("    Retrieving table fields for ",n)
+        download.file(file.list[[n]]$txt,file.path(tempdir(),
+            paste(n,".txt.gz",sep="")))
+        if (.Platform$OS.type == "unix")
+            system(paste("gzip -df",file.path(tempdir(),
+                paste(n,".txt.gz",sep=""))))
+        else
+            unzip(file.path(tempdir(),paste(n,".txt.gz",sep="")))
+        sql.df <- read.delim(file.path(tempdir(),paste(n,".txt.gz",sep="")),
+            row.names=NULL,header=FALSE,strip.white=TRUE)
+        dbWriteTable(con,n,sql.df,row.names=FALSE,header=FALSE)
+    }
+    dbDisconnect(con)
+    return()
+}
+
 #' Return queries for the UCSC Genome Browser database, according to organism and
 #' source
 #'
@@ -1610,7 +1919,7 @@ get.gc.content <- function(ann,org) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' db.query <- get.ucsc.query("gene","ucsc")
+#' db.query <- get.ucsc.query("hg18","gene","ucsc")
 #'}
 get.ucsc.query <- function(org,type,refdb="ucsc") {
     type <- tolower(type[1])
