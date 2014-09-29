@@ -69,6 +69,7 @@ Collate:
     'metaseqr.norm.R'
     'metaseqR-package.R'
     'metaseqr.plot.R'
+    'metaseqr.query.R'
     'metaseqr.sim.R'
     'metaseqr.stat.R'
     'metaseqr.util.R'
