@@ -29,7 +29,7 @@ get.ucsc.dbl <- function(org,type,refdb="ucsc") {
 
     http.base <- paste("http://hgdownload.soe.ucsc.edu/goldenPath/",
         get.ucsc.organism(org),"/database/",sep="")
-    table.defs <- get.ucsc.tabledef(org,type,refdb)
+    table.defs <- get.ucsc.tabledef(org,type,refdb,"fields")
     file.list <- vector("list",length(table.defs))
     names(file.list) <- names(table.defs)
     for (n in names(file.list))
@@ -39,19 +39,18 @@ get.ucsc.dbl <- function(org,type,refdb="ucsc") {
     drv <- dbDriver("SQLite")
     db.tmp <- tempfile()
     con <- dbConnect(drv,dbname=db.tmp)
-    disp("  Defining tables for temporary SQLite ",refdb," ",org," ",
-        type," subset database")
-    for (n in names(file.list)) {
-        cat("    Creating table ",n,"\n")
-        dbSendQuery(con,table.defs[[n]])
-    }
+    #disp("  Defining tables for temporary SQLite ",refdb," ",org," ",
+    #    type," subset database")
+    #for (n in names(file.list)) {
+    #    disp("    Creating table ",n,"\n")
+    #    dbSendQuery(con,table.defs[[n]])
+    #}
     disp("  Retrieving tables for temporary SQLite ",refdb," ",org," ",type,
         " subset database")
     for (n in names(file.list)) {
-        #disp("    Retrieving table fields for ",n)
-        cat("    Retrieving table fields for ",n,"\n")
+        disp("    Retrieving table ",n)
         download.file(file.list[[n]],file.path(tempdir(),
-            paste(n,".txt.gz",sep="")))
+            paste(n,".txt.gz",sep="")),quiet=TRUE)
         if (.Platform$OS.type == "unix")
             system(paste("gzip -df",file.path(tempdir(),
                 paste(n,".txt.gz",sep=""))))
@@ -59,10 +58,11 @@ get.ucsc.dbl <- function(org,type,refdb="ucsc") {
             unzip(file.path(tempdir(),paste(n,".txt.gz",sep="")))
         sql.df <- read.delim(file.path(tempdir(),paste(n,".txt",sep="")),
             row.names=NULL,header=FALSE,strip.white=TRUE)
-        dbWriteTable(con,n,sql.df,row.names=FALSE,header=FALSE)
+        names(sql.df) <- table.defs[[n]]
+        dbWriteTable(con,n,sql.df,row.names=FALSE)
     }
     dbDisconnect(con)
-    return()
+    return(db.tmp)
 }
 
 #' Get SQLite UCSC table defintions, according to organism and source
@@ -83,14 +83,16 @@ get.ucsc.dbl <- function(org,type,refdb="ucsc") {
 #' \dontrun{
 #' db.tabledefs <- get.ucsc.tables("hg18","gene","ucsc")
 #'}
-get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
+get.ucsc.tabledef <- function(org,type,refdb="ucsc",what="queries") {
     type <- tolower(type[1])
     org <- tolower(org[1])
     refdb <- tolower(refdb[1])
+    what <- tolower(what[1])
     check.text.args("type",type,c("gene","exon"))
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
         "danrer7","pantro4","tair10"),multiarg=FALSE)
     check.text.args("refdb",refdb,c("ucsc","refseq"))
+    check.text.args("what",what,c("queries","fields"))
     switch(type,
         gene = {
             switch(refdb,
@@ -99,95 +101,95 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                         hg18 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         hg19 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         hg38 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         mm9 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         mm10 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         rn5 = {
                             return(list(
-                                mgcGenes=get.ucsc.tbl.template("mgcGenes"),
+                                mgcGenes=get.ucsc.tbl.tpl("mgcGenes",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         dm3 = {
                             return(list(
                                 flyBaseCanonical=
-                                    get.ucsc.tbl.template("flyBaseCanonical"),
+                                    get.ucsc.tbl.tpl("flyBaseCanonical",what),
                                 flyBaseGene=
-                                    get.ucsc.tbl.template("flyBaseGene"),
+                                    get.ucsc.tbl.tpl("flyBaseGene",what),
                                 flyBaseToRefSeq=
-                                    get.ucsc.tbl.template("flyBaseToRefSeq"),
+                                    get.ucsc.tbl.tpl("flyBaseToRefSeq",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         danrer7 = {
                             return(list(
-                                mgcGenes=get.ucsc.tbl.template("mgcGenes"),
+                                mgcGenes=get.ucsc.tbl.tpl("mgcGenes",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         pantro4 = {
@@ -195,11 +197,11 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                                 "troglodytes! Will use RefSeq instead...",
                                 now=TRUE)
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         tair10 = {
@@ -215,95 +217,95 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                     switch(org,
                         hg18 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical")
+                                    get.ucsc.tbl.tpl("knownCanonical",what)
                             ))
                         },
                         hg19 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         hg38 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical")
+                                    get.ucsc.tbl.tpl("knownCanonical",what)
                             ))
                         },
                         mm9 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         mm10 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         rn5 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         dm3 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         danrer7 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         pantro4 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         tair10 = {
@@ -324,95 +326,95 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                         hg18 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         hg19 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         hg38 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         mm9 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         mm10 = {
                             return(list(
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
-                                knownGene=get.ucsc.tbl.template("knownGene"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
+                                knownGene=get.ucsc.tbl.tpl("knownGene",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource"),
-                                refFlat=get.ucsc.tbl.template("refFlat")
+                                    get.ucsc.tbl.tpl("ensemblSource",what),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what)
                             ))
                         },
                         rn5 = {
                             return(list(
-                                mgcGenes=get.ucsc.tbl.template("mgcGenes"),
+                                mgcGenes=get.ucsc.tbl.tpl("mgcGenes",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         dm3 = {
                             return(list(
                                 flyBaseCanonical=
-                                    get.ucsc.tbl.template("flyBaseCanonical"),
+                                    get.ucsc.tbl.tpl("flyBaseCanonical",what),
                                 flyBaseGene=
-                                    get.ucsc.tbl.template("flyBaseGene"),
+                                    get.ucsc.tbl.tpl("flyBaseGene",what),
                                 flyBaseToRefSeq=
-                                    get.ucsc.tbl.template("flyBaseToRefSeq"),
+                                    get.ucsc.tbl.tpl("flyBaseToRefSeq",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         danrer7 = {
                             return(list(
-                                mgcGenes=get.ucsc.tbl.template("mgcGenes"),
+                                mgcGenes=get.ucsc.tbl.tpl("mgcGenes",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         pantro4 = {
@@ -420,11 +422,11 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                                 "troglodytes! Will use RefSeq instead...",
                                 now=TRUE)
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         tair10 = {
@@ -440,95 +442,95 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
                     switch(org,
                         hg18 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical")
+                                    get.ucsc.tbl.tpl("knownCanonical",what)
                             ))
                         },
                         hg19 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         hg38 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical")
+                                    get.ucsc.tbl.tpl("knownCanonical",what)
                             ))
                         },
                         mm9 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         mm10 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 knownToRefSeq=
-                                    get.ucsc.tbl.template("knownToRefSeq"),
+                                    get.ucsc.tbl.tpl("knownToRefSeq",what),
                                 knownCanonical=
-                                    get.ucsc.tbl.template("knownCanonical"),
+                                    get.ucsc.tbl.tpl("knownCanonical",what),
                                 knownToEnsembl=
-                                    get.ucsc.tbl.template("knownToEnsembl"),
+                                    get.ucsc.tbl.tpl("knownToEnsembl",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         rn5 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         dm3 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         danrer7 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         pantro4 = {
                             return(list(
-                                refFlat=get.ucsc.tbl.template("refFlat"),
+                                refFlat=get.ucsc.tbl.tpl("refFlat",what),
                                 ensemblToGeneName=
-                                    get.ucsc.tbl.template("ensemblToGeneName"),
+                                    get.ucsc.tbl.tpl("ensemblToGeneName",what),
                                 ensemblSource=
-                                    get.ucsc.tbl.template("ensemblSource")
+                                    get.ucsc.tbl.tpl("ensemblSource",what)
                             ))
                         },
                         tair10 = {
@@ -558,9 +560,9 @@ get.ucsc.tabledef <- function(org,type,refdb="ucsc") {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' db.table.tmpl <- get.ucsc.tbl.template("knownCanonical")
+#' db.table.tmpl <- get.ucsc.tbl.tpl("knownCanonical")
 #'}
-get.ucsc.tbl.template <- function(tab,what="queries") {
+get.ucsc.tbl.tpl <- function(tab,what="queries") {
     if (what=="queries") {
         switch(tab,
             knownCanonical = {

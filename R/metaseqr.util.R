@@ -1499,7 +1499,8 @@ get.ucsc.annotation <- function(org,type,refdb="ucsc",multic=FALSE) {
     db.org <- get.ucsc.organism(org)
     if (rmysql.present) {
         db.creds <- get.ucsc.credentials()
-        con <- dbConnect(MySQL(),user=db.creds[2],password=NULL,dbname=db.org,
+        drv <- dbDriver("MySQL")
+        con <- dbConnect(drv,user=db.creds[2],password=NULL,dbname=db.org,
             host=db.creds[1])
         query <- get.ucsc.query(org,type,refdb)
         raw.ann <- dbGetQuery(con,query)
@@ -1507,7 +1508,12 @@ get.ucsc.annotation <- function(org,type,refdb="ucsc",multic=FALSE) {
     }
     else {
         # This should return the same data frame as the db query
-        get.ucsc.file(org,type,refdb)
+        tmp.sqlite <- get.ucsc.dbl(org,type,refdb)
+        drv <- dbDriver("SQLite")
+        con <- dbConnect(drv,dbname=tmp.sqlite)
+        query <- get.ucsc.query(org,type,refdb)
+        raw.ann <- dbGetQuery(con,query)
+        dbDisconnect(con)
     }
     if (type=="gene") {
         ann <- raw.ann

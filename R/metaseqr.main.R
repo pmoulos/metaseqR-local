@@ -857,18 +857,27 @@ metaseqr <- function(
             "be a targets file with at least three columns! See the ",
             "read.targets function. counts may also be a gene model list ",
             "(see the documentation)")
-    if (!missing(counts) && is.character(counts) && file.exists(counts)
-        && length(grep(".RData$",counts)))
+    if (!missing(counts) && !missing(sample.list) && is.character(counts) 
+        && file.exists(counts) && length(grep(".RData$",counts))>0) 
+    {
+        warning("When restoring a previous analysis, sample.list argument is ",
+            "not necessary! Ignoring...")
+        sample.list <- NULL
+        from.previous <- TRUE
+    }
+    if (!missing(counts) && missing(sample.list) && is.character(counts) 
+        && file.exists(counts) && length(grep(".RData$",counts))>0)
         from.previous <- TRUE
     if (missing(sample.list) && !from.previous || (!is.list(sample.list) &&
         !file.exists(sample.list)))
         stop("You must provide a list with condition names and sample names ",
             "(same as in the counts file) or an input file to create the ",
             "sample list from!")
-    if (!is.list(sample.list) && file.exists(sample.list) && !missing(counts)
-        && !from.previous)
+    if (!missing(sample.list) && !is.list(sample.list) 
+        && file.exists(sample.list) && !missing(counts) && !from.previous)
         sample.list <- make.sample.list(sample.list)
-    if (!is.list(sample.list) && file.exists(sample.list) && missing(counts))
+    if (!missing(sample.list) && !is.list(sample.list) 
+        && file.exists(sample.list) && missing(counts))
     {
         counts <- NULL
         the.list <- read.targets(sample.list,path=path)
@@ -924,6 +933,16 @@ metaseqr <- function(
         if (length(which(!is.na(match(samples,aline)))) != length(samples))
             stopwrap("The sample names provided in the counts file/list do ",
                 "not match with those of the sample.list!")
+    }
+    
+    # Time to load previous analysis if existing
+    if (from.previous) 
+    {
+        tmp.env <- new.env()
+        disp("Restoring previous analysis from ",basename(counts))
+        load(counts,tmp.env)
+        sample.list <- tmp.env$sample.list
+        count.type <- tmp.env$count.type
     }
 
     file.type <- tolower(file.type[1])
@@ -1116,16 +1135,6 @@ metaseqr <- function(
                 "Adding to figure output formats...")
             fig.format <- c(fig.format,"png")
         }
-    }
-    
-    # Time to load previous analysis if existing
-    if (from.previous) 
-    {
-        tmp.env <- new.env()
-        disp("  Restoring previous analysis from ",basename(counts))
-        load(counts,tmp.env)
-        sample.list <- tmp.env$sample.list
-        count.type <- tmp.env$count.type
     }
 
     # Display initialization report
@@ -1361,7 +1370,7 @@ metaseqr <- function(
             {
                 disp("Saving gene model to ",file.path(PROJECT.PATH[["data"]],
                     "gene_model.RData"))
-                save(the.counts,exon.data,gene.data,count.type,
+                save(the.counts,exon.data,gene.data,sample.list,count.type,
                     file=file.path(PROJECT.PATH$data,"gene_model.RData"),
                     compress=TRUE)
             }
@@ -1516,7 +1525,7 @@ metaseqr <- function(
         {
             disp("Saving gene model to ",file.path(PROJECT.PATH[["data"]],
                 "gene_model.RData"))
-            save(gene.counts,gene.data,count.type,
+            save(gene.counts,gene.data,sample.list,count.type,
                 file=file.path(PROJECT.PATH$data,"gene_model.RData"),
                 compress=TRUE)
         }

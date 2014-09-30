@@ -2,7 +2,7 @@
 \alias{get.ucsc.tabledef}
 \title{Get SQLite UCSC table defintions, according to organism and source}
 \usage{
-    get.ucsc.tabledef(org, type, refdb="ucsc")
+    get.ucsc.tabledef(org, type, refdb="ucsc", what="queries")
 }
 \arguments{
     \item{org}{one of metaseqR supported organisms.}    
@@ -12,6 +12,9 @@
     \item{refdb}{one of \code{"ucsc"} or \code{"refseq"} 
     to use the UCSC or RefSeq annotation sources 
     respectively.}
+    
+    \item{what}{either \code{"queries"} for SQLite table definitions
+    or \code{"fields"} for only a vector of table field names.}
 }
 \value{
     A list with SQLite table definitions.

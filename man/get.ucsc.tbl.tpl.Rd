@@ -1,8 +1,8 @@
-\name{get.ucsc.tbl.template}
-\alias{get.ucsc.tbl.template}
+\name{get.ucsc.tbl.tpl}
+\alias{get.ucsc.tbl.tpl}
 \title{Create SQLite UCSC table template defintions}
 \usage{
-    get.ucsc.tbl(tab, what="queries")
+    get.ucsc.tbl.tpl(tab, what="queries")
 }
 \arguments{
     \item{tab}{name of UCSC database table.}
@@ -23,7 +23,7 @@
 }
 \examples{
 \donttest{
-db.table.tmpl <- get.ucsc.tbl.template("knownCanonical")
+db.table.tmpl <- get.ucsc.tbl.tpl("knownCanonical")
 }
 }
 \author{
