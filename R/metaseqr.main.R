@@ -132,8 +132,10 @@
 #' @param org the supported organisms by metaseqr. These can be, for human genomes
 #' \code{"hg18"}, \code{"hg19"} or \code{"hg38"} for mouse genomes \code{"mm9"},
 #' \code{"mm10"}, for rat genomes \code{"rn5"}, for drosophila genome \code{"dm3"}, 
-#' for zebrafish genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"} 
-#' and for Arabidopsis thaliana genome \code{"tair10"}.
+#' for zebrafish genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"},
+#' for pig genome \code{"susScr3"} and for Arabidopsis thaliana genome \code{"tair10"}.
+#' Finally, \code{"custom"} will instruct metaseqR to completely ignore the 
+#' \code{org} argument and depend solely on annotation file provided by the user.
 #' @param refdb the reference annotation repository from which to retrieve annotation
 #' elements to use with metaseqr. It can be one of \code{"ensembl"} (default),
 #' \code{"ucsc"} or \code{"refseq"}.
@@ -780,7 +782,7 @@ metaseqr <- function(
     bt.col=NA,
     annotation=c("download","embedded"),
     org=c("hg18","hg19","hg38","mm9","mm10","rn5","dm3","danrer7","pantro4",
-        "tair10"),
+        "susscr3","tair10","custom"),
     refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon"),
     exon.filters=list(
@@ -996,7 +998,7 @@ metaseqr <- function(
     check.text.args("annotation",annotation,c("embedded","download"),
         multiarg=FALSE)
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
-        "danrer7","pantro4","tair10"),multiarg=FALSE)
+        "danrer7","pantro4","susscr3","tair10","custom"),multiarg=FALSE)
     check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
     check.text.args("when.apply.filter",when.apply.filter,c("postnorm",

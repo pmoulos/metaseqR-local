@@ -218,3 +218,12 @@ BUG FIXES
     o Fixed problem with RMySQL dependency when using annotation from UCSC.
     Solved with the usage of RSQLite, however, the process is a bit longer.
     
+CHANGES IN VERSION 1.5.1 (2014-10-31)
+--------------------------------------
+
+NEW FEATURES
+
+    o Support for pig genome (Sus scrofa, susScr3 in UCSC)
+    
+BUG FIXES
+
