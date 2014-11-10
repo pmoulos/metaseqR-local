@@ -1765,7 +1765,7 @@ load.bs.genome <- function(org) {
             "proceed!")
     bs.org <- get.bs.organism(org)
     if (bs.org %in% installed.genomes())
-        bs.obj <- getBSgenome(org)
+        bs.obj <- getBSgenome(get.ucsc.organism(org))
     else {
         biocLite(bs.org)
         bs.obj <- getBSgenome(get.ucsc.organism(org))
