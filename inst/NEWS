@@ -227,3 +227,20 @@ NEW FEATURES
     
 BUG FIXES
 
+    o None 
+    
+CHANGES IN VERSION 1.5.13 (2014-12-11)
+--------------------------------------
+
+NEW FEATURES
+
+    o Minor code improvements
+    
+BUG FIXES
+
+    o Introduced a (hopefully robust) fix for constant changes in Ensembl
+    schema for human GRC37 (hg19). It increases annotation retrieval time
+    though
+    o Fixed problem when input counts are a data.frame and count.type in exon,
+    introduced during package upgrades. Thanks to Ben Elsworth, Garvan
+    Institute of Medical Research, Austria.

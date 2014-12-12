@@ -1458,7 +1458,7 @@ get.ensembl.annotation <- function(org,type) {
             gene_id=bm$ensembl_gene_id,
             gc_content=bm$percentage_gc_content,
             strand=ifelse(bm$strand==1,"+","-"),
-            gene_name=if (org %in% c("hg18","hg19","mm9")) bm$external_gene_id 
+            gene_name=if (org %in% c("hg18","mm9")) bm$external_gene_id 
                 else bm$external_gene_name,
             biotype=bm$gene_biotype
         )
@@ -1466,18 +1466,37 @@ get.ensembl.annotation <- function(org,type) {
     }
     else if (type=="exon") {
         bm <- getBM(attributes=get.exon.attributes(org),mart=mart)
-        ann <- data.frame(
-            chromosome=paste("chr",bm$chromosome_name,sep=""),
-            start=bm$exon_chrom_start,
-            end=bm$exon_chrom_end,
-            exon_id=bm$ensembl_exon_id,
-            gene_id=bm$ensembl_gene_id,
-            strand=ifelse(bm$strand==1,"+","-"),
-            gene_name=if (org %in% c("hg18","hg19","mm9")) bm$external_gene_id 
-                else bm$external_gene_name,
-            biotype=bm$gene_biotype
-        )
-        rownames(ann) <- ann$exon_id
+        if (org == "hg19") {
+            disp("  Bypassing problem with hg19 Ensembl combined gene-exon",
+                "annotation... Will take slightly longer...")
+            bmg <- getBM(attributes=get.gene.attributes(org),mart=mart)
+            gene_name <- bmg$external_gene_name
+            names(gene_name) <- bmg$ensembl_gene_id
+            ann <- data.frame(
+                chromosome=paste("chr",bm$chromosome_name,sep=""),
+                start=bm$exon_chrom_start,
+                end=bm$exon_chrom_end,
+                exon_id=bm$ensembl_exon_id,
+                gene_id=bm$ensembl_gene_id,
+                strand=ifelse(bm$strand==1,"+","-"),
+                gene_name=gene_name[bm$ensembl_gene_id],
+                biotype=bm$gene_biotype
+            )
+            rownames(ann) <- ann$exon_id
+        }
+        else
+            ann <- data.frame(
+                chromosome=paste("chr",bm$chromosome_name,sep=""),
+                start=bm$exon_chrom_start,
+                end=bm$exon_chrom_end,
+                exon_id=bm$ensembl_exon_id,
+                gene_id=bm$ensembl_gene_id,
+                strand=ifelse(bm$strand==1,"+","-"),
+                gene_name=if (org %in% c("hg18","mm9")) bm$external_gene_id 
+                    else bm$external_gene_name,
+                biotype=bm$gene_biotype
+            )
+            rownames(ann) <- ann$exon_id
     }
     ann <- ann[order(ann$chromosome,ann$start),]
     ann <- ann[grep(chrs.exp,ann$chromosome),]
@@ -1985,7 +2004,7 @@ get.valid.chrs <- function(org)
 #' gene.attr <- get.gene.attributes()
 #'}
 get.gene.attributes <- function(org) {
-    if (org %in% c("hg18","hg19","mm9"))
+    if (org %in% c("hg18","mm9"))
         return(c(
             "chromosome_name",
             "start_position",
@@ -2024,7 +2043,7 @@ get.gene.attributes <- function(org) {
 #' exon.attr <- get.exon.attributes()
 #'}
 get.exon.attributes <- function(org) {
-    if (org %in% c("hg18","hg19","mm9"))
+    if (org %in% c("hg18","mm9"))
         return(c(
             "chromosome_name",
             "exon_chrom_start",
@@ -2033,6 +2052,16 @@ get.exon.attributes <- function(org) {
             "strand",
             "ensembl_gene_id",
             "external_gene_id",
+            "gene_biotype"
+        ))
+    else if (org == "hg19")
+        return(c(
+            "chromosome_name",
+            "exon_chrom_start",
+            "exon_chrom_end",
+            "ensembl_exon_id",
+            "strand",
+            "ensembl_gene_id",
             "gene_biotype"
         ))
     else
