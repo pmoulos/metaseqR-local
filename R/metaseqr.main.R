@@ -89,6 +89,8 @@
 #' argument should be provided (see below). The third column MUST contain the 
 #' biological condition where each of the samples in the first column should belong 
 #' to.
+#' @param exclude.list a list of samples to exclude, in the same (list) format 
+#' as \code{sample.list} above.
 #' @param path an optional path where all the BED/BAM files are placed, to be 
 #' prepended to the BAM/BED file names in the targets file. If not given and if 
 #' the files in the second column of the targets file do not contain a path to a 
@@ -772,6 +774,7 @@
 metaseqr <- function(
     counts,
     sample.list,
+    exclude.list=NULL,
     file.type=c("auto","sam","bam","bed"),
     path=NULL,
     contrast=NULL,
@@ -876,7 +879,7 @@ metaseqr <- function(
     { # Time to load previous analysis if existing
         from.previous <- TRUE
         tmp.env <- new.env()
-        disp("Restoring previous analysis from ",basename(counts))
+        message("Restoring previous analysis from ",basename(counts))
         load(counts,tmp.env)
         sample.list <- tmp.env$sample.list
         count.type <- tmp.env$count.type
@@ -947,6 +950,20 @@ metaseqr <- function(
             stopwrap("The sample names provided in the counts file/list do ",
                 "not match with those of the sample.list!")
     }
+    
+    # If exclude list given, check that it's a subset of sample.list, otherwise
+    # just ignore exclude.list
+    if (!is.null(exclude.list) && !is.na(exclude.list))
+    {
+        sl <- unlist(sample.list)
+        el <- unlist(exclude.list)
+        if (length(intersect(sl,el)) != length(el))
+        {
+            warnwrap("Some samples in exclude.list do not match those in the ",
+                "initial sample.list! Ignoring...",now=TRUE)
+            exclude.list <- NULL
+        }
+    }   
 
     file.type <- tolower(file.type[1])
     annotation <- tolower(annotation[1])
@@ -974,7 +991,7 @@ metaseqr <- function(
         {
             check.file.args("counts",counts)
             if (from.previous)
-                counts.name <- "previously stored analysis object"
+                counts.name <- "previously stored project"
             else
                 counts.name <- basename(counts)
         }
@@ -1151,7 +1168,11 @@ metaseqr <- function(
     ############################################################################
     disp("Read counts file: ",counts.name)
     disp("Conditions: ",paste(names(sample.list),collapse=", "))
-    disp("Samples: ",paste(unlist(sample.list),collapse=", "))
+    disp("Samples to include: ",paste(unlist(sample.list),collapse=", "))
+    if (!is.null(exclude.list) && !is.na(exclude.list))
+        disp("Samples to exclude: ",paste(unlist(exclude.list),collapse=", "))
+    else
+        disp("Samples to exclude: none")
     disp("Requested contrasts: ",paste(contrast,collapse=", "))
     if (!is.null(libsize.list))
     {
@@ -1323,8 +1344,7 @@ metaseqr <- function(
         {
             if (!is.null(counts)) # Otherwise it's coming ready from read2count
             {
-                if (!is.data.frame(counts) && !is.list(counts) 
-                    && !from.previous)
+                if (!is.data.frame(counts) && !is.list(counts))
                 {
                     disp("Reading counts file ",counts.name,"...")
                     exon.counts <- read.delim(counts)
@@ -1384,6 +1404,16 @@ metaseqr <- function(
         }
         else # Retrieved gene model and/or previous analysis
             the.counts <- counts
+            
+        # Exclude any samples not wanted (when e.g. restoring a previous project
+        # and having determined that some samples are of bad quality
+        if (!is.null(exclude.list) && !is.na(exclude.list))
+        {
+            for (n in names(exclude.list))
+                sample.list[[n]] <- setdiff(sample.list[[n]],
+                    exclude.list[[n]])
+            the.counts <- the.counts[unlist(sample.list)]
+        }
 
         # Apply exon filters
         if (!is.null(exon.filters))
@@ -1527,6 +1557,16 @@ metaseqr <- function(
         gene.data <- gene.data[rownames(gene.counts),]
         gene.length <- gene.data$end - gene.data$start # Based on total gene lengths
         names(gene.length) <- rownames(gene.data)
+        
+        # Exclude any samples not wanted (when e.g. restoring a previous project
+        # and having determined that some samples are of bad quality
+        if (!is.null(exclude.list) && !is.na(exclude.list))
+        {
+            for (n in names(exclude.list))
+                sample.list[[n]] <- setdiff(sample.list[[n]],
+                    exclude.list[[n]])
+            gene.counts <- gene.counts[,unlist(sample.list,use.names=FALSE)]
+        }
         
         if (save.gene.model)
         {

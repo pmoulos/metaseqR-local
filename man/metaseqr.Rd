@@ -3,7 +3,7 @@
 \alias{metaseqr.main}
 \title{The main metaseqr pipeline}
 \usage{
-    metaseqr(counts, sample.list,
+    metaseqr(counts, sample.list, exclude.list,
         file.type = c("auto", "sam", "bam", "bed"),
         path = NULL, contrast = NULL, libsize.list = NULL,
         id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
@@ -135,6 +135,9 @@
     provided (see below). The third column MUST contain the
     biological condition where each of the samples in the
     first column should belong to.}
+    
+    \item{exclude.list}{ a list of samples to exclude, in the 
+    same (list) format as \code{sample.list} above.}
 
     \item{path}{an optional path where all the BED/BAM files
     are placed, to be prepended to the BAM/BED file names in

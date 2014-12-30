@@ -249,3 +249,18 @@ BUG FIXES
     to Ben Elsworth, Garvan Institute of Medical Research, Austria.
     o Fixed problem related to a bug in the current version of edgeR GLM and 
     the usage of ... in glmFit.
+
+CHANGES IN VERSION 1.5.2 (2014-12-30)
+--------------------------------------
+
+NEW FEATURES
+
+    o Added the argument exclude.list, to provide the possibility of excluding
+    samples from any analysis, e.g. in the case where after a preliminary 
+    metaseqr run, some samples are not of adequate quality. It is useful when
+    a previous analysis is restored, so as not to repeat the construction of
+    a gene model from exons for example.
+    
+BUG FIXES
+
+    o None

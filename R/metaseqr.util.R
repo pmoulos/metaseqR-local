@@ -3038,6 +3038,9 @@ make.contrast.list <- function(contrast,sample.list) {
 #' The first column MUST contain UNIQUE sample names and the second column MUST
 #' contain the biological condition where each of the samples in the first column
 #' should belong to.
+#' @param type one of \code{"simple"} or \code{"targets"} to indicate if the input
+#' is a simple two column text file or the targets file used to launch the main
+#' analysis pipeline.
 #' @return A named list whose names are the conditions of the experiments and its
 #' members are the samples belonging to each condition.
 #' @export
@@ -3049,13 +3052,18 @@ make.contrast.list <- function(contrast,sample.list) {
 #' write.table(targets,file="targets.txt",sep="\t",row.names=FALSE,quote="")
 #' sample.list <- make.sample.list("targets.txt")
 #'}
-make.sample.list <- function(input) {
+make.sample.list <- function(input,type=c("simple","targets")) {
     if (missing(input) || !file.exists(input))
         stopwrap("File to make sample list from should be a valid existing ",
             "text file!")
+    check.text.args("type",file.type,c("simple","targets"),
+        multiarg=FALSE)
     tab <- read.delim(input)
     samples <- as.character(tab[,1])
-    conditions <- unique(as.character(tab[,2]))
+    if (type=="simple")
+        conditions <- unique(as.character(tab[,2]))
+    else if (type=="targets")
+        conditions <- unique(as.character(tab[,3]))
     if (length(samples) != length(unique(samples)))
         stopwrap("Sample names must be unique for each sample!")
     sample.list <- vector("list",length(conditions))
