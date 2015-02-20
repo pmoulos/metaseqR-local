@@ -3,13 +3,13 @@
 \alias{metaseqr.main}
 \title{The main metaseqr pipeline}
 \usage{
-    metaseqr(counts, sample.list, exclude.list,
+    metaseqr(counts, sample.list, exclude.list = NULL,
         file.type = c("auto", "sam", "bam", "bed"),
         path = NULL, contrast = NULL, libsize.list = NULL,
         id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
         annotation = c("download", "embedded"),
         org = c("hg18", "hg19", "hg38", "mm9", "mm10", "rn5", "dm3", 
-            "danrer7", "pantro4", "susscr3", "tair10", "custom"),
+            "danrer7", "pantro4", "susscr3", "tair10", "bmori2", "custom"),
         refdb = c("ensembl", "ucsc", "refseq"),
         count.type = c("gene", "exon"),
         exon.filters = list(min.active.exons = list(exons.per.gene = 5, 
@@ -29,7 +29,7 @@
         adjust.method = sort(c(p.adjust.methods, "qvalue")),
         meta.p = if (length(statistics) > 1) c("simes", "bonferroni", "fisher", 
                 "dperm.min", "dperm.max", "dperm.weight", "fperm", "whitlock", 
-                "minp", "maxp", "weight", "none") else "none",
+                "minp", "maxp", "weight", "pandora", "none") else "none",
         weight = rep(1/length(statistics), length(statistics)),
         nperm = 10000, reprod=TRUE, pcut = NA, log.offset = 1,
         preset = NULL,
@@ -316,12 +316,12 @@
     \strong{(experimental! see also the second note below,
     regarding meta-analysis)}. It can be one of \code{"simes"}
     (default), \code{"bonferroni"}, \code{"minp"}, 
-    \code{"maxp"}, \code{"weight"}, \code{"dperm.min"}, 
-    \code{"dperm.max"}, \code{"dperm.weight"}, \code{"fisher"},
-    \code{"fperm"}, \code{"whitlock"} or\code{"none"}. For the
-    \code{"fisher"} and \code{"fperm"} methods, see the 
-    documentation of the R package MADAM. For the 
-    \code{"whitlock"} method, see the documentation of the 
+    \code{"maxp"}, \code{"weight"}, \code{"pandora"}, 
+    \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"}, 
+    \code{"fisher"}, \code{"fperm"}, \code{"whitlock"} or 
+    \code{"none"}. For the \code{"fisher"} and \code{"fperm"} 
+    methods, see the documentation of the R package MADAM. For 
+    the \code{"whitlock"} method, see the documentation of the 
     survcomp Bioconductor package. With the \code{"maxp"} 
     option, the final p-value is the maximum p-value out of 
     those returned by each statistical test. This is 
@@ -366,7 +366,9 @@
     but without permutations. Generally, permutations 
     would be accurate to use when the experiment includes
     >5 samples per condition (or even better 7-10) which 
-    is rather rare in RNA-Seq experiments.}
+    is rather rare in RNA-Seq experiments. Finally, 
+    \code{"pandora"} is the same as \code{"weight"} and is
+    added to be in accordance with the metaseqR paper.}
 
     \item{weight}{a vector of weights with the same length as
     the \code{statistics} vector containing a weight for each

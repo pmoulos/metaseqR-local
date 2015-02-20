@@ -246,7 +246,7 @@ BUG FIXES
     Institute of Medical Research, Austria.
     o Replaced "==" with all.equal while checking if the sum of weights is one
     when meta.p="weight". Of course this is the correct way to compare. Thanks 
-    to Ben Elsworth, Garvan Institute of Medical Research, Austria.
+    to Ben Elsworth, Garvan Institute of Medical Research, Syndey, Australia.
     o Fixed problem related to a bug in the current version of edgeR GLM and 
     the usage of ... in glmFit.
 
@@ -264,3 +264,31 @@ NEW FEATURES
 BUG FIXES
 
     o None
+
+CHANGES IN VERSION 1.5.21 (2015-01-09)
+--------------------------------------
+
+NEW FEATURES
+
+    o None
+    
+BUG FIXES
+
+    o Fixed small bug regarding annotation retrieval when directly using the
+    get.annotation function for certain genomes (e.g. pig). Thanks to Rathi
+    Ryan from Synthetic Genomics, Inc.
+
+CHANGES IN VERSION 1.5.3 (2015-02-20)
+--------------------------------------
+
+NEW FEATURES
+
+    o Added support for both forward and reverse RNA-Seq library preparation
+    protocol. Thanks to Ben Elsworth, Garvan Institute of Medical Research, 
+    Syndey, Australia.
+    o Added support for Bombyx mori (Silkworm) (EXPERIMENTAL!)
+    
+BUG FIXES
+
+    o Fixed a problem caused by a bug in baySeq 2.0.50 code which caused an
+    analysis based in baySeq to crash.

@@ -198,7 +198,7 @@
 #' @param meta.p the meta-analysis method to combine p-values from multiple
 #' statistical tests \strong{(experimental! see also the second note below,
 #' regarding meta-analysis)}. It can be one of \code{"simes"} (default), 
-#' \code{"bonferroni"}, \code{"minp"}, \code{"maxp"}, \code{"weight"},
+#' \code{"bonferroni"}, \code{"minp"}, \code{"maxp"}, \code{"weight"}, \code{"pandora"},
 #' \code{"dperm.min"}, \code{"dperm.max"}, \code{"dperm.weight"}, \code{"fisher"},
 #' \code{"fperm"}, \code{"whitlock"} or\code{"none"}. For the \code{"fisher"} and
 #' \code{"fperm"} methods, see the documentation of the R package MADAM. For the
@@ -233,7 +233,8 @@
 #' options which correspond to the latter three methods but without permutations.
 #' Generally, permutations would be accurate to use when the experiment includes
 #' >5 samples per condition (or even better 7-10) which is rather rare in RNA-Seq
-#' experiments.
+#' experiments. Finally, \code{"pandora"} is the same as \code{"weight"} and is
+#' added to be in accordance with the metaseqR paper.
 #' @param weight a vector of weights with the same length as the \code{statistics}
 #' vector containing a weight for each statistical test. It should sum to 1. 
 #' \strong{Use with caution with the} \code{dperm.weight} \strong{parameter! 
@@ -785,7 +786,7 @@ metaseqr <- function(
     bt.col=NA,
     annotation=c("download","embedded"),
     org=c("hg18","hg19","hg38","mm9","mm10","rn5","dm3","danrer7","pantro4",
-        "susscr3","tair10","custom"),
+        "susscr3","tair10","bmori2","custom"),
     refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon"),
     exon.filters=list(
@@ -820,7 +821,7 @@ metaseqr <- function(
     adjust.method=sort(c(p.adjust.methods,"qvalue")), # Brings BH first which is the default
     meta.p=if (length(statistics)>1) c("simes","bonferroni","fisher",
         "dperm.min","dperm.max","dperm.weight","fperm","whitlock","minp","maxp",
-        "weight","none") else "none",
+        "weight","pandora","none") else "none",
     weight=rep(1/length(statistics),length(statistics)),
     nperm=10000,
     reprod=TRUE,
@@ -1020,7 +1021,8 @@ metaseqr <- function(
     check.text.args("annotation",annotation,c("embedded","download"),
         multiarg=FALSE)
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
-        "danrer7","pantro4","susscr3","tair10","custom"),multiarg=FALSE)
+        "danrer7","pantro4","susscr3","tair10","bmori2","custom"),
+        multiarg=FALSE)
     check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
     check.text.args("when.apply.filter",when.apply.filter,c("postnorm",
@@ -1031,7 +1033,7 @@ metaseqr <- function(
         "limma","nbpseq"),multiarg=TRUE)
     check.text.args("meta.p",meta.p,c("simes","bonferroni","fisher","dperm.min",
         "dperm.max","dperm.weight","fperm","whitlock","minp","maxp","weight",
-        "none"),multiarg=FALSE)
+        "pandora","none"),multiarg=FALSE)
     check.text.args("fig.format",fig.format,c("png","jpg","tiff","bmp","pdf",
         "ps"),multiarg=TRUE)
     check.text.args("export.what",export.what,c("annotation","p.value",
@@ -1409,9 +1411,12 @@ metaseqr <- function(
         # and having determined that some samples are of bad quality
         if (!is.null(exclude.list) && !is.na(exclude.list))
         {
-            for (n in names(exclude.list))
+            for (n in names(exclude.list)) {
                 sample.list[[n]] <- setdiff(sample.list[[n]],
                     exclude.list[[n]])
+                if (length(sample.list[[n]])==0) # Removed whole condition
+                    sample.list[n] <- NULL
+            }
             the.counts <- the.counts[unlist(sample.list)]
         }
 
@@ -1562,9 +1567,12 @@ metaseqr <- function(
         # and having determined that some samples are of bad quality
         if (!is.null(exclude.list) && !is.na(exclude.list))
         {
-            for (n in names(exclude.list))
+            for (n in names(exclude.list)) {
                 sample.list[[n]] <- setdiff(sample.list[[n]],
                     exclude.list[[n]])
+                if (length(sample.list[[n]])==0) # Removed whole condition
+                    sample.list[n] <- NULL
+            }
             gene.counts <- gene.counts[,unlist(sample.list,use.names=FALSE)]
         }
         
