@@ -3,7 +3,7 @@
 \title{Calculates several transformation of counts}
 \usage{
     make.transformation(data.matrix, export.scale, 
-        scf = rep(1, nrow(data.matrix), log.offset = 1)
+        scf = rep(1, nrow(data.matrix)), log.offset = 1)
 }
 \arguments{
     \item{data.matrix}{the raw or normalized counts matrix.
@@ -14,7 +14,7 @@
     \code{"log2"}, \code{"log10"},\code{"vst"}). See also the
     main help page of metaseqr.}
     
-    \itemP{scf}{a scaling factor for the reads of each gene, 
+    \item{scf}{a scaling factor for the reads of each gene, 
     for example the sum of exon lengths or the gene length. 
     Divided by each read count when \code{export.scale="rpgm"}. 
     It provides an RPKM-like measure but not the actual RPKM 

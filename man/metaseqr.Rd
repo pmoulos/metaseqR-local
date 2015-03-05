@@ -9,7 +9,7 @@
         id.col = 4, gc.col = NA, name.col = NA, bt.col = NA,
         annotation = c("download", "embedded"),
         org = c("hg18", "hg19", "hg38", "mm9", "mm10", "rn5", "dm3", 
-            "danrer7", "pantro4", "susscr3", "tair10", "bmori2", "custom"),
+            "danrer7", "pantro4", "susscr3", "tair10", "custom"),
         refdb = c("ensembl", "ucsc", "refseq"),
         count.type = c("gene", "exon"),
         exon.filters = list(min.active.exons = list(exons.per.gene = 5, 

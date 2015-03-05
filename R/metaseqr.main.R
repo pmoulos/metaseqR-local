@@ -786,7 +786,7 @@ metaseqr <- function(
     bt.col=NA,
     annotation=c("download","embedded"),
     org=c("hg18","hg19","hg38","mm9","mm10","rn5","dm3","danrer7","pantro4",
-        "susscr3","tair10","bmori2","custom"),
+        "susscr3","tair10","custom"),
     refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon"),
     exon.filters=list(
@@ -1021,8 +1021,7 @@ metaseqr <- function(
     check.text.args("annotation",annotation,c("embedded","download"),
         multiarg=FALSE)
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
-        "danrer7","pantro4","susscr3","tair10","bmori2","custom"),
-        multiarg=FALSE)
+        "danrer7","pantro4","susscr3","tair10","custom"),multiarg=FALSE)
     check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon"),multiarg=FALSE)
     check.text.args("when.apply.filter",when.apply.filter,c("postnorm",
@@ -1040,7 +1039,7 @@ metaseqr <- function(
         "adj.p.value","meta.p.value","adj.meta.p.value","fold.change","stats",
         "counts","flags"),multiarg=TRUE)
     check.text.args("export.scale",export.scale,c("natural","log2","log10",
-        "vst"),multiarg=TRUE)
+        "rpgm","vst"),multiarg=TRUE)
     check.text.args("export.values",export.values,c("raw","normalized"),
         multiarg=TRUE)
     check.text.args("export.stats",export.stats,c("mean","median","sd","mad",
@@ -2077,14 +2076,22 @@ metaseqr <- function(
     disp("Building output files...")
     if (out.list) out <- make.export.list(contrast) else out <- NULL
     if (report) html <- make.export.list(contrast) else html <- NULL
-    if ("normalized" %in% export.values)
-        norm.list <- make.transformation(norm.genes.expr,export.scale,
+    if ("rpgm" %in% export.what)
+        fa <- attr(gene.data,"gene.length")
+    else
+        fa <- NULL
+    if ("normalized" %in% export.values) {
+        fac <- fa[rownames(norm.genes.expr)]
+        norm.list <- make.transformation(norm.genes.expr,export.scale,fac,
             log.offset)
+    }
     else
         norm.list <- NULL
-    if ("raw" %in% export.values)
-        raw.list <- make.transformation(gene.counts.expr,export.scale,
+    if ("raw" %in% export.values) {
+        fac <- fa[rownames(gene.counts.expr)]
+        raw.list <- make.transformation(gene.counts.expr,export.scale,fac,
             log.offset)
+    }
     else
         raw.list <- NULL
     if ("flags" %in% export.what)
@@ -2097,14 +2104,18 @@ metaseqr <- function(
         gene.counts.filtered <- rbind(gene.counts.zero,gene.counts.dead)
         gene.counts.unnorm.filtered <- rbind(gene.counts.zero,
             gene.counts.unnorm)
-        if ("normalized" %in% export.values)
+        if ("normalized" %in% export.values) {
+            fac <- fa[rownames(gene.counts.filtered)]
             norm.list.filtered <- make.transformation(gene.counts.filtered,
-                export.scale,log.offset)
+                export.scale,fac,log.offset)
+        }
         else
             norm.list.filtered <- NULL
-        if ("raw" %in% export.values)
+        if ("raw" %in% export.values) {
+            fac <- fa[rownames(gene.counts.unnorm.filtered)]
             raw.list.filtered <- make.transformation(
-                gene.counts.unnorm.filtered,export.scale,log.offset)
+                gene.counts.unnorm.filtered,export.scale,fac,log.offset)
+        }
         else
             raw.list.filtered <- NULL
         if ("flags" %in% export.what && !is.null(flags))

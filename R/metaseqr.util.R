@@ -1689,10 +1689,11 @@ make.html.table <- function(b,h=NULL,id=NULL) {
 #' head(tr$vst)
 #'}
 make.transformation <- function(data.matrix,export.scale,
-    scf=rep(1,nrow(data.matrix)),log.offset=1) {
+    scf=NULL,log.offset=1) {
     mat <- vector("list",length(export.scale))
     names(mat) <- export.scale
     if (!is.matrix(data.matrix)) data.matrix <- as.matrix(data.matrix)
+    if (is.null(scf)) scf <- rep(1,nrow(data.matrix))
     for (scl in export.scale) {
         switch(scl,
             natural = {
@@ -1709,8 +1710,7 @@ make.transformation <- function(data.matrix,export.scale,
                 mat[[scl]] <- predict(fit,newdata=data.matrix)
             },
             rpgm = {
-                mat[[scl]] <- matrix(0,nrow=nrow(data.matrix),
-                    ncol=ncol(data.matrix))
+                mat[[scl]] <- data.matrix
                 for (i in 1:ncol(data.matrix))
                     mat[[scl]] <- data.matrix[,i]/scf
             }

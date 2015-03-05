@@ -349,6 +349,11 @@ read.targets <- function(input,path=NULL) {
         if (any(tmp=="."))
             rawfiles <- file.path(path,basename(rawfiles))
     }
+    # Check if they exist!!!
+    for (f in rawfiles) {
+        if (!file.exists(f))
+            stopwrap("Raw reads input file ",f," does not exist! Please check!")
+    }
     if (length(samples) != length(unique(samples)))
         stopwrap("Sample names must be unique for each sample!")
     if (length(rawfiles) != length(unique(rawfiles)))
