@@ -42,7 +42,7 @@
         export.what = c("annotation", "p.value", "adj.p.value", 
                 "meta.p.value", "adj.meta.p.value", "fold.change", 
                 "stats", "counts","flags"),
-        export.scale = c("natural", "log2", "log10", "vst"),
+        export.scale = c("natural", "log2", "log10", "vst", "rpgm"),
         export.values = c("raw", "normalized"),
         export.stats = c("mean", "median", "sd", "mad", "cv", 
                 "rcv"),
@@ -499,7 +499,14 @@
     transformations applied to the data. It can be one or
     more of \code{"natural"}, \code{"log2"}, \code{"log10"},
     \code{"vst"} (Variance Stabilizing Transormation, see the
-    documentation of DESeq package).}
+    documentation of DESeq package) and \code{"rpgm"} which
+	is ratio of mapped reads per gene model (either the gene
+	length or the sum of exon lengths, depending on 
+	\code{count.type} argument). Note that this is not RPKM
+	as reads are already normalized for library size using 
+	one of the supported normalization methods. Also, 
+	\code{"rpgm"} might be misleading when \code{normalization} 
+	is other than \code{"deseq"}.}
 
     \item{export.values}{It can be one or more of
     \code{"raw"} to export raw values (counts etc.) and

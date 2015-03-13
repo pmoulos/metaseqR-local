@@ -1712,7 +1712,7 @@ make.transformation <- function(data.matrix,export.scale,
             rpgm = {
                 mat[[scl]] <- data.matrix
                 for (i in 1:ncol(data.matrix))
-                    mat[[scl]] <- data.matrix[,i]/scf
+                    mat[[scl]][,i] <- data.matrix[,i]/scf
             }
         )
     }
@@ -2177,6 +2177,7 @@ make.report.messages <- function(lang) {
                     log2="log2 scale",
                     log10="log10 scale",
                     vst="Variance stabilization transformation",
+					rpgm="Reads per Gene Model",
                     raw="Raw values",
                     normalized="Normalized values",
                     mean="Mean",

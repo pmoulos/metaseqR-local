@@ -3,7 +3,7 @@
 \title{Calculates several transformation of counts}
 \usage{
     make.transformation(data.matrix, export.scale, 
-        scf = rep(1, nrow(data.matrix)), log.offset = 1)
+        scf = NULL, log.offset = 1)
 }
 \arguments{
     \item{data.matrix}{the raw or normalized counts matrix.

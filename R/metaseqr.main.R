@@ -318,7 +318,11 @@
 #' @param export.scale export values from one or more transformations applied to 
 #' the data. It can be one or more of \code{"natural"}, \code{"log2"}, \code{"log10"},
 #' \code{"vst"} (Variance Stabilizing Transormation, see the documentation of DESeq 
-#' package).
+#' package) and \code{"rpgm"} which is ratio of mapped reads per gene model 
+#' (either the gene length or the sum of exon lengths, depending on \code{count.type} 
+#' argument). Note that this is not RPKM as reads are already normalized for 
+#' library size using one of the supported normalization methods. Also, \code{"rpgm"} 
+#' might be misleading when \code{normalization} is other than \code{"deseq"}.
 #' @param export.values It can be one or more of \code{"raw"} to export raw values
 #' (counts etc.) and \code{"normalized"} to export normalized counts.
 #' @param export.stats calculate and export several statistics on raw and normalized
@@ -839,7 +843,7 @@ metaseqr <- function(
     export.where=NA, # An output directory for the project
     export.what=c("annotation","p.value","adj.p.value","meta.p.value",
         "adj.meta.p.value","fold.change","stats","counts","flags"),
-    export.scale=c("natural","log2","log10","vst"),
+    export.scale=c("natural","log2","log10","vst","rpgm"),
     export.values=c("raw","normalized"),
     export.stats=c("mean","median","sd","mad","cv","rcv"),
     export.counts.table=FALSE,
@@ -2076,7 +2080,7 @@ metaseqr <- function(
     disp("Building output files...")
     if (out.list) out <- make.export.list(contrast) else out <- NULL
     if (report) html <- make.export.list(contrast) else html <- NULL
-    if ("rpgm" %in% export.what)
+    if ("rpgm" %in% export.scale)
         fa <- attr(gene.data,"gene.length")
     else
         fa <- NULL
