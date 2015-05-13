@@ -1001,6 +1001,11 @@ diagplot.noiseq <- function(x,sample.list,covars,which.plot=c("biodetection",
 #'}
 diagplot.noiseq.saturation <- function(x,o,tb,path=NULL) {
     if (is.null(path)) path <- getwd()
+    if (length(unique(tb))==1) {
+        warnwrap("Saturation plot cannot be created with only one biotype! ",
+            "Skipping...")
+        return(NULL)
+    }
     total.biotypes <- table(tb)
     the.biotypes <- names(tb)
     biotypes <- colnames(x[[1]][,2:ncol(x[[1]])])
