@@ -2520,6 +2520,55 @@ metaseqr <- function(
         tmp <- rbind(gene.data.expr,gene.data.filtered)
         attr(tmp,"gene.length") <- c(attr(gene.data.expr,"gene.length"),
             attr(gene.data.filtered,"gene.length"))
+        for (n in names(cp.list)) {
+            if (!is.null(gene.data.filtered)) {
+                filler <- matrix(NA,nrow(gene.data.filtered),ncol(cp.list[[n]]))
+                rownames(filler) <- rownames(gene.data.filtered)
+                colnames(filler) <- colnames(cp.list[[n]])
+            }
+            else
+                filler <- NULL
+            cp.list[[n]] <- rbind(cp.list[[n]],filler)
+            cp.list[[n]] <- cp.list[[n]][rownames(tmp),,drop=FALSE]
+        }
+        if (!is.null(adj.cp.list)) {
+           for (n in names(adj.cp.list)) {
+               if (!is.null(gene.data.filtered)) {
+                   filler <- matrix(NA,nrow(gene.data.filtered),
+                       ncol(adj.cp.list[[n]]))
+                   rownames(filler) <- rownames(gene.data.filtered)
+                   colnames(filler) <- colnames(cp.list[[n]])
+               }
+               else
+                   filler <- NULL
+               adj.cp.list[[n]] <- rbind(adj.cp.list[[n]],filler)
+               adj.cp.list[[n]] <- adj.cp.list[[n]][rownames(tmp),,drop=FALSE]
+           }
+        }
+        if (!is.null(sum.p.list)) {
+           for (n in names(sum.p.list)) {
+               if (!is.null(gene.data.filtered)) {
+                   filler <- rep(NA,nrow(gene.data.filtered))
+                   names(filler) <- rownames(gene.data.filtered)
+               }
+               else
+                   filler <- NULL
+               sum.p.list[[n]] <- c(sum.p.list[[n]],filler)
+               sum.p.list[[n]] <- sum.p.list[[n]][rownames(tmp)]
+           }
+        }
+        if (!is.null(adj.sum.p.list)) {
+           for (n in names(adj.sum.p.list)) {
+               if (!is.null(gene.data.filtered)) {
+                   filler <- rep(NA,nrow(gene.data.filtered))
+                   names(filler) <- rownames(gene.data.filtered)
+               }
+               else
+                   filler <- NULL
+               adj.sum.p.list[[n]] <- c(adj.sum.p.list[[n]],filler)
+               adj.sum.p.list[[n]] <- adj.sum.p.list[[n]][rownames(tmp)]
+           }
+        }
         complete <- list(
             call=as.list(match.call()),
             gene.data=tmp,
