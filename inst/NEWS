@@ -354,5 +354,16 @@ NEW FEATURES
 BUG FIXES
 
     o Fixed BED file reading by fixing the deprecated option in import.bed
-	(asRangedData) from rtracklayer
+    (asRangedData) from rtracklayer
+
+CHANGES IN VERSION 1.11.2 (2016-07-26)
+--------------------------------------
+
+NEW FEATURES
+
+    o Basic support for Quant-Seq experiments
+
+BUG FIXES
+
+    o None
 

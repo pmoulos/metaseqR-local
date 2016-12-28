@@ -34,6 +34,11 @@
 #'}
 get.annotation <- function(org,type,refdb="ensembl",multic=FALSE) {
     org <- tolower(org)
+    if (type=="utr" && refdb %in% c("ucsc","refseq")) {
+        disp("Quant-Seq (utr) analysis is not yet supported with UCSC or ",
+            "RefSeq annotation. Switching to Ensembl...")
+        refdb <- "ensembl"
+    }
     switch(refdb,
         ensembl = { return(get.ensembl.annotation(org,type)) },
         ucsc = { return(get.ucsc.annotation(org,type,refdb,multic)) },
@@ -133,6 +138,25 @@ get.ensembl.annotation <- function(org,type) {
                 biotype=bm$gene_biotype
             )
             rownames(ann) <- ann$exon_id
+    }
+    else if (type=="utr") {
+        bm <- getBM(attributes=get.transcript.utr.attributes(org),mart=mart)
+        ann <- data.frame(
+            chromosome=paste("chr",bm$chromosome_name,sep=""),
+            start=bm$`3_utr_start`,
+            end=bm$`3_utr_end`,
+            tstart=bm$transcript_start,
+            tend=bm$transcript_end,
+            transcript_id=bm$ensembl_transcript_id,
+            gene_id=bm$ensembl_gene_id,
+            strand=ifelse(bm$strand==1,"+","-"),
+            gene_name=if (org %in% c("hg18","mm9","tair10")) 
+                bm$external_gene_id else bm$external_gene_name,
+            biotype=bm$gene_biotype
+        )
+        ann <- correct.transcripts(ann)
+        ann <- ann[,c("chromosome","start","end","transcript_id","gene_id",
+            "strand","gene_name","biotype")]
     }
     ann <- ann[order(ann$chromosome,ann$start),]
     ann <- ann[grep(chrs.exp,ann$chromosome),]
@@ -343,6 +367,7 @@ get.ucsc.organism <- function(org) {
         mm9 = { return("mm9") },
         mm10 = { return("mm10") },
         rn5 = { return("rn5") },
+        rn5 = { return("rn6") },
         dm3 = { return("dm3") },
         danrer7 = { return("danRer7") },
         pantro4 = { return("panTro4") },
@@ -381,6 +406,9 @@ get.bs.organism <- function(org) {
         },
         rn5 = {
             return("BSgenome.Rnorvegicus.UCSC.rn5")
+        },
+        rn6 = {
+            return("BSgenome.Rnorvegicus.UCSC.rn6")
         },
         dm3 = {
             return("BSgenome.Dmelanogaster.UCSC.dm3")
@@ -470,7 +498,8 @@ get.host <- function(org) {
         hg38 = { return("www.ensembl.org") },
         mm9 = { return("may2012.archive.ensembl.org") },
         mm10 = { return("www.ensembl.org") },
-        rn5 = { return("www.ensembl.org") },
+        rn5 = { return("may2012.archive.ensembl.org") },
+        rn6 = { return("www.ensembl.org") },
         dm3 = { return("www.ensembl.org") },
         danrer7 = { return("www.ensembl.org") },
         pantro4 = { return("www.ensembl.org") },
@@ -530,6 +559,7 @@ get.dataset <- function(org) {
         mm9 = { return("mmusculus_gene_ensembl") },
         mm10 = { return("mmusculus_gene_ensembl") },
         rn5 = { return("rnorvegicus_gene_ensembl") },
+        rn6 = { return("rnorvegicus_gene_ensembl") },
         dm3 = { return("dmelanogaster_gene_ensembl") },
         danrer7 = { return("drerio_gene_ensembl") },
         pantro4 = { return("ptroglodytes_gene_ensembl") },
@@ -591,6 +621,13 @@ get.valid.chrs <- function(org)
             ))
         },
         rn5 = {
+            return(c(
+                "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
+                "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6",
+                "chr7","chr8","chr9","chrX"
+            ))
+        },
+        rn6 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
                 "chr17","chr18","chr19","chr2","chr3","chr4","chr5","chr6",
@@ -727,4 +764,64 @@ get.exon.attributes <- function(org) {
             "external_gene_name",
             "gene_biotype"
         ))
+}
+
+#' Annotation downloader helper
+#'
+#' Returns a vector of genomic annotation attributes which are used by the biomaRt
+#' package in order to fetch the exon annotation for each organism. It has no
+#' parameters. Internal use.
+#'
+#' @param org one of the supported organisms.
+#' @return A character vector of Ensembl transcript attributes.
+#' @export
+#' @author Panagiotis Moulos
+#' @examples
+#' \dontrun{
+#' trans.attr <- get.transcript.attributes()
+#'}
+get.transcript.utr.attributes <- function(org) {
+    if (org %in% c("hg18","mm9","tair10","bmori2"))
+        return(c(
+            "chromosome_name",
+            "transcript_start",
+            "transcript_end",
+            "3_utr_start",
+            "3_utr_end",
+            "ensembl_transcript_id",
+            "strand",
+            "ensembl_gene_id",
+            "external_gene_id",
+            "gene_biotype"
+        ))
+    else
+        return(c(
+            "chromosome_name",
+            "transcript_start",
+            "transcript_end",
+            "3_utr_start",
+            "3_utr_end",
+            "ensembl_transcript_id",
+            "strand",
+            "ensembl_gene_id",
+            "external_gene_name",
+            "gene_biotype"
+        ))
+}
+
+correct.transcripts <- function(ann) {
+    rownames(ann) <- paste("T",1:nrow(ann),sep="_")
+    len <- ann[,3] - ann[,2]
+    len <- len[-which(is.na(len))]
+    len[len==0] <- 1
+    def.utr.len <- round(2^mean(log2(len)))
+    nas <- which(is.na(ann$start))
+    ann.na <- ann[nas,]
+    ann.na$start <- ann.na$tstart
+    ann.na$end <- ann.na$tend
+    tmp <- makeGRangesFromDataFrame(df=ann.na)
+    tmp <- flank(resize(tmp,width=1,fix="end"),start=FALSE,width=def.utr.len)
+    ann[names(tmp),"start"] <- start(tmp)
+    ann[names(tmp),"end"] <- end(tmp)
+    return(ann)
 }
