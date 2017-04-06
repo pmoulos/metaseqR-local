@@ -84,7 +84,7 @@ read2count <- function(targets,annotation,file.type=targets$type,
     # If the count type is "exon", we must reduce the overlapping exons belonging
     # to multiple transcripts, so as to avoid inflating the final read count when
     # summing all exons
-    inter.feature <- TRUE
+    inter.feature <- FALSE
     if (length(grep("exon",colnames(annotation)))>0) {
         if (length(grep("MEX",annotation$exon_id[1]))) # Retrieved from previous
             merged.annotation <- annotation

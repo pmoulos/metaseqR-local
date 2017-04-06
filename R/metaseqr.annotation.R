@@ -75,7 +75,7 @@ get.annotation <- function(org,type,refdb="ensembl",multic=FALSE) {
 #'}
 get.ensembl.annotation <- function(org,type) {
     if (org=="tair10")
-        dat <- "ENSEMBL_MART_PLANT"
+        dat <- "plants_mart"
     else if (org=="bmori2")
         dat <- "metazoa_mart"
     else
@@ -321,7 +321,7 @@ get.gc.content <- function(ann,org) {
             "retrieve GC-content.")
     org <- tolower(org[1])
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","dm3",
-        "danrer7","pantro4","susscr3","tair10"),multiarg=FALSE)
+		"dm6","danrer7","pantro4","susscr3","tair10"),multiarg=FALSE)
     # Convert annotation to GRanges
     disp("Converting annotation to GenomicRanges object...")
     if (packageVersion("GenomicRanges")<1.14)
@@ -367,8 +367,9 @@ get.ucsc.organism <- function(org) {
         mm9 = { return("mm9") },
         mm10 = { return("mm10") },
         rn5 = { return("rn5") },
-        rn5 = { return("rn6") },
+        rn6 = { return("rn6") },
         dm3 = { return("dm3") },
+        dm6 = { return("dm6") },
         danrer7 = { return("danRer7") },
         pantro4 = { return("panTro4") },
         susscr3 = { return("susScr3") },
@@ -412,6 +413,9 @@ get.bs.organism <- function(org) {
         },
         dm3 = {
             return("BSgenome.Dmelanogaster.UCSC.dm3")
+        },
+        dm6 = {
+            return("BSgenome.Dmelanogaster.UCSC.dm6")
         },
         danrer7 = {
             return("BSgenome.Drerio.UCSC.danRer7")
@@ -500,11 +504,12 @@ get.host <- function(org) {
         mm10 = { return("www.ensembl.org") },
         rn5 = { return("may2012.archive.ensembl.org") },
         rn6 = { return("www.ensembl.org") },
-        dm3 = { return("www.ensembl.org") },
+        dm3 = { return("grch37.ensembl.org") },
+        dm6 = { return("www.ensembl.org") },
         danrer7 = { return("www.ensembl.org") },
         pantro4 = { return("www.ensembl.org") },
         susscr3 = { return("www.ensembl.org") },
-        tair10 = { return("www.biomart.org") },
+        tair10 = { return("plants.ensembl.org") },
         bmori2 = { return("metazoa.ensembl.org") }
     )
 }
@@ -529,11 +534,12 @@ get.alt.host <- function(org) {
         mm9 = { return("may2012.archive.ensembl.org") },
         mm10 = { return("uswest.ensembl.org") },
         rn5 = { return("uswest.ensembl.org") },
-        dm3 = { return("uswest.ensembl.org") },
+        dm3 = { return("grch37.ensembl.org") },
+        dm6 = { return("uswest.ensembl.org") },
         danrer7 = { return("uswest.ensembl.org") },
         pantro4 = { return("uswest.ensembl.org") },
         susscr3 = { return("uswest.ensembl.org") },
-        tair10 = { return("www.biomart.org") },
+        tair10 = { return("plants.ensembl.org") },
         bmori2 = { return("metazoa.ensembl.org") }
     )
 }
@@ -549,7 +555,7 @@ get.alt.host <- function(org) {
 #' @author Panagiotis Moulos
 #' @examples
 #' \dontrun{
-#' dm3.id <- get.dataset("dm3")
+#' dm6.id <- get.dataset("dm6")
 #'}
 get.dataset <- function(org) {
     switch(org,
@@ -561,6 +567,7 @@ get.dataset <- function(org) {
         rn5 = { return("rnorvegicus_gene_ensembl") },
         rn6 = { return("rnorvegicus_gene_ensembl") },
         dm3 = { return("dmelanogaster_gene_ensembl") },
+        dm6 = { return("dmelanogaster_gene_ensembl") },
         danrer7 = { return("drerio_gene_ensembl") },
         pantro4 = { return("ptroglodytes_gene_ensembl") },
         susscr3 = { return("sscrofa_gene_ensembl") },
@@ -641,6 +648,13 @@ get.valid.chrs <- function(org)
                 "chrYHet"
             ))
         },
+        dm6 = {
+            return(c(
+                "chr2L","chr2LHet","chr2R","chr2RHet","chr3L","chr3LHet",
+                "chr3R","chr3RHet","chr4","chrU","chrUextra","chrX","chrXHet",
+                "chrYHet"
+            ))
+        },
         danrer7 = {
             return(c(
                 "chr1","chr10","chr11","chr12","chr13","chr14","chr15","chr16",
@@ -710,7 +724,7 @@ get.gene.attributes <- function(org) {
             "start_position",
             "end_position",
             "ensembl_gene_id",
-            "percentage_gc_content",
+            "percentage_gene_gc_content",
             "strand",
             "external_gene_name",
             "gene_biotype"

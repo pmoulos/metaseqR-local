@@ -133,7 +133,7 @@
 #' similar as possible to the \code{"download"} case, in terms of column structure.
 #' @param org the supported organisms by metaseqr. These can be, for human genomes
 #' \code{"hg18"}, \code{"hg19"} or \code{"hg38"} for mouse genomes \code{"mm9"},
-#' \code{"mm10"}, for rat genomes \code{"rn5"}, for drosophila genome \code{"dm3"}, 
+#' \code{"mm10"}, for rat genomes \code{"rn5"}, for drosophila genome \code{"dm6"}, 
 #' for zebrafish genome \code{"danrer7"}, for chimpanzee genome \code{"pantro4"},
 #' for pig genome \code{"susScr3"} and for Arabidopsis thaliana genome \code{"tair10"}.
 #' Finally, \code{"custom"} will instruct metaseqR to completely ignore the 
@@ -789,8 +789,9 @@ metaseqr <- function(
     name.col=NA,
     bt.col=NA,
     annotation=c("download","embedded"),
-    org=c("hg18","hg19","hg38","mm9","mm10","rn5","rn6","dm3","danrer7",
-        "pantro4","susscr3","tair10","custom"),
+    gene.file=NULL,
+    org=c("hg18","hg19","hg38","mm9","mm10","rn5","rn6","dm3","dm6",
+        "danrer7","pantro4","susscr3","tair10","custom"),
     refdb=c("ensembl","ucsc","refseq"),
     count.type=c("gene","exon","utr"),
     exon.filters=list(
@@ -1011,7 +1012,8 @@ metaseqr <- function(
         }
     }
 
-    if (is.list(counts) && count.type=="exon" && annotation=="embedded")
+    if (is.list(counts) && !is.data.frame(counts) && count.type=="exon" 
+		&& annotation=="embedded")
     {
         warnwrap("annotation cannot be \"embedded\" when importing a stored ",
             "gene model! Switching to \"download\"...")
@@ -1027,7 +1029,8 @@ metaseqr <- function(
     check.text.args("annotation",annotation,c("embedded","download"),
         multiarg=FALSE)
     check.text.args("org",org,c("hg18","hg19","hg38","mm9","mm10","rn5","rn6",
-        "dm3","danrer7","pantro4","susscr3","tair10","custom"),multiarg=FALSE)
+        "dm3","dm6","danrer7","pantro4","susscr3","tair10","custom"),
+        multiarg=FALSE)
     check.text.args("refdb",refdb,c("ensembl","ucsc","refseq"),multiarg=FALSE)
     check.text.args("count.type",count.type,c("gene","exon","utr"),multiarg=FALSE)
     check.text.args("when.apply.filter",when.apply.filter,c("postnorm",
@@ -1139,6 +1142,13 @@ metaseqr <- function(
         if (length(to.remove)>0)
             qc.plots <- qc.plots[-to.remove]
     }
+    
+    # Check what happens with custom organism and exons/utrs
+    if (org=="custom" && count.type %in% c("exon","utr") 
+		&& (is.null(gene.file) || !file.exists(gene.file))) 
+		stopwrap("When org=\"custom\" and count.type is not \"gene\", ",
+			"an additional gene file must be provided with the gene.file ",
+			"argument!")
 
     # Check additional input arguments for normalization and statistics
     alg.args <- validate.alg.args(normalization,statistics,norm.args,stat.args)
@@ -1297,8 +1307,25 @@ metaseqr <- function(
         # Download gene annotation anyway if not previous analysis restored
         if (!from.previous) 
         {
-            disp("Downloading gene annotation for ",org,"...")
-            gene.data <- get.annotation(org,"gene",refdb)
+            if (org=="custom") 
+            {
+				if (!is.null(gene.file) && file.exists(gene.file)) 
+				{
+					disp("Reading custom external gene annotation for from ",
+						gene.file,"...")
+					gene.data <- read.delim(gene.file)
+					rownames(gene.data) <- as.character(gene.data$gene_id)
+					if (!is.null(gene.data$gc_content) # Already divided
+						&& max(as.numeric(gene.data$gc_content))<=1)
+						gene.data$gc_content = 
+							100*as.numeric(gene.data$gc_content)
+				}
+			}
+			else
+			{
+				disp("Downloading gene annotation for ",org,"...")
+				gene.data <- get.annotation(org,"gene",refdb)
+			}
         }
         
         if (!from.previous)
@@ -1414,8 +1441,27 @@ metaseqr <- function(
                     compress=TRUE)
             }
         }
-        else # Retrieved gene model and/or previous analysis
+        # Retrieved gene model and/or previous analysis
+        else if (annotation !="embedded" && from.previous)
             the.counts <- counts
+        else if (annotation=="embedded") {
+			# First time read, construct gene model
+			disp("Checking chromosomes in exon counts and gene annotation...")
+            gene.data <- reduce.gene.data(exon.data[rownames(exon.counts),],
+                gene.data)
+            disp("Processing exons...")
+            the.counts <- construct.gene.model(exon.counts,sample.list,
+                gene.data,multic=multic)
+
+            if (save.gene.model)
+            {
+                disp("Saving gene model to ",file.path(PROJECT.PATH[["data"]],
+                    "gene_model.RData"))
+                save(the.counts,exon.data,gene.data,sample.list,count.type,
+                    file=file.path(PROJECT.PATH$data,"gene_model.RData"),
+                    compress=TRUE)
+            }
+		}
             
         # Exclude any samples not wanted (when e.g. restoring a previous project
         # and having determined that some samples are of bad quality
@@ -1468,8 +1514,25 @@ metaseqr <- function(
         # Download gene annotation anyway if not previous analysis restored
         if (!from.previous) 
         {
-            disp("Downloading gene annotation for ",org,"...")
-            gene.data <- get.annotation(org,"gene",refdb)
+            if (org=="custom") 
+            {
+				if (!is.null(gene.file) && file.exists(gene.file)) 
+				{
+					disp("Reading custom external gene annotation for from ",
+						gene.file,"...")
+					gene.data <- read.delim(gene.file)
+					rownames(gene.data) <- as.character(gene.data$gene_id)
+					if (!is.null(gene.data$gc_content) # Already divided
+						&& max(as.numeric(gene.data$gc_content))<=1)
+						gene.data$gc_content = 
+							100*as.numeric(gene.data$gc_content)
+				}
+			}
+			else
+			{
+				disp("Downloading gene annotation for ",org,"...")
+				gene.data <- get.annotation(org,"gene",refdb)
+			}
         }
         
         if (!from.previous)
