@@ -97,7 +97,8 @@ get.ensembl.annotation <- function(org,type) {
             start=bm$start_position,
             end=bm$end_position,
             gene_id=bm$ensembl_gene_id,
-            gc_content=bm$percentage_gc_content,
+            gc_content=if (org %in% c("hg18","mm9","tair10")) 
+				bm$percentage_gc_content else bm$percentage_gene_gc_content,
             strand=ifelse(bm$strand==1,"+","-"),
             gene_name=if (org %in% c("hg18","mm9","tair10")) bm$external_gene_id 
                 else bm$external_gene_name,

@@ -1648,8 +1648,27 @@ metaseqr <- function(
                     compress=TRUE)
             }
         }
-        else # Retrieved gene model and/or previous analysis
+        # Retrieved gene model and/or previous analysis
+        else if (annotation !="embedded" && from.previous)
             the.counts <- counts
+        else if (annotation=="embedded") {
+			# First time read, construct gene model
+			disp("Checking chromosomes in transcript counts and gene annotation...")
+            gene.data <- reduce.gene.data(transcript.data[rownames(transcript.counts),],
+                gene.data)
+            disp("Processing transcripts...")
+            the.counts <- construct.utr.model(transcript.counts,sample.list,
+                gene.data,multic=multic)
+
+            if (save.gene.model)
+            {
+                disp("Saving gene model to ",file.path(PROJECT.PATH[["data"]],
+                    "gene_model.RData"))
+                save(the.counts,transcript.data,gene.data,sample.list,count.type,
+                    file=file.path(PROJECT.PATH$data,"gene_model.RData"),
+                    compress=TRUE)
+            }
+		}
             
         # Exclude any samples not wanted (when e.g. restoring a previous project
         # and having determined that some samples are of bad quality

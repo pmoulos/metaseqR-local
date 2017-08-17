@@ -530,6 +530,12 @@ read.targets <- function(input,path=NULL) {
             whats.strand <- tolower(as.character(tab[,5]))
             if (!all(whats.strand %in% c("yes","no","forward","reverse")))
                 stopwrap("Unknown option for read strandedness in targets file")
+            if (whats.strand %in% c("yes","no")) {
+				deprecated.warning("read.targets")
+				tmp <- as.character(tab[,5])
+				tmp[tmp=="yes"] <- "forward"
+				tab[,5] <- tmp
+			}
             has.paired.info <- TRUE
             has.stranded.info <- TRUE
         }
